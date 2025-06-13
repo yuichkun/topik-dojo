@@ -43,9 +43,9 @@
 | 学習用ユニット選択 | 03-unit-selection.md | ✅ 完成 |
 | テストモード選択 | 04-test-mode-selection.md | ✅ 完成 |
 | リスニングユニット選択 | 05-listening-unit-selection.md | ✅ 完成 |
-| リーディングユニット選択 | 06-reading-unit-selection.md | ❌ 未作成 |
-| 学習画面 | 07-learning.md | ❌ 未作成 |
-| リスニングテスト | 08-listening-test.md | ❌ 未作成 |
+| リーディングユニット選択 | 06-reading-unit-selection.md | ✅ 完成 |
+| 学習画面 | 07-learning.md | ✅ 完成 |
+| リスニングテスト | 08-listening-test.md | ✅ 完成 |
 | リーディングテスト | 09-reading-test.md | ❌ 未作成 |
 | 成績画面 | 10-results.md | ❌ 未作成 |
 | 復習画面 | 11-review.md | ❌ 未作成 |
