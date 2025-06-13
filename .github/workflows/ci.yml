@@ -56,12 +56,6 @@ jobs:
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon
-      
-      - name: Upload Android APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk
-          path: android/app/build/outputs/apk/debug/*.apk
 
   build-ios:
     runs-on: macos-latest
