@@ -62,6 +62,7 @@ erDiagram
         string example_korean "韓国語例文"
         string example_japanese "日本語例文"
         integer grade "級(1-6)"
+        integer grade_word_number "級内通し番号"
         string part_of_speech "品詞"
         datetime created_at "作成日時"
     }
@@ -167,14 +168,19 @@ CREATE TABLE words (
     example_korean TEXT,                -- 韓国語例文
     example_japanese TEXT,              -- 日本語例文
     grade INTEGER NOT NULL,             -- 級（1-6）
+    grade_word_number INTEGER NOT NULL, -- 級内通し番号（1から開始）
     part_of_speech TEXT,                -- 品詞（名詞、動詞等）
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 **ユニット計算式:**
-- `unit = CEIL(word_id / 10)` （例：word_id=25 → unit=3）
-- `unit_position = ((word_id - 1) % 10) + 1` （例：word_id=25 → 5番目）
+- `級内ユニット番号 = CEIL(grade_word_number / 10)` （例：grade_word_number=25 → ユニット3）
+- `ユニット内位置 = ((grade_word_number - 1) % 10) + 1` （例：grade_word_number=25 → 5番目）
+
+**データ例:**
+- word_id=1, grade=1, grade_word_number=1 （1級1番目）
+- word_id=401, grade=2, grade_word_number=1 （2級1番目）
 
 ### 2. SRS_MANAGEMENT（SRS管理テーブル）
 各単語のSRS（間隔反復学習）データを管理
@@ -332,12 +338,12 @@ GROUP BY test_type;
 
 #### 4. ユニット単語取得
 ```sql
--- 指定ユニットの単語を取得（word_idの範囲で計算）
+-- 指定ユニットの単語を取得（級内通し番号で計算）
 SELECT *
 FROM words
-WHERE word_id BETWEEN (3-1)*10+1 AND 3*10  -- ユニット3の例：21-30
-  AND grade = 3
-ORDER BY word_id;
+WHERE grade = 3
+  AND grade_word_number BETWEEN (3-1)*10+1 AND 3*10  -- 3級ユニット3の例：21-30
+ORDER BY grade_word_number;
 ```
 
 #### 5. 復習マーク単語抽出
