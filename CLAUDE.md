@@ -10,6 +10,15 @@ TOPIK道場は、日本人韓国語学習者向けのTOPIK（韓国語能力試�
 
 **質問は1度に必ず1つだけ行う** - 複数の質問を同時にせず、一つずつ丁寧に議論する
 
+**絶対に推測で要件を追加しない** - 明示的に指示されていない機能や仕様を勝手に追加することを禁止する。既存の要件や仕様書に明記されている内容のみを実装し、不明な点があれば必ず確認を求める。
+
+## プロジェクト参照先
+
+**詳細仕様**: `requirements.md` と各画面仕様書（`docs/screens/`）を参照  
+**進捗状況**: `docs/screen-index.md` を参照  
+**画面遷移**: `docs/design/screen-flows.md` を参照  
+**注意**: `docs/original-materials/memo.md` は初期の原案であり、現在の正式な仕様ではない
+
 ## Key Requirements
 
 - **プラットフォーム**: React Native (iOS/Android)
