@@ -4,7 +4,7 @@
 
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { Alert } from 'react-native';
+import { Alert, TouchableOpacity, Text } from 'react-native';
 import App from '../App';
 
 // AlertのスパイFunction
@@ -43,11 +43,10 @@ describe('TopScreen', () => {
       component = ReactTestRenderer.create(<App />);
     });
     
-    // 復習ボタンのテキストを確認（モックデータは15語）
-    const reviewButtonText = component!.root.findByProps({ 
-      children: '復習 (15語)' 
-    });
-    expect(reviewButtonText).toBeDefined();
+    // 復習ボタンのテキストを確認（動的に生成される文字列をテスト）
+    const reviewButton = component!.root.findAllByType(TouchableOpacity)[0];
+    const reviewButtonText = reviewButton.findByType(Text);
+    expect(reviewButtonText.props.children).toEqual(['復習 (', 15, '語)']);
   });
 
   test('displays all 6 level buttons', async () => {
@@ -58,11 +57,15 @@ describe('TopScreen', () => {
     });
     
     // 1級から6級までのボタンが表示されることを確認
-    for (let level = 1; level <= 6; level++) {
-      const levelButton = component!.root.findByProps({ 
-        children: `${level}級` 
-      });
-      expect(levelButton).toBeDefined();
+    const levelButtons = component!.root.findAllByType(TouchableOpacity);
+    // 復習ボタンも含まれるので、級ボタンは1番目以降
+    const actualLevelButtons = levelButtons.slice(1);
+    
+    expect(actualLevelButtons).toHaveLength(6);
+    
+    for (let i = 0; i < 6; i++) {
+      const buttonText = actualLevelButtons[i].findByType(Text);
+      expect(buttonText.props.children).toEqual([i + 1, '級']);
     }
   });
 
@@ -74,7 +77,7 @@ describe('TopScreen', () => {
     });
     
     // 復習ボタンを取得してタップ
-    const reviewButton = component!.root.findAllByType('TouchableOpacity')[0];
+    const reviewButton = component!.root.findAllByType(TouchableOpacity)[0];
     
     await ReactTestRenderer.act(async () => {
       reviewButton.props.onPress();
@@ -91,7 +94,7 @@ describe('TopScreen', () => {
     });
     
     // 1級ボタンを取得してタップ（復習ボタンの次のTouchableOpacity）
-    const levelButtons = component!.root.findAllByType('TouchableOpacity');
+    const levelButtons = component!.root.findAllByType(TouchableOpacity);
     const firstLevelButton = levelButtons[1]; // インデックス0は復習ボタン
     
     await ReactTestRenderer.act(async () => {
