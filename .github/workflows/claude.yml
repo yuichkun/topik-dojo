@@ -19,15 +19,27 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Run Claude Code
         id: claude
@@ -44,14 +56,20 @@ jobs:
           # Optional: Trigger when specific user is assigned to an issue
           # assignee_trigger: "claude-bot"
           
-          # Optional: Allow Claude to run specific commands
-          # allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
+          # Allow Claude to run React Native development commands
+          allowed_tools: "Bash(npm *),Bash(cd android && ./gradlew *),Bash(cd ios && *),Bash(bundle *)"
           
-          # Optional: Add custom instructions for Claude to customize its behavior for your project
-          # custom_instructions: |
-          #   Follow our coding standards
-          #   Ensure all new code has tests
-          #   Use TypeScript for new files
+          # Custom instructions for TOPIK道場 React Native project
+          custom_instructions: |
+            - このプロジェクトはTOPIK道場（日本人韓国語学習者向けTOPIK対策アプリ）のReact Native開発です
+            - 必ずCLAUDE.mdの要件定義に従って作業してください
+            - 推測で要件を追加せず、明示的な指示のみを実装してください
+            - 新機能開発時は必ずテストファースト（TDD）で進めてください
+            - Jest/React Native Testing Libraryを使用してテストを書いてください
+            - スナップショットテスト・ユニットテスト・統合テストを含めてください
+            - テストが通ってからコミット・PR作成してください
+            - コード変更後は必ずlintとテストを実行してください
+            - requirements.md、docs/screen-flows.md、docs/database-design.mdを参照してください
           
           # Optional: Custom environment variables for Claude
           # claude_env: |
