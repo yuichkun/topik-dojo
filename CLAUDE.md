@@ -17,11 +17,26 @@ TOPIK道場は、日本人韓国語学習者向けのTOPIK（韓国語能力試�
 **Claude Codeでこのプロジェクトの作業を開始する際は、必ず以下のファイルを最初に読み込んでプロジェクト全体像を把握すること:**
 
 1. **詳細仕様**: `requirements.md` - プロジェクトの基本要件・仕様
-2. **進捗状況**: `docs/screen-index.md` - 画面作成状況の一覧
-3. **画面遷移**: `docs/screen-flows.md` - 全体的な画面フロー・シーケンス
-4. **各画面仕様書**: `docs/screens/` - 各画面の詳細設計
+2. **画面遷移**: `docs/screen-flows.md` - 全体的な画面フロー・シーケンス
+3. **各画面仕様書**: `docs/screens/` - 各画面の詳細設計（全11画面完成）
+4. **設計課題**: `docs/design-issues-checklist.md` - 仕様の矛盾点・未解決課題
 
 **注意**: `docs/original-materials/memo.md` は初期の原案であり、現在の正式な仕様ではない
+
+## 画面設計完成状況
+
+全11画面の設計が完了：
+- **01-top.md** - トップ画面（級選択）
+- **02-learning-mode-selection.md** - 学習モード選択画面
+- **03-unit-selection.md** - 学習用ユニット選択画面
+- **04-test-mode-selection.md** - テストモード選択画面
+- **05-listening-unit-selection.md** - リスニングテストユニット選択画面
+- **06-reading-unit-selection.md** - リーディングテストユニット選択画面
+- **07-learning.md** - 学習画面
+- **08-listening-test.md** - リスニングテスト画面
+- **09-reading-test.md** - リーディングテスト画面
+- **10-results.md** - 成績確認画面
+- **11-review.md** - 復習画面
 
 ## Key Requirements
 
