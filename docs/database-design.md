@@ -188,16 +188,44 @@ CREATE TABLE words (
 ```sql
 CREATE TABLE srs_management (
     word_id INTEGER PRIMARY KEY,        -- 単語ID（外部キー）
-    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-5）
+    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 学習段階0-2, 復習段階3-9）
+    ease_factor DECIMAL(4,2) DEFAULT 2.5, -- 易しさ係数（1.3-4.0, デフォルト2.5）
     next_review_date DATETIME,          -- 次回復習日
     interval_days INTEGER DEFAULT 1,    -- 復習間隔（日数）
     mistake_count INTEGER DEFAULT 0,    -- 間違い回数
     last_reviewed DATETIME,             -- 最終復習日時
-    status TEXT DEFAULT 'learning',     -- 学習状態（learning/mastered）
+    status TEXT DEFAULT 'learning',     -- 学習状態（learning/graduated/mastered）
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (word_id) REFERENCES words(word_id)
 );
+```
+
+**SRS間隔アルゴリズム（Anki SM-2準拠）:**
+
+**学習段階（mastery_level 0-2）:**
+- Level 0 → 1: 1日後
+- Level 1 → 2: 3日後  
+- Level 2 → 3: 卒業して復習段階へ
+
+**復習段階（mastery_level 3-9）:**
+- 基本計算式: `新間隔 = 前回間隔 × ease_factor`
+- Level 3: 6日後（卒業初期値）
+- Level 4以降: ease_factorによる自動調整
+
+**フィードバック反映:**
+- **覚えてない**: mastery_level-1, ease_factor-0.2, 間隔リセット
+- **覚えた**: mastery_level+1, ease_factor維持, 間隔延長
+
+**制限値:**
+- 最小ease_factor: 1.3
+- 最大間隔: 365日（1年）
+- 最大mastery_level: 9（実質無制限習得）
+
+**具体例（ease_factor=2.5の場合）:**
+```
+Level 3: 6日 → Level 4: 15日 → Level 5: 38日 
+→ Level 6: 95日 → Level 7: 238日 → Level 8: 365日（上限）
 ```
 
 ### 3. LEARNING_PROGRESS（学習進捗テーブル）
