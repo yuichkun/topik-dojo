@@ -47,6 +47,7 @@ TOPIK道場は、日本人韓国語学習者向けのTOPIK（韓国語能力試�
 - **復習システム**: 簡易SRS（覚えた/覚えてない 2択）
 - **マネタイズ**: 広告収入検討中
 - **通知**: ローカル通知でバッジ表示
+- **スタイリング**: NativeWind (Tailwind CSS for React Native)
 
 ## Pending Tasks
 
@@ -63,7 +64,60 @@ TOPIK道場は、日本人韓国語学習者向けのTOPIK（韓国語能力試�
 
 ## Development Commands
 
-*To be added as the project structure is established*
+### テスト実行
+```bash
+npm test
+```
+
+### アプリ起動
+```bash
+# iOS
+npm run ios
+
+# Android  
+npm run android
+
+# Metro bundler (開発サーバー)
+npm start
+```
+
+### スタイリング（NativeWind）
+
+このプロジェクトではTailwind CSSをReact Nativeで使用できるNativeWindを採用しています。
+
+#### 基本的な使い方
+```jsx
+// className プロパティでTailwindクラスを指定
+<View className="flex-1 bg-white p-4">
+  <Text className="text-xl font-bold text-gray-800">
+    テキスト
+  </Text>
+  <TouchableOpacity className="bg-blue-500 px-4 py-2 rounded-lg">
+    <Text className="text-white font-semibold">ボタン</Text>
+  </TouchableOpacity>
+</View>
+```
+
+#### 条件付きスタイル
+```jsx
+<TouchableOpacity 
+  className={`
+    px-4 py-2 rounded-lg
+    ${isActive ? 'bg-blue-500' : 'bg-gray-300'}
+  `}
+>
+```
+
+#### 重要な設定ファイル
+- `tailwind.config.js` - Tailwind設定
+- `global.css` - Tailwindスタイルのインポート
+- `babel.config.js` - NativeWindプラグイン設定
+- `metro.config.js` - Metro設定でNativeWind統合
+
+#### 開発時の注意点
+- スタイル変更後はMetro bundlerの再起動が必要な場合があります
+- `npm start --reset-cache` でキャッシュをクリアして再起動
+- テスト環境では `jest.config.js` でCSS importをモック化済み
 
 ---
 *Created: 2025/6/13*

@@ -1,0 +1,328 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TopScreen matches snapshot 1`] = `
+<RCTSafeAreaView
+  className="flex-1 bg-white"
+>
+  <View
+    className="items-center pt-16 pb-10"
+  >
+    <Text
+      className="text-3xl font-bold text-gray-800 tracking-wider"
+    >
+      TOPIK道場
+    </Text>
+  </View>
+  <View
+    className="items-center py-8"
+  >
+    <View
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "opacity": 1,
+        }
+      }
+    >
+      <Text
+        className="
+            text-lg font-semibold
+            text-blue-500
+          "
+      >
+        復習 (
+        15
+        語)
+      </Text>
+    </View>
+  </View>
+  <View
+    className="flex-1 justify-center px-5"
+  >
+    <View
+      className="items-center"
+    >
+      <View
+        className="flex-row justify-between w-full my-4"
+      >
+        <View
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "opacity": 1,
+            }
+          }
+        >
+          <Text
+            className="text-base font-medium text-gray-800"
+          >
+            1
+            級
+          </Text>
+        </View>
+        <View
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "opacity": 1,
+            }
+          }
+        >
+          <Text
+            className="text-base font-medium text-gray-800"
+          >
+            2
+            級
+          </Text>
+        </View>
+        <View
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "opacity": 1,
+            }
+          }
+        >
+          <Text
+            className="text-base font-medium text-gray-800"
+          >
+            3
+            級
+          </Text>
+        </View>
+      </View>
+      <View
+        className="flex-row justify-between w-full my-4"
+      >
+        <View
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "opacity": 1,
+            }
+          }
+        >
+          <Text
+            className="text-base font-medium text-gray-800"
+          >
+            4
+            級
+          </Text>
+        </View>
+        <View
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "opacity": 1,
+            }
+          }
+        >
+          <Text
+            className="text-base font-medium text-gray-800"
+          >
+            5
+            級
+          </Text>
+        </View>
+        <View
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "opacity": 1,
+            }
+          }
+        >
+          <Text
+            className="text-base font-medium text-gray-800"
+          >
+            6
+            級
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+</RCTSafeAreaView>
+`;
