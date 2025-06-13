@@ -19,6 +19,7 @@ TOPIK道場は、日本人韓国語学習者向けのTOPIK（韓国語能力試�
 1. **詳細仕様**: `requirements.md` - プロジェクトの基本要件・仕様
 2. **画面遷移**: `docs/screen-flows.md` - 全体的な画面フロー・シーケンス
 3. **各画面仕様書**: `docs/screens/` - 各画面の詳細設計（全11画面完成）
+4. **データベース設計**: `docs/database-design.md` - SQLiteデータベース設計・ER図
 
 **注意**: `docs/original-materials/memo.md` は初期の原案であり、現在の正式な仕様ではない
 
