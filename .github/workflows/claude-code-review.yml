@@ -21,8 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
+      actions: read
       id-token: write
     
     steps:
@@ -42,14 +43,27 @@ jobs:
           
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            このプロジェクトはTOPIK道場（日本人韓国語学習者向けTOPIK対策アプリ）のReact Native開発です。
             
-            Be constructive and helpful in your feedback.
+            まず以下を参照してプロジェクト理解を深めてください：
+            - CLAUDE.md: 基本ルールと必読ファイル
+            - requirements.md: 詳細仕様
+            - docs/screen-flows.md: 画面遷移
+            - docs/database-design.md: DB設計
+            
+            CI結果も確認し、lint/test失敗があれば指摘してください。
+            
+            以下の観点でレビューしてください：
+            - React Native固有のパフォーマンス（FlatList、memo、レンダリング最適化）
+            - ナビゲーション（React Navigation）
+            - 状態管理とデータフロー
+            - アクセシビリティ対応
+            - コード品質とベストプラクティス
+            - 潜在的なバグや問題
+            - セキュリティ懸念
+            - テストカバレッジ
+            
+            建設的で親切なフィードバックを提供してください。
           
           # Optional: Customize review based on file types
           # direct_prompt: |
