@@ -63,7 +63,6 @@ erDiagram
         string example_japanese "日本語例文"
         integer grade "級(1-6)"
         integer grade_word_number "級内通し番号"
-        string part_of_speech "品詞"
         datetime created_at "作成日時"
     }
     
@@ -169,7 +168,6 @@ CREATE TABLE words (
     example_japanese TEXT,              -- 日本語例文
     grade INTEGER NOT NULL,             -- 級（1-6）
     grade_word_number INTEGER NOT NULL, -- 級内通し番号（1から開始）
-    part_of_speech TEXT,                -- 品詞（名詞、動詞等）
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
