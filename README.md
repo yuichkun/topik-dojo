@@ -54,8 +54,10 @@ TOPIK（韓国語能力試験）対策専用の単語帳アプリです。日本
 npm install
 
 # iOS用CocoaPods依存関係をインストール（macOSのみ）
+cd ios
 bundle install
 bundle exec pod install
+cd ..
 ```
 
 ### 開発サーバーの起動
