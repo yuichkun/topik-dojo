@@ -61,7 +61,6 @@ erDiagram
         string japanese "日本語訳"
         string example_korean "韓国語例文"
         string example_japanese "日本語例文"
-        string audio_file_path "音声ファイルパス"
         integer grade "級(1-6)"
         string part_of_speech "品詞"
         datetime created_at "作成日時"
@@ -156,6 +155,10 @@ erDiagram
 ### 1. WORDS（語彙マスターテーブル）
 全12,000語の語彙データを格納する中核テーブル
 
+**音声ファイル**: DBに保存せず、一定のルールで命名・読み込み
+- 単語音声: `audio/words/{word_id}.mp3`
+- 例文音声: `audio/examples/{word_id}.mp3`
+
 ```sql
 CREATE TABLE words (
     word_id INTEGER PRIMARY KEY,        -- 単語ID（1-12000の連番）
@@ -163,7 +166,6 @@ CREATE TABLE words (
     japanese TEXT NOT NULL,             -- 日本語訳
     example_korean TEXT,                -- 韓国語例文
     example_japanese TEXT,              -- 日本語例文
-    audio_file_path TEXT,               -- 音声ファイルパス
     grade INTEGER NOT NULL,             -- 級（1-6）
     part_of_speech TEXT,                -- 品詞（名詞、動詞等）
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
