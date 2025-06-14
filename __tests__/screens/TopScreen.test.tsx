@@ -19,12 +19,20 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // テスト用のナビゲーションコンテナーを作成
 const createTestNavigationContainer = () => {
+  // ダミーのLearningModeSelectionScreen
+  const DummyLearningModeSelectionScreen = () => null;
+  
   const TestNavigationContainer = () => (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Top">
         <Stack.Screen 
           name="Top" 
           component={TopScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="LearningModeSelection" 
+          component={DummyLearningModeSelectionScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
