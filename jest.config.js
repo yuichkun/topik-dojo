@@ -8,7 +8,7 @@ module.exports = {
     '\\.(png|jpg|jpeg|gif|svg)$': 'identity-obj-proxy',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-vector-icons|nativewind|@nozbe|@react-navigation)/)',
+    'node_modules/(?!(react-native|@react-native|react-native-vector-icons|nativewind|react-native-css-interop|@nozbe|@react-navigation)/)',
   ],
   testPathIgnorePatterns: [
     '<rootDir>/__tests__/helpers/',
