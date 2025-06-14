@@ -2,11 +2,11 @@
 export enum TableName {
   WORDS = 'words',
   SRS_MANAGEMENT = 'srs_management',
-  CATEGORIES = 'categories',
-  WORD_CATEGORIES = 'word_categories',
-  STUDY_SESSIONS = 'study_sessions',
+  LEARNING_STATUS = 'learning_status',
   TEST_RESULTS = 'test_results',
-  SETTINGS = 'settings',
+  TEST_QUESTIONS = 'test_questions',
+  REVIEW_HISTORY = 'review_history',
+  LEARNING_PROGRESS = 'learning_progress',
 }
 
 // データベース設定の定数定義
