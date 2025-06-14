@@ -4,7 +4,7 @@
  */
 
 import './global.css';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -14,33 +14,14 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
+import { useReviewCount } from './src/hooks/useReviewCount';
 
 interface TopScreenProps {}
 
 const TopScreen: React.FC<TopScreenProps> = () => {
-  const [reviewCount, setReviewCount] = useState<number>(0);
+  const { count: reviewCount } = useReviewCount();
   const isDarkMode = useColorScheme() === 'dark';
 
-  // 復習対象数を取得（現在はモックデータ）
-  useEffect(() => {
-    const loadReviewCount = async () => {
-      try {
-        // TODO: 実際のDBから復習対象数を取得
-        // 現在はモックデータを使用
-        const mockReviewCount = 15;
-        setReviewCount(mockReviewCount);
-        
-        // TODO: アプリアイコンバッジの更新
-        // setBadgeCount(mockReviewCount);
-      } catch (error) {
-        console.error('復習対象数の取得に失敗:', error);
-        // エラーの場合は0件として扱う
-        setReviewCount(0);
-      }
-    };
-
-    loadReviewCount();
-  }, []);
 
   // 復習ボタンのタップハンドラ
   const handleReviewPress = () => {
