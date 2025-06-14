@@ -7,6 +7,7 @@ import ReactTestRenderer from 'react-test-renderer';
 import { Alert, TouchableOpacity, Text } from 'react-native';
 import App from '../App';
 import { createTestWords, createDueReviews } from './helpers/databaseHelpers';
+import database from '../src/database';
 
 // AlertのスパイFunction
 jest.spyOn(Alert, 'alert');
@@ -48,7 +49,6 @@ describe('TopScreen', () => {
 
   test('displays review button with database count', async () => {
     // テスト用のデータを作成
-    const database = require('../src/database').default;
     const words = await createTestWords(database, [
       { korean: '안녕하세요', japanese: 'こんにちは' },
       { korean: '감사합니다', japanese: 'ありがとうございます' },

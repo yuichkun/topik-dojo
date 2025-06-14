@@ -1,12 +1,9 @@
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
-import { Word, SrsManagement } from '../../src/database/models';
+import { Word, SrsManagement, modelClasses } from '../../src/database/models';
 import { TableName, DATABASE_CONFIG } from '../../src/database/constants';
-
-// Import schema and migrations
-const schema = require('../../src/database/schema').default;
-const migrations = require('../../src/database/migrations').default;
-const { modelClasses } = require('../../src/database/models');
+import schema from '../../src/database/schema';
+import migrations from '../../src/database/migrations';
 
 /**
  * Create a test database instance
