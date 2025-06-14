@@ -8,3 +8,9 @@ export enum TableName {
   TEST_RESULTS = 'test_results',
   SETTINGS = 'settings',
 }
+
+// データベース設定の定数定義
+export const DATABASE_CONFIG = {
+  name: 'TopikDojo',
+  testName: ':memory:',
+} as const;
