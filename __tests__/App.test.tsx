@@ -13,19 +13,6 @@ import database from '../src/database';
 jest.spyOn(Alert, 'alert');
 
 describe('TopScreen', () => {
-  let consoleErrorSpy: jest.SpyInstance;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    // Suppress console.error during tests (for React warnings)
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    // Restore console.error
-    consoleErrorSpy.mockRestore();
-  });
-
   test('renders correctly', async () => {
     let component: ReactTestRenderer.ReactTestRenderer;
     
