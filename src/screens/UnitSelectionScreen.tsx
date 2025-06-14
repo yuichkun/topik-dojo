@@ -14,6 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { UnitSelectionScreenProps } from '../navigation/types';
+import { SCREEN_NAMES } from '../constants/screens';
 
 // 各級のユニット数設定
 const UNITS_PER_LEVEL: Record<number, number> = {
@@ -56,7 +57,7 @@ const UnitSelectionScreen: React.FC<UnitSelectionScreenProps> = ({ navigation, r
 
   // ホームボタンのハンドラ
   const handleHomePress = () => {
-    navigation.navigate('Top');
+    navigation.navigate(SCREEN_NAMES.TOP);
   };
 
   // ユニット選択のハンドラ

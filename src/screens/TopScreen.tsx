@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useReviewCount } from '../hooks/useReviewCount';
 import { TopScreenProps } from '../navigation/types';
+import { SCREEN_NAMES } from '../constants/screens';
 
 const TopScreen: React.FC<TopScreenProps> = ({ navigation }) => {
   const { count: reviewCount } = useReviewCount();
@@ -32,7 +33,7 @@ const TopScreen: React.FC<TopScreenProps> = ({ navigation }) => {
 
   // 級選択ボタンのタップハンドラ
   const handleLevelPress = (level: number) => {
-    navigation.navigate('LearningModeSelection', { level });
+    navigation.navigate(SCREEN_NAMES.LEARNING_MODE_SELECTION, { level });
   };
 
   const levels = [1, 2, 3, 4, 5, 6];

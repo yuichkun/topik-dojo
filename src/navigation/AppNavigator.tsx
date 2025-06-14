@@ -6,6 +6,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
+import { SCREEN_NAMES } from '../constants/screens';
 
 // 画面コンポーネントのインポート
 import TopScreen from '../screens/TopScreen';
@@ -18,14 +19,14 @@ const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Top"
+        initialRouteName={SCREEN_NAMES.TOP}
         screenOptions={{
           headerShown: false, // カスタムヘッダーを使用するため非表示
         }}
       >
-        <Stack.Screen name="Top" component={TopScreen} />
-        <Stack.Screen name="LearningModeSelection" component={LearningModeSelectionScreen} />
-        <Stack.Screen name="UnitSelection" component={UnitSelectionScreen} />
+        <Stack.Screen name={SCREEN_NAMES.TOP} component={TopScreen} />
+        <Stack.Screen name={SCREEN_NAMES.LEARNING_MODE_SELECTION} component={LearningModeSelectionScreen} />
+        <Stack.Screen name={SCREEN_NAMES.UNIT_SELECTION} component={UnitSelectionScreen} />
         {/* TODO: 他の画面を追加 */}
       </Stack.Navigator>
     </NavigationContainer>
