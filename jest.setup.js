@@ -14,6 +14,18 @@ jest.mock(
   },
 );
 
+// Global test database cleanup - reset before each test
+beforeEach(async () => {
+  const databaseModule = require('./src/database');
+  const database = databaseModule.default || databaseModule;
+  
+  if (database && typeof database.write === 'function') {
+    await database.write(async () => {
+      await database.unsafeResetDatabase();
+    });
+  }
+});
+
 // Clean up test database files after all tests
 afterAll(async () => {
   try {
