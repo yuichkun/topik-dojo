@@ -9,6 +9,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TopScreen from '../../src/screens/TopScreen';
 import { RootStackParamList } from '../../src/navigation/types';
+import { SCREEN_NAMES } from '../../src/constants/screens';
 import { createTestWords, createDueReviews } from '../helpers/databaseHelpers';
 import database from '../../src/database';
 
@@ -24,14 +25,14 @@ const createTestNavigationContainer = () => {
   
   const TestNavigationContainer = () => (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Top">
+      <Stack.Navigator initialRouteName={SCREEN_NAMES.TOP}>
         <Stack.Screen 
-          name="Top" 
+          name={SCREEN_NAMES.TOP} 
           component={TopScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen 
-          name="LearningModeSelection" 
+          name={SCREEN_NAMES.LEARNING_MODE_SELECTION} 
           component={DummyLearningModeSelectionScreen}
           options={{ headerShown: false }}
         />
