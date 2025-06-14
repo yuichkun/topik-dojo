@@ -9,6 +9,9 @@ import migrations from '../../src/database/migrations';
  * Create a test database instance
  */
 export const createTestDatabase = (): Database => {
+  // Ensure logger is silenced for this database instance
+  const logger = require('@nozbe/watermelondb/utils/common/logger').default;
+  logger.silence();
   const adapter = new SQLiteAdapter({
     schema,
     migrations,

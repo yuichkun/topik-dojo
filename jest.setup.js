@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 
+// Intercept native SQLite calls and redirect to Node.js adapter
 jest.mock(
   '@nozbe/watermelondb/adapters/sqlite/makeDispatcher/index.native.js',
   () => {
