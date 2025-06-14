@@ -15,14 +15,17 @@ interface ReviewCountState {
 export const useReviewCount = (): ReviewCountState => {
   const [state, setState] = useState<ReviewCountState>({
     count: 0,
-    isLoading: true,
+    isLoading: false,
     error: null,
   });
 
   useEffect(() => {
-    let isCancelled = false;
-
     const fetchReviewCount = async () => {
+      setState(prevState => ({
+        ...prevState,
+        isLoading: true,
+      }));
+
       try {
         const srsRecords = await database.collections
           .get<SrsManagement>(TableName.SRS_MANAGEMENT)
@@ -31,31 +34,22 @@ export const useReviewCount = (): ReviewCountState => {
 
         const dueCount = srsRecords.filter(srs => srs.isDueToday).length;
 
-        if (!isCancelled) {
-          setState({
-            count: dueCount,
-            isLoading: false,
-            error: null,
-          });
-        }
+        setState({
+          count: dueCount,
+          isLoading: false,
+          error: null,
+        });
       } catch (error) {
         console.error('Review count fetch error:', error);
-        if (!isCancelled) {
-          setState({
-            count: 0,
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
+        setState({
+          count: 0,
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     };
 
     fetchReviewCount();
-
-    // クリーンアップ関数
-    return () => {
-      isCancelled = true;
-    };
   }, []);
 
   return state;
