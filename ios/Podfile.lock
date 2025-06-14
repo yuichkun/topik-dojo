@@ -2361,7 +2361,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - simdjson (3.1.0-wmelon1)
   - SocketRocket (0.7.1)
+  - WatermelonDB (0.27.1):
+    - React
+    - simdjson
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2439,7 +2443,9 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
+  - "simdjson (from `../node_modules/@nozbe/simdjson`)"
   - SocketRocket (~> 0.7.1)
+  - "WatermelonDB (from `../node_modules/@nozbe/watermelondb`)"
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2594,6 +2600,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
+  simdjson:
+    :path: "../node_modules/@nozbe/simdjson"
+  WatermelonDB:
+    :path: "../node_modules/@nozbe/watermelondb"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2671,9 +2681,11 @@ SPEC CHECKSUMS:
   ReactCodegen: 5d41e1df061200130dd326e55cdfdf94b0289c6e
   ReactCommon: b028d09a66e60ebd83ca59d8cc9a1216360db147
   RNReanimated: bc1ddb7a5352648bcf0d592256069833bf935a46
+  simdjson: e6bfae9ce4bcdc80452d388d593816f1ca2106f3
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  WatermelonDB: 358332faedb8dd4aa699a178e308586e4e3a8b23
   Yoga: 0c4b7d2aacc910a1f702694fa86be830386f4ceb
 
-PODFILE CHECKSUM: 8c0ad1601df778ad98fc7ab840458860a2faebae
+PODFILE CHECKSUM: a34263b4288476a2a8bf6f2a414843a00f96ea58
 
 COCOAPODS: 1.16.2
