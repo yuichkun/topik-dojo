@@ -5,7 +5,14 @@ TOPIK道場アプリのSQLiteデータベース設計
 
 **重要**: このデータベースはクライアント（アプリ）内蔵型です。サーバーレス構成のため、全データはアプリに内蔵されたSQLiteデータベースで管理されます。
 
-**ORM**: WatermelonDB を使用して大量データ（12,000語）の高速処理とReact Nativeでの最適なパフォーマンスを実現します。WatermelonDBは内部でSQLiteを使用するため、既存のテーブル設計・ER図をそのまま活用できます。
+**ORM**: WatermelonDB を使用して大量データ（12,000語）の高速処理とReact Nativeでの最適なパフォーマンスを実現します。WatermelonDBは内部でSQLiteを使用するため、基本的なテーブル設計・ER図を活用できます。
+
+**WatermelonDB実装パターン**:
+- **主キー**: すべてのテーブルで自動生成される`id`（TEXT型）を使用
+- **外部キー**: `word_id`等の参照フィールドもTEXT型で統一
+- **日時データ**: DATETIMEではなくUnixTimestamp（INTEGER型）で保存
+- **1:1関係**: 外部キーフィールド + `@relation`デコレータで実装
+- **自動フィールド**: `created_at`, `updated_at`は全テーブルで自動管理
 
 **パフォーマンス最適化**: 現在はパフォーマンス最適化（インデックス追加等）は考慮しない。基本的なDB設計のみを行い、必要に応じて後から最適化を検討する。
 
@@ -60,42 +67,45 @@ TOPIK道場アプリのSQLiteデータベース設計
 erDiagram
     %% 語彙マスターテーブル
     WORDS {
-        integer word_id PK "単語ID"
+        string id PK "単語ID"
         string korean "韓国語"
         string japanese "日本語訳"
         string example_korean "韓国語例文"
         string example_japanese "日本語例文"
         integer grade "級(1-6)"
         integer grade_word_number "級内通し番号"
-        datetime created_at "作成日時"
+        integer created_at "作成日時"
+        integer updated_at "更新日時"
     }
     
     
     %% 学習状況テーブル
     LEARNING_STATUS {
         integer status_id PK "ステータスID"
-        integer word_id FK "単語ID"
+        string word_id FK "単語ID"
         boolean is_learned "学習済みフラグ"
         boolean is_marked_for_review "復習マーク"
-        datetime learned_date "学習完了日時"
-        datetime marked_date "復習マーク日時"
+        integer learned_date "学習完了日時"
+        integer marked_date "復習マーク日時"
         integer learning_session_count "学習セッション回数"
-        datetime created_at "作成日時"
-        datetime updated_at "更新日時"
+        integer created_at "作成日時"
+        integer updated_at "更新日時"
     }
     
     
     %% SRS管理テーブル
     SRS_MANAGEMENT {
-        integer word_id PK "単語ID"
-        integer mastery_level "習得レベル(0-5)"
-        datetime next_review_date "次回復習日"
+        string id PK "レコードID"
+        string word_id FK "単語ID"
+        integer mastery_level "習得レベル(0-9)"
+        real ease_factor "易しさ係数"
+        integer next_review_date "次回復習日"
         integer interval_days "復習間隔(日)"
         integer mistake_count "間違い回数"
-        datetime last_reviewed "最終復習日時"
+        integer last_reviewed "最終復習日時"
         string status "学習状態"
-        datetime created_at "作成日時"
-        datetime updated_at "更新日時"
+        integer created_at "作成日時"
+        integer updated_at "更新日時"
     }
     
     %% 学習進捗テーブル
@@ -106,7 +116,7 @@ erDiagram
         integer mastered_words_count "習得単語数"
         integer total_words_count "総単語数"
         decimal progress_rate "進捗率(%)"
-        datetime created_at "作成日時"
+        integer created_at "作成日時"
     }
     
     %% テスト結果テーブル
@@ -119,31 +129,31 @@ erDiagram
         integer total_questions "総問題数"
         decimal accuracy_rate "正答率(%)"
         integer duration_seconds "所要時間(秒)"
-        datetime test_date "テスト実施日時"
-        datetime created_at "作成日時"
+        integer test_date "テスト実施日時"
+        integer created_at "作成日時"
     }
     
     %% テスト問題詳細テーブル
     TEST_QUESTIONS {
         integer question_id PK "問題ID"
         integer test_id FK "テストID"
-        integer word_id FK "単語ID"
+        string word_id FK "単語ID"
         boolean is_correct "正解フラグ"
         string user_answer "ユーザー回答"
         string correct_answer "正解"
         integer response_time_ms "回答時間(ms)"
-        datetime created_at "作成日時"
+        integer created_at "作成日時"
     }
     
     %% 復習履歴テーブル
     REVIEW_HISTORY {
         integer review_id PK "復習ID"
-        integer word_id FK "単語ID"
+        string word_id FK "単語ID"
         string feedback "覚えた/覚えてない"
         integer previous_mastery_level "変更前習得レベル"
         integer new_mastery_level "変更後習得レベル"
-        datetime review_date "復習日時"
-        datetime created_at "作成日時"
+        integer review_date "復習日時"
+        integer created_at "作成日時"
     }
     
     %% リレーション
@@ -160,19 +170,20 @@ erDiagram
 全12,000語の語彙データを格納する中核テーブル
 
 **音声ファイル**: DBに保存せず、一定のルールで命名・読み込み
-- 単語音声: `audio/words/{word_id}.mp3`
-- 例文音声: `audio/examples/{word_id}.mp3`
+- 単語音声: `audio/words/{id}.mp3`
+- 例文音声: `audio/examples/{id}.mp3`
 
 ```sql
 CREATE TABLE words (
-    word_id INTEGER PRIMARY KEY,        -- 単語ID（1-12000の連番）
+    id TEXT PRIMARY KEY,                -- 単語ID（WatermelonDB自動生成）
     korean TEXT NOT NULL,               -- 韓国語単語
     japanese TEXT NOT NULL,             -- 日本語訳
     example_korean TEXT,                -- 韓国語例文
     example_japanese TEXT,              -- 日本語例文
     grade INTEGER NOT NULL,             -- 級（1-6）
     grade_word_number INTEGER NOT NULL, -- 級内通し番号（1から開始）
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
+    updated_at INTEGER NOT NULL         -- 更新日時（UnixTimestamp）
 );
 ```
 
@@ -181,25 +192,26 @@ CREATE TABLE words (
 - `ユニット内位置 = ((grade_word_number - 1) % 10) + 1` （例：grade_word_number=25 → 5番目）
 
 **データ例:**
-- word_id=1, grade=1, grade_word_number=1 （1級1番目）
-- word_id=401, grade=2, grade_word_number=1 （2級1番目）
+- id="word_001", grade=1, grade_word_number=1 （1級1番目）
+- id="word_401", grade=2, grade_word_number=1 （2級1番目）
 
 ### 2. SRS_MANAGEMENT（SRS管理テーブル）
 各単語のSRS（間隔反復学習）データを管理
 
 ```sql
 CREATE TABLE srs_management (
-    word_id INTEGER PRIMARY KEY,        -- 単語ID（外部キー）
+    id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
+    word_id TEXT NOT NULL,              -- 単語ID（外部キー）
     mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 学習段階0-2, 復習段階3-9）
-    ease_factor DECIMAL(4,2) DEFAULT 2.5, -- 易しさ係数（1.3-4.0, デフォルト2.5）
-    next_review_date DATETIME,          -- 次回復習日
+    ease_factor REAL DEFAULT 2.5,      -- 易しさ係数（1.3-4.0, デフォルト2.5）
+    next_review_date INTEGER,           -- 次回復習日（UnixTimestamp）
     interval_days INTEGER DEFAULT 1,    -- 復習間隔（日数）
     mistake_count INTEGER DEFAULT 0,    -- 間違い回数
-    last_reviewed DATETIME,             -- 最終復習日時
+    last_reviewed INTEGER,              -- 最終復習日時（UnixTimestamp）
     status TEXT DEFAULT 'learning',     -- 学習状態（learning/graduated/mastered）
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (word_id) REFERENCES words(word_id)
+    created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
+    updated_at INTEGER NOT NULL,        -- 更新日時（UnixTimestamp）
+    FOREIGN KEY (word_id) REFERENCES words(id)
 );
 ```
 
@@ -241,7 +253,7 @@ CREATE TABLE learning_progress (
     mastered_words_count INTEGER DEFAULT 0,  -- 習得済み単語数
     total_words_count INTEGER NOT NULL, -- その級の総単語数
     progress_rate DECIMAL(5,2) DEFAULT 0,    -- 進捗率（%）
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at INTEGER NOT NULL,
     UNIQUE(progress_date, grade)        -- 日付+級の組み合わせでユニーク
 );
 ```
@@ -259,8 +271,8 @@ CREATE TABLE test_results (
     total_questions INTEGER NOT NULL,   -- 総問題数
     accuracy_rate DECIMAL(5,2),         -- 正答率（%）
     duration_seconds INTEGER,           -- 所要時間（秒）
-    test_date DATETIME NOT NULL,        -- テスト実施日時
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    test_date INTEGER NOT NULL,        -- テスト実施日時
+    created_at INTEGER NOT NULL
 );
 ```
 
@@ -271,14 +283,14 @@ CREATE TABLE test_results (
 CREATE TABLE test_questions (
     question_id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 問題ID（自動増分）
     test_id INTEGER NOT NULL,           -- テストID（外部キー）
-    word_id INTEGER NOT NULL,           -- 単語ID（外部キー）
+    word_id TEXT NOT NULL,           -- 単語ID（外部キー）
     is_correct BOOLEAN NOT NULL,        -- 正解フラグ
     user_answer TEXT,                   -- ユーザーの回答
     correct_answer TEXT NOT NULL,       -- 正解
     response_time_ms INTEGER,           -- 回答時間（ミリ秒）
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at INTEGER NOT NULL,
     FOREIGN KEY (test_id) REFERENCES test_results(test_id),
-    FOREIGN KEY (word_id) REFERENCES words(word_id)
+    FOREIGN KEY (word_id) REFERENCES words(id)
 );
 ```
 
@@ -288,13 +300,13 @@ CREATE TABLE test_questions (
 ```sql
 CREATE TABLE review_history (
     review_id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 復習ID（自動増分）
-    word_id INTEGER NOT NULL,           -- 単語ID（外部キー）
+    word_id TEXT NOT NULL,           -- 単語ID（外部キー）
     feedback TEXT NOT NULL,             -- フィードバック（remembered/forgotten）
     previous_mastery_level INTEGER,     -- 変更前習得レベル
     new_mastery_level INTEGER,          -- 変更後習得レベル
-    review_date DATETIME NOT NULL,      -- 復習実施日時
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (word_id) REFERENCES words(word_id)
+    review_date INTEGER NOT NULL,      -- 復習実施日時
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (word_id) REFERENCES words(id)
 );
 ```
 
@@ -303,15 +315,15 @@ CREATE TABLE review_history (
 
 ```sql
 CREATE TABLE learning_status (
-    word_id INTEGER PRIMARY KEY,        -- 単語ID（主キー兼外部キー）
+    word_id TEXT PRIMARY KEY,        -- 単語ID（主キー兼外部キー）
     is_learned BOOLEAN DEFAULT FALSE,   -- 学習済みフラグ
     is_marked_for_review BOOLEAN DEFAULT FALSE,  -- 復習マーク
-    learned_date DATETIME,              -- 学習完了日時
-    marked_date DATETIME,               -- 復習マーク日時
+    learned_date INTEGER,              -- 学習完了日時
+    marked_date INTEGER,               -- 復習マーク日時
     learning_session_count INTEGER DEFAULT 0,  -- 学習セッション回数
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (word_id) REFERENCES words(word_id)
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (word_id) REFERENCES words(id)
 );
 ```
 
@@ -392,7 +404,7 @@ ORDER BY ls.marked_date ASC;
 SELECT japanese
 FROM words
 WHERE grade = 3
-  AND word_id != 123  -- 正解単語のword_id
+  AND id != 'word_123'  -- 正解単語のid
 ORDER BY RANDOM()
 LIMIT 3;
 ```
