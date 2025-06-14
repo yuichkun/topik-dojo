@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import database from '../database';
 import { Word } from '../database/models';
 import { TableName } from '../database/constants';
-import { seedTestData } from '../database/fixtures';
 
 interface DatabaseState {
   isInitialized: boolean;
@@ -28,16 +27,6 @@ export const useDatabase = (): DatabaseState => {
 
     const initializeDatabase = async () => {
       try {
-        // データベースが空の場合、テストデータをシード
-        const existingWords = await database.collections
-          .get<Word>(TableName.WORDS)
-          .query()
-          .fetchCount();
-
-        if (existingWords === 0) {
-          await seedTestData(database);
-        }
-
         // 単語数を取得
         const wordCount = await database.collections
           .get<Word>(TableName.WORDS)
