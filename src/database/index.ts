@@ -12,9 +12,6 @@ const adapter = new SQLiteAdapter({
   migrations,
   jsi: true, // JSI (JavaScript Interface) を有効化（パフォーマンス向上）
   dbName: DATABASE_CONFIG.name, // データベースファイル名を設定から取得（.dbは自動付与される）
-  onSetUpError: (error) => {
-    console.error('Database setup error:', error);
-  }
 });
 
 // データベースインスタンスの作成
