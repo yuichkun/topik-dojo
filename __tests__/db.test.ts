@@ -2,8 +2,8 @@ import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import schema from '../src/database/schema';
 import migrations from '../src/database/migrations';
-import { modelClasses } from '../src/database/models';
-import { Word, SrsManagement } from '../src/database/models';
+import { modelClasses, Word, SrsManagement } from '../src/database/models';
+import { TableName } from '../src/database/constants';
 import { testWords, testSrsData, seedTestData } from '../src/database/fixtures';
 
 // テスト用のデータベースインスタンスを作成
@@ -36,8 +36,8 @@ describe('WatermelonDB Database Tests', () => {
   afterEach(async () => {
     // データベースをクリーンアップ
     await database.write(async () => {
-      const words = await database.collections.get('words').query().fetch();
-      const srsRecords = await database.collections.get('srs_management').query().fetch();
+      const words = await database.collections.get<Word>(TableName.WORDS).query().fetch();
+      const srsRecords = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).query().fetch();
       
       for (const word of words) {
         await word.markAsDeleted();
@@ -55,12 +55,12 @@ describe('WatermelonDB Database Tests', () => {
     });
 
     test('should have words collection', () => {
-      const wordsCollection = database.collections.get('words');
+      const wordsCollection = database.collections.get<Word>(TableName.WORDS);
       expect(wordsCollection).toBeDefined();
     });
 
     test('should have srs_management collection', () => {
-      const srsCollection = database.collections.get('srs_management');
+      const srsCollection = database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT);
       expect(srsCollection).toBeDefined();
     });
   });
@@ -68,7 +68,7 @@ describe('WatermelonDB Database Tests', () => {
   describe('CRUD Operations - Words', () => {
     test('CREATE: should create a new word', async () => {
       const newWord = await database.write(async () => {
-        return await database.collections.get('words').create((word: Word) => {
+        return await database.collections.get<Word>(TableName.WORDS).create((word) => {
           word.korean = '테스트';
           word.japanese = 'テスト';
           word.exampleKorean = '이것은 테스트입니다.';
@@ -86,7 +86,7 @@ describe('WatermelonDB Database Tests', () => {
     });
 
     test('READ: should fetch all words', async () => {
-      const words = await database.collections.get('words').query().fetch();
+      const words = await database.collections.get<Word>(TableName.WORDS).query().fetch();
       
       expect(words).toBeDefined();
       expect(words.length).toBe(testWords.length);
@@ -94,24 +94,24 @@ describe('WatermelonDB Database Tests', () => {
 
     test('READ: should fetch words by grade', async () => {
       const grade1Words = await database.collections
-        .get('words')
+        .get<Word>(TableName.WORDS)
         .query()
         .fetch()
-        .then(words => words.filter(word => (word as Word).grade === 1));
+        .then(words => words.filter(word => word.grade === 1));
       
       expect(grade1Words.length).toBe(3); // テストデータから1級の単語は3つ
     });
 
     test('READ: should fetch specific word by ID', async () => {
-      const word = await database.collections.get('words').find('word_1');
+      const word = await database.collections.get<Word>(TableName.WORDS).find('word_1');
       
       expect(word).toBeDefined();
-      expect((word as Word).korean).toBe('안녕하세요');
-      expect((word as Word).japanese).toBe('こんにちは');
+      expect(word.korean).toBe('안녕하세요');
+      expect(word.japanese).toBe('こんにちは');
     });
 
     test('UPDATE: should update word data', async () => {
-      const word = await database.collections.get('words').find('word_1') as Word;
+      const word = await database.collections.get<Word>(TableName.WORDS).find('word_1');
       
       await database.write(async () => {
         await word.update((w) => {
@@ -120,24 +120,24 @@ describe('WatermelonDB Database Tests', () => {
       });
 
       // 更新後のデータを確認
-      const updatedWord = await database.collections.get('words').find('word_1') as Word;
+      const updatedWord = await database.collections.get<Word>(TableName.WORDS).find('word_1');
       expect(updatedWord.japanese).toBe('更新されたこんにちは');
     });
 
     test('DELETE: should delete a word', async () => {
-      const word = await database.collections.get('words').find('word_1');
+      const word = await database.collections.get<Word>(TableName.WORDS).find('word_1');
       
       await database.write(async () => {
         await word.markAsDeleted();
       });
 
       // 削除後はクエリで取得できないことを確認
-      const words = await database.collections.get('words').query().fetch();
+      const words = await database.collections.get<Word>(TableName.WORDS).query().fetch();
       const deletedWord = words.find(w => w.id === 'word_1');
       expect(deletedWord).toBeUndefined();
       
       // find()では削除マークされたレコードとして取得できる
-      const foundWord = await database.collections.get('words').find('word_1');
+      const foundWord = await database.collections.get<Word>(TableName.WORDS).find('word_1');
       expect((foundWord as any)._raw._status).toBe('deleted');
     });
   });
@@ -145,7 +145,7 @@ describe('WatermelonDB Database Tests', () => {
   describe('CRUD Operations - SRS Management', () => {
     test('CREATE: should create SRS record', async () => {
       const newSrs = await database.write(async () => {
-        return await database.collections.get('srs_management').create((srs: SrsManagement) => {
+        return await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).create((srs) => {
           srs.wordId = 'word_4';
           srs.masteryLevel = 0;
           srs.easeFactor = 2.5;
@@ -157,27 +157,27 @@ describe('WatermelonDB Database Tests', () => {
       });
 
       expect(newSrs).toBeDefined();
-      expect((newSrs as SrsManagement).wordId).toBe('word_4');
-      expect((newSrs as SrsManagement).masteryLevel).toBe(0);
-      expect((newSrs as SrsManagement).status).toBe('learning');
+      expect(newSrs.wordId).toBe('word_4');
+      expect(newSrs.masteryLevel).toBe(0);
+      expect(newSrs.status).toBe('learning');
     });
 
     test('READ: should fetch SRS records', async () => {
-      const srsRecords = await database.collections.get('srs_management').query().fetch();
+      const srsRecords = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).query().fetch();
       
       expect(srsRecords).toBeDefined();
       expect(srsRecords.length).toBe(testSrsData.length);
     });
 
     test('READ: should fetch due reviews', async () => {
-      const srsRecords = await database.collections.get('srs_management').query().fetch();
-      const dueRecords = srsRecords.filter(srs => (srs as SrsManagement).isDueToday);
+      const srsRecords = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).query().fetch();
+      const dueRecords = srsRecords.filter(srs => srs.isDueToday);
       
       expect(dueRecords.length).toBeGreaterThan(0);
     });
 
     test('UPDATE: should update SRS data', async () => {
-      const srs = await database.collections.get('srs_management').find('srs_1') as SrsManagement;
+      const srs = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).find('srs_1');
       
       await database.write(async () => {
         await srs.update((s) => {
@@ -188,7 +188,7 @@ describe('WatermelonDB Database Tests', () => {
         });
       });
 
-      const updatedSrs = await database.collections.get('srs_management').find('srs_1') as SrsManagement;
+      const updatedSrs = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).find('srs_1');
       expect(updatedSrs.masteryLevel).toBe(1);
       expect(updatedSrs.easeFactor).toBe(2.6);
     });
@@ -196,21 +196,21 @@ describe('WatermelonDB Database Tests', () => {
 
   describe('Model Helper Methods', () => {
     test('Word model should calculate unit number correctly', async () => {
-      const word = await database.collections.get('words').find('word_1') as Word;
+      const word = await database.collections.get<Word>(TableName.WORDS).find('word_1');
       
       expect(word.unitNumber).toBe(1); // grade_word_number = 1 → unit 1
       expect(word.positionInUnit).toBe(1); // 1番目の単語
     });
 
     test('Word model should generate audio paths', async () => {
-      const word = await database.collections.get('words').find('word_1') as Word;
+      const word = await database.collections.get<Word>(TableName.WORDS).find('word_1');
       
       expect(word.wordAudioPath).toBe('audio/words/word_1.mp3');
       expect(word.exampleAudioPath).toBe('audio/examples/word_1.mp3');
     });
 
     test('SRS model should check review status', async () => {
-      const srs = await database.collections.get('srs_management').find('srs_1') as SrsManagement;
+      const srs = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).find('srs_1');
       
       expect(srs.isDueToday).toBe(true); // テストデータでは今日が復習日
       expect(srs.isLearning).toBe(true);
@@ -220,22 +220,22 @@ describe('WatermelonDB Database Tests', () => {
 
   describe('Complex Queries', () => {
     test('should fetch words with unit filtering', async () => {
-      const words = await database.collections.get('words').query().fetch();
-      const unit1Words = words.filter(word => (word as Word).unitNumber === 1);
+      const words = await database.collections.get<Word>(TableName.WORDS).query().fetch();
+      const unit1Words = words.filter(word => word.unitNumber === 1);
       
       expect(unit1Words.length).toBeGreaterThan(0);
       unit1Words.forEach(word => {
-        expect((word as Word).unitNumber).toBe(1);
+        expect(word.unitNumber).toBe(1);
       });
     });
 
     test('should fetch learning status words', async () => {
-      const srsRecords = await database.collections.get('srs_management').query().fetch();
-      const learningRecords = srsRecords.filter(srs => (srs as SrsManagement).status === 'learning');
+      const srsRecords = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).query().fetch();
+      const learningRecords = srsRecords.filter(srs => srs.status === 'learning');
       
       expect(learningRecords.length).toBeGreaterThan(0);
       learningRecords.forEach(srs => {
-        expect((srs as SrsManagement).status).toBe('learning');
+        expect(srs.status).toBe('learning');
       });
     });
   });

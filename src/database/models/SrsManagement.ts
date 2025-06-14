@@ -1,9 +1,10 @@
-import { Model } from '@nozbe/watermelondb';
+import { Model, Relation } from '@nozbe/watermelondb';
 import { field, date, readonly, relation } from '@nozbe/watermelondb/decorators';
+import { TableName } from '../constants';
 import Word from './Word';
 
 export default class SrsManagement extends Model {
-  static table = 'srs_management';
+  static table = TableName.SRS_MANAGEMENT;
 
   @field('word_id') wordId!: string;
   @field('mastery_level') masteryLevel!: number;
@@ -17,7 +18,7 @@ export default class SrsManagement extends Model {
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
 
-  @relation('words', 'word_id') word!: Word;
+  @relation(TableName.WORDS, 'word_id') word!: Relation<Word>;
 
   // 次回復習日をDateオブジェクトで取得
   get nextReviewDateObj(): Date | null {

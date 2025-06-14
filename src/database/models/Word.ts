@@ -1,8 +1,9 @@
 import { Model } from '@nozbe/watermelondb';
 import { field, date, readonly } from '@nozbe/watermelondb/decorators';
+import { TableName } from '../constants';
 
 export default class Word extends Model {
-  static table = 'words';
+  static table = TableName.WORDS;
 
   @field('korean') korean!: string;
   @field('japanese') japanese!: string;
