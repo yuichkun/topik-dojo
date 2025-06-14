@@ -10,11 +10,13 @@ export type RootStackParamList = {
   LearningModeSelection: {
     level: number;
   };
+  UnitSelection: { 
+    level: number; 
+  };
   // TODO: 他の画面のパラメータ定義を追加
-  // UnitSelection: { level: number };
   // TestModeSelection: { level: number };
   // Results: { level: number };
-  // Learning: { level: number; unitId: string };
+  // Learning: { level: number; unitStart: number; unitEnd: number };
   // ListeningTest: { level: number; unitId: string };
   // ReadingTest: { level: number; unitId: string };
   // Review: undefined;
@@ -23,6 +25,7 @@ export type RootStackParamList = {
 // 各画面のプロップス型定義
 export type TopScreenProps = NativeStackScreenProps<RootStackParamList, 'Top'>;
 export type LearningModeSelectionScreenProps = NativeStackScreenProps<RootStackParamList, 'LearningModeSelection'>;
+export type UnitSelectionScreenProps = NativeStackScreenProps<RootStackParamList, 'UnitSelection'>;
 
 declare global {
   namespace ReactNavigation {
