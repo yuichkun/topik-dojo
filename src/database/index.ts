@@ -1,0 +1,24 @@
+import { Database } from '@nozbe/watermelondb';
+import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
+
+import schema from './schema';
+import migrations from './migrations';
+import { modelClasses } from './models';
+
+// SQLiteアダプターの設定
+const adapter = new SQLiteAdapter({
+  schema,
+  migrations,
+  jsi: true, // JSI (JavaScript Interface) を有効化（パフォーマンス向上）
+  onSetUpError: (error) => {
+    console.error('Database setup error:', error);
+  }
+});
+
+// データベースインスタンスの作成
+const database = new Database({
+  adapter,
+  modelClasses,
+});
+
+export default database;
