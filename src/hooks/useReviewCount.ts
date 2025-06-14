@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import database from '../database';
 import { SrsManagement } from '../database/models';
 import { TableName } from '../database/constants';
-import { useDatabase } from './useDatabase';
 
 interface ReviewCountState {
   count: number;
@@ -12,10 +11,8 @@ interface ReviewCountState {
 
 /**
  * 復習対象数を管理するカスタムフック
- * データベースが初期化された後に復習データを取得
  */
 export const useReviewCount = (): ReviewCountState => {
-  const { isInitialized } = useDatabase();
   const [state, setState] = useState<ReviewCountState>({
     count: 0,
     isLoading: true,
@@ -23,10 +20,6 @@ export const useReviewCount = (): ReviewCountState => {
   });
 
   useEffect(() => {
-    if (!isInitialized) {
-      return;
-    }
-
     let isCancelled = false;
 
     const fetchReviewCount = async () => {
@@ -63,7 +56,7 @@ export const useReviewCount = (): ReviewCountState => {
     return () => {
       isCancelled = true;
     };
-  }, [isInitialized]);
+  }, []);
 
   return state;
 };
