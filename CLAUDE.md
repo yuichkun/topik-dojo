@@ -48,6 +48,7 @@ TOPIK道場は、日本人韓国語学習者向けのTOPIK（韓国語能力試�
 - **マネタイズ**: 広告収入検討中
 - **通知**: ローカル通知でバッジ表示
 - **スタイリング**: NativeWind (Tailwind CSS for React Native)
+- **ORM**: WatermelonDB (React Native特化・大量データ最適化)
 
 ## Pending Tasks
 
