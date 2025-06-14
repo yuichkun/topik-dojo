@@ -21,7 +21,7 @@ exports[`TopScreen matches snapshot 1`] = `
         {
           "busy": undefined,
           "checked": undefined,
-          "disabled": false,
+          "disabled": true,
           "expanded": undefined,
           "selected": undefined,
         }
@@ -36,7 +36,7 @@ exports[`TopScreen matches snapshot 1`] = `
       }
       accessible={true}
       collapsable={false}
-      focusable={true}
+      focusable={false}
       onClick={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
@@ -53,11 +53,11 @@ exports[`TopScreen matches snapshot 1`] = `
       <Text
         className="
             text-lg font-semibold
-            text-blue-500
+            text-gray-400
           "
       >
         復習 (
-        15
+        0
         語)
       </Text>
     </View>
