@@ -10,6 +10,7 @@ const adapter = new SQLiteAdapter({
   schema,
   migrations,
   jsi: true, // JSI (JavaScript Interface) を有効化（パフォーマンス向上）
+  dbName: 'TopikDojo', // データベースファイル名を指定（.dbは自動付与される）
   onSetUpError: (error) => {
     console.error('Database setup error:', error);
   }
