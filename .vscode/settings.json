@@ -6,5 +6,6 @@
     "nozbe",
     "TOPIK",
     "watermelondb"
-  ]
+  ],
+  "editor.formatOnSave": true
 }
