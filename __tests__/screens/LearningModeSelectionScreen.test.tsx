@@ -56,8 +56,13 @@ describe('LearningModeSelectionScreen', () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
     
-    const levelHeader = component!.root.findByProps({ children: '3級' });
-    expect(levelHeader).toBeDefined();
+    // Text要素の内容を確認 - 配列形式で [3, '級'] となっている
+    const textElements = component!.root.findAllByType(Text);
+    const levelText = textElements.find(element => {
+      const children = element.props.children;
+      return Array.isArray(children) && children[0] === 3 && children[1] === '級';
+    });
+    expect(levelText).toBeDefined();
   });
 
   test('displays all three mode buttons', async () => {
