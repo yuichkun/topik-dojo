@@ -5,8 +5,7 @@ import { useDatabase } from '../../src/hooks/useDatabase';
 import { 
   createTestWords, 
   createDueReviews,
-  createNotDueReviews,
-  resetDatabase
+  createNotDueReviews
 } from '../helpers/databaseHelpers';
 
 // Mock useDatabase hook
@@ -23,12 +22,10 @@ describe('useReviewCount hook (integration)', () => {
   let testDatabase: Database;
   let consoleErrorSpy: jest.SpyInstance;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
     // Get the test database instance for test data creation
     testDatabase = require('../../src/database');
-    // Reset database to ensure clean state
-    await resetDatabase(testDatabase);
     // Suppress console.error during tests
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });

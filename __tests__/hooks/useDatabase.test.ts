@@ -1,7 +1,7 @@
 import { Database } from '@nozbe/watermelondb';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { useDatabase } from '../../src/hooks/useDatabase';
-import { createTestWords, resetDatabase } from '../helpers/databaseHelpers';
+import { createTestWords } from '../helpers/databaseHelpers';
 
 // Mock the database module
 jest.mock('../../src/database', () => {
@@ -13,11 +13,9 @@ describe('useDatabase hook (integration)', () => {
   let testDatabase: Database;
   let consoleErrorSpy: jest.SpyInstance;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Get the test database instance for test data creation
     testDatabase = require('../../src/database');
-    // Reset database to ensure clean state
-    await resetDatabase(testDatabase);
     // Suppress console.error during tests
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
