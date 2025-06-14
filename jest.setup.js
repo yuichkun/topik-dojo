@@ -1,3 +1,4 @@
+/* eslint-env jest */
 // Jest setup for WatermelonDB testing
 // Intercept native SQLite calls and redirect to Node.js adapter
 
