@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@nozbe/watermelondb": "0.27.1",
     "@react-native/new-app-screen": "0.80.0",
     "nativewind": "4.1.23",
     "react": "19.1.0",
@@ -19,8 +20,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@babel/plugin-proposal-decorators": "7.27.1",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
+    "@nozbe/lokijs": "1.5.12-wmelon8",
     "@react-native-community/cli": "19.0.0",
     "@react-native-community/cli-platform-android": "19.0.0",
     "@react-native-community/cli-platform-ios": "19.0.0",
@@ -31,6 +34,7 @@
     "@types/jest": "^29.5.13",
     "@types/react": "^19.1.0",
     "@types/react-test-renderer": "^19.1.0",
+    "better-sqlite3": "11.10.0",
     "eslint": "^8.19.0",
     "identity-obj-proxy": "3.0.0",
     "jest": "^29.6.3",
