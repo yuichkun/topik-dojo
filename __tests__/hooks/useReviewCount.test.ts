@@ -1,5 +1,4 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
-import { Database } from '@nozbe/watermelondb';
 import { useReviewCount } from '../../src/hooks/useReviewCount';
 import { useDatabase } from '../../src/hooks/useDatabase';
 import { 
@@ -7,6 +6,7 @@ import {
   createDueReviews,
   createNotDueReviews
 } from '../helpers/databaseHelpers';
+import testDatabase from '../../src/database';
 
 // Mock useDatabase hook
 jest.mock('../../src/hooks/useDatabase');
@@ -14,18 +14,14 @@ const mockUseDatabase = useDatabase as jest.MockedFunction<typeof useDatabase>;
 
 // Mock the database module
 jest.mock('../../src/database', () => {
-  const { createTestDatabase } = require('../helpers/databaseHelpers');
-  return createTestDatabase();
+  return jest.requireActual('../helpers/databaseHelpers').createTestDatabase();
 });
 
 describe('useReviewCount hook (integration)', () => {
-  let testDatabase: Database;
   let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Get the test database instance for test data creation
-    testDatabase = require('../../src/database');
     // Suppress console.error during tests
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
