@@ -2,6 +2,10 @@
   "cSpell.words": [
     "anthropics",
     "gradlew",
-    "TOPIK"
-  ]
+    "nativewind",
+    "nozbe",
+    "TOPIK",
+    "watermelondb"
+  ],
+  "editor.formatOnSave": true
 }
