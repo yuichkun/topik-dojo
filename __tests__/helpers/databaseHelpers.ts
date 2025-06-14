@@ -1,7 +1,7 @@
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import { Word, SrsManagement } from '../../src/database/models';
-import { TableName } from '../../src/database/constants';
+import { TableName, DATABASE_CONFIG } from '../../src/database/constants';
 
 // Import schema and migrations
 const schema = require('../../src/database/schema').default;
@@ -16,7 +16,7 @@ export const createTestDatabase = (): Database => {
     schema,
     migrations,
     jsi: false,
-    dbName: ':memory:',
+    dbName: DATABASE_CONFIG.testName, // ':memory:' を設定から取得
     onSetUpError: (error) => {
       console.error('Test database setup error:', error);
     }
@@ -29,23 +29,15 @@ export const createTestDatabase = (): Database => {
 };
 
 /**
- * Clean all data from database
+ * Reset database using WatermelonDB's official reset function
+ * This completely destroys and recreates the database
  */
-export const cleanDatabase = async (database: Database): Promise<void> => {
+export const resetDatabase = async (database: Database): Promise<void> => {
   await database.write(async () => {
-    // Delete all words
-    const words = await database.collections.get<Word>(TableName.WORDS).query().fetch();
-    for (const word of words) {
-      await word.markAsDeleted();
-    }
-
-    // Delete all SRS records
-    const srsRecords = await database.collections.get<SrsManagement>(TableName.SRS_MANAGEMENT).query().fetch();
-    for (const srs of srsRecords) {
-      await srs.markAsDeleted();
-    }
+    await database.unsafeResetDatabase();
   });
 };
+
 
 /**
  * Create a single word for testing
