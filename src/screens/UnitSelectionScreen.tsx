@@ -12,43 +12,18 @@ import {
   useColorScheme,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { UnitSelectionScreenProps } from '../navigation/types';
 import { SCREEN_NAMES } from '../constants/screens';
-
-// 各級のユニット数設定
-const UNITS_PER_LEVEL: Record<number, number> = {
-  1: 40,   // 1級: 400語 ÷ 10語/ユニット = 40ユニット
-  2: 140,  // 2級: 1,400語 ÷ 10語/ユニット = 140ユニット
-  3: 200,  // 3級: 2,000語 ÷ 10語/ユニット = 200ユニット
-  4: 200,  // 4級: 2,000語 ÷ 10語/ユニット = 200ユニット
-  5: 300,  // 5級: 3,000語 ÷ 10語/ユニット = 300ユニット
-  6: 300,  // 6級: 3,000語 ÷ 10語/ユニット = 300ユニット
-};
+import { useUnits } from '../hooks/useUnits';
 
 const UnitSelectionScreen: React.FC<UnitSelectionScreenProps> = ({ navigation, route }) => {
   const { level } = route.params;
   const isDarkMode = useColorScheme() === 'dark';
   
-  // 選択された級のユニット数を取得
-  const totalUnits = UNITS_PER_LEVEL[level] || 40;
-  
-  // ユニット範囲の配列を生成（1-10, 11-20, ...）
-  const generateUnits = () => {
-    const units = [];
-    for (let i = 1; i <= totalUnits; i += 10) {
-      const end = Math.min(i + 9, totalUnits);
-      units.push({
-        id: `${i}-${end}`,
-        label: `${i}-${end}`,
-        startUnit: i,
-        endUnit: end,
-      });
-    }
-    return units;
-  };
-
-  const units = generateUnits();
+  // データベースからユニット一覧を取得
+  const { units, loading, error } = useUnits(level);
 
   // 戻るボタンのハンドラ
   const handleBackPress = () => {
@@ -61,11 +36,37 @@ const UnitSelectionScreen: React.FC<UnitSelectionScreenProps> = ({ navigation, r
   };
 
   // ユニット選択のハンドラ
-  const handleUnitPress = (startUnit: number, endUnit: number) => {
+  const handleUnitPress = (unitNumber: number) => {
     // TODO: 学習画面への遷移
-    console.log(`Selected unit: ${startUnit}-${endUnit} for level ${level}`);
-    // navigation.navigate('Learning', { level, unitStart: startUnit, unitEnd: endUnit });
+    console.log(`Selected unit: ${unitNumber} for level ${level}`);
+    // navigation.navigate('Learning', { level, unit: unitNumber });
   };
+
+  // ローディング中の表示
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white justify-center items-center">
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text className="mt-4 text-gray-600">ユニット情報を読み込んでいます...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // エラー時の表示
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 bg-white justify-center items-center px-4">
+        <Text className="text-red-500 text-lg mb-4">エラーが発生しました</Text>
+        <Text className="text-gray-600 text-center">{error.message}</Text>
+        <TouchableOpacity
+          className="mt-6 bg-blue-500 px-6 py-3 rounded-lg"
+          onPress={() => navigation.goBack()}
+        >
+          <Text className="text-white font-medium">戻る</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -105,10 +106,10 @@ const UnitSelectionScreen: React.FC<UnitSelectionScreenProps> = ({ navigation, r
             <TouchableOpacity
               key={unit.id}
               className="w-[48%] border border-gray-300 rounded-lg py-6 mb-4 items-center bg-white shadow-sm"
-              onPress={() => handleUnitPress(unit.startUnit, unit.endUnit)}
+              onPress={() => handleUnitPress(unit.unitNumber)}
             >
               <Text className="text-base font-medium text-gray-800">
-                {unit.label}
+                {unit.displayName}
               </Text>
             </TouchableOpacity>
           ))}
