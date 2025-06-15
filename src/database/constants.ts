@@ -1,5 +1,6 @@
 // テーブル名の定数定義（型安全性向上）
 export enum TableName {
+  UNITS = 'units',
   WORDS = 'words',
   SRS_MANAGEMENT = 'srs_management',
   LEARNING_STATUS = 'learning_status',

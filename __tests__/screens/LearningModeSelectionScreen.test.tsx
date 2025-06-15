@@ -9,6 +9,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LearningModeSelectionScreen from '../../src/screens/LearningModeSelectionScreen';
 import { RootStackParamList } from '../../src/navigation/types';
+import { SCREEN_NAMES } from '../../src/constants/screens';
 
 // AlertのスパイFunction
 jest.spyOn(Alert, 'alert');
@@ -19,9 +20,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const createTestNavigationContainer = (level: number) => {
   const TestNavigationContainer = () => (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="LearningModeSelection">
+      <Stack.Navigator initialRouteName={SCREEN_NAMES.LEARNING_MODE_SELECTION}>
         <Stack.Screen 
-          name="LearningModeSelection" 
+          name={SCREEN_NAMES.LEARNING_MODE_SELECTION} 
           component={LearningModeSelectionScreen}
           initialParams={{ level }}
           options={{ headerShown: false }}
@@ -83,7 +84,7 @@ describe('LearningModeSelectionScreen', () => {
     expect(resultsButton).toBeDefined();
   });
 
-  test('learning button shows alert when pressed', async () => {
+  test('learning button can be pressed', async () => {
     const TestContainer = createTestNavigationContainer(2);
     let component: ReactTestRenderer.ReactTestRenderer;
     
@@ -104,11 +105,13 @@ describe('LearningModeSelectionScreen', () => {
     
     expect(learningButton).toBeDefined();
     
+    // ボタンが押せることを確認（エラーが発生しないことを確認）
     await ReactTestRenderer.act(async () => {
       learningButton!.props.onPress();
     });
     
-    expect(Alert.alert).toHaveBeenCalledWith('学習モード', '2級の学習ユニットを選択してください');
+    // 学習ボタンは現在ナビゲーションするため、Alertは呼ばれない
+    expect(Alert.alert).not.toHaveBeenCalled();
   });
 
   test('test button shows alert when pressed', async () => {

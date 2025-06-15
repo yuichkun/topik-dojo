@@ -14,6 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import { LearningModeSelectionScreenProps } from '../navigation/types';
+import { SCREEN_NAMES } from '../constants/screens';
 
 const LearningModeSelectionScreen: React.FC<LearningModeSelectionScreenProps> = ({
   route,
@@ -29,8 +30,7 @@ const LearningModeSelectionScreen: React.FC<LearningModeSelectionScreenProps> = 
 
   // 学習ボタンのタップハンドラ
   const handleLearningPress = () => {
-    // TODO: ユニット選択画面への遷移 (03-unit-selection)
-    Alert.alert('学習モード', `${level}級の学習ユニットを選択してください`);
+    navigation.navigate(SCREEN_NAMES.UNIT_SELECTION, { level });
   };
 
   // テストボタンのタップハンドラ

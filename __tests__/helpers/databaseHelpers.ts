@@ -51,7 +51,8 @@ export const createTestWord = async (
     exampleKorean?: string;
     exampleJapanese?: string;
     grade?: number;
-    gradeWordNumber?: number;
+    unitId?: string;
+    unitOrder?: number;
   }
 ): Promise<Word> => {
   return await database.write(async () => {
@@ -64,7 +65,8 @@ export const createTestWord = async (
       word.exampleKorean = wordData.exampleKorean || '';
       word.exampleJapanese = wordData.exampleJapanese || '';
       word.grade = wordData.grade || 1;
-      word.gradeWordNumber = wordData.gradeWordNumber || 1;
+      word.unitId = wordData.unitId || 'unit_1_1';
+      word.unitOrder = wordData.unitOrder || 1;
     });
   });
 };
