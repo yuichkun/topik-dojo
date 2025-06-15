@@ -43,16 +43,22 @@
 
 ## データ構造
 
-### 単語データ
+### 単語データの取得
+**データベース駆動**: WORDSテーブルから指定ユニットの単語を取得
+- **クエリ**: `SELECT w.* FROM words w JOIN units u ON w.unit_id = u.id WHERE u.id = ? ORDER BY w.unit_order`
+- **順序**: unit_orderフィールドで1-10の順序を保証
+
+### 単語データ構造
 ```javascript
 {
   id: "word_001",
   korean: "안녕하세요",
   japanese: "こんにちは",
-  pronunciation: "アンニョンハセヨ",
   example_korean: "안녕하세요, 만나서 반갑습니다.",
   example_japanese: "こんにちは、お会いできて嬉しいです。",
-  audio_url: "/audio/word_001.mp3"
+  unit_id: "unit_3_1",
+  unit_order: 1,
+  audio_url: "/audio/word_001.mp3"  // ファイルパスルールで生成
 }
 ```
 
@@ -98,8 +104,9 @@
 
 ### 必要なデータ
 - ナビゲーションパラメータから級+ユニット情報を取得
-- 指定されたユニットの単語データ（10問分）
-- 音声ファイル（各単語）
+- **データベース**: WORDSテーブルから指定ユニットの単語データ（10問分）
+- **getWordsByUnitId query**: ユニットIDで単語一覧を取得
+- 音声ファイル（各単語、ファイルパスルールで自動生成）
 - ユーザーの学習進捗状況
 
 ### ローカルストレージ
