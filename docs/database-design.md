@@ -73,7 +73,17 @@ erDiagram
         string example_korean "韓国語例文"
         string example_japanese "日本語例文"
         integer grade "級(1-6)"
-        integer grade_word_number "級内通し番号"
+        string unit_id FK "ユニットID"
+        integer unit_order "ユニット内順序"
+        integer created_at "作成日時"
+        integer updated_at "更新日時"
+    }
+    
+    %% ユニットマスターテーブル
+    UNITS {
+        string id PK "ユニットID"
+        integer grade "級(1-6)"
+        integer unit_number "ユニット番号"
         integer created_at "作成日時"
         integer updated_at "更新日時"
     }
@@ -157,6 +167,7 @@ erDiagram
     }
     
     %% リレーション
+    UNITS ||--o{ WORDS : "1対多"
     WORDS ||--|| SRS_MANAGEMENT : "1対1"
     WORDS ||--|| LEARNING_STATUS : "1対1"
     WORDS ||--o{ TEST_QUESTIONS : "1対多"
@@ -166,7 +177,28 @@ erDiagram
 
 ## テーブル設計
 
-### 1. WORDS（語彙マスターテーブル）
+### 1. UNITS（ユニットマスターテーブル）
+語彙学習の単位となるユニット情報を管理する新設テーブル
+
+```sql
+CREATE TABLE units (
+    id TEXT PRIMARY KEY,                -- ユニットID（WatermelonDB自動生成）
+    grade INTEGER NOT NULL,             -- 級（1-6）
+    unit_number INTEGER NOT NULL,       -- 級内ユニット番号（1から開始）
+    created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
+    updated_at INTEGER NOT NULL         -- 更新日時（UnixTimestamp）
+);
+```
+
+**表示名計算:**
+- ユニット表示名: `{(unit_number-1)*10+1}-{unit_number*10}` 
+- 例：unit_number=3 → "21-30"
+
+**データ例:**
+- id="unit_1_1", grade=1, unit_number=1 → 表示名"1-10"
+- id="unit_3_25", grade=3, unit_number=25 → 表示名"241-250"
+
+### 2. WORDS（語彙マスターテーブル）
 全12,000語の語彙データを格納する中核テーブル
 
 **音声ファイル**: DBに保存せず、一定のルールで命名・読み込み
@@ -181,21 +213,20 @@ CREATE TABLE words (
     example_korean TEXT,                -- 韓国語例文
     example_japanese TEXT,              -- 日本語例文
     grade INTEGER NOT NULL,             -- 級（1-6）
-    grade_word_number INTEGER NOT NULL, -- 級内通し番号（1から開始）
+    unit_id TEXT NOT NULL,              -- ユニットID（外部キー）
+    unit_order INTEGER NOT NULL,        -- ユニット内順序（1-10）
     created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
-    updated_at INTEGER NOT NULL         -- 更新日時（UnixTimestamp）
+    updated_at INTEGER NOT NULL,        -- 更新日時（UnixTimestamp）
+    FOREIGN KEY (unit_id) REFERENCES units(id)
 );
 ```
 
-**ユニット計算式:**
-- `級内ユニット番号 = CEIL(grade_word_number / 10)` （例：grade_word_number=25 → ユニット3）
-- `ユニット内位置 = ((grade_word_number - 1) % 10) + 1` （例：grade_word_number=25 → 5番目）
-
 **データ例:**
-- id="word_001", grade=1, grade_word_number=1 （1級1番目）
-- id="word_401", grade=2, grade_word_number=1 （2級1番目）
+- id="word_001", grade=1, unit_id="unit_1_1", unit_order=1 
+- id="word_010", grade=1, unit_id="unit_1_1", unit_order=10
+- id="word_011", grade=1, unit_id="unit_1_2", unit_order=1
 
-### 2. SRS_MANAGEMENT（SRS管理テーブル）
+### 3. SRS_MANAGEMENT（SRS管理テーブル）
 各単語のSRS（間隔反復学習）データを管理
 
 ```sql
@@ -242,7 +273,7 @@ Level 3: 6日 → Level 4: 15日 → Level 5: 38日
 → Level 6: 95日 → Level 7: 238日 → Level 8: 365日（上限）
 ```
 
-### 3. LEARNING_PROGRESS（学習進捗テーブル）
+### 4. LEARNING_PROGRESS（学習進捗テーブル）
 日別・級別の学習進捗スナップショットを保存
 
 ```sql
@@ -258,7 +289,7 @@ CREATE TABLE learning_progress (
 );
 ```
 
-### 4. TEST_RESULTS（テスト結果テーブル）
+### 5. TEST_RESULTS（テスト結果テーブル）
 テストセッションの全体結果を記録
 
 ```sql
@@ -276,7 +307,7 @@ CREATE TABLE test_results (
 );
 ```
 
-### 5. TEST_QUESTIONS（テスト問題詳細テーブル）
+### 6. TEST_QUESTIONS（テスト問題詳細テーブル）
 テスト内の各問題の詳細結果を記録
 
 ```sql
@@ -294,7 +325,7 @@ CREATE TABLE test_questions (
 );
 ```
 
-### 6. REVIEW_HISTORY（復習履歴テーブル）
+### 7. REVIEW_HISTORY（復習履歴テーブル）
 復習セッションでの個別単語フィードバックを記録
 
 ```sql
@@ -310,7 +341,7 @@ CREATE TABLE review_history (
 );
 ```
 
-### 7. LEARNING_STATUS（学習状況テーブル）
+### 8. LEARNING_STATUS（学習状況テーブル）
 学習画面での単語別学習状況を管理
 
 ```sql
@@ -378,17 +409,26 @@ WHERE grade = 3
 GROUP BY test_type;
 ```
 
-#### 4. ユニット単語取得
+#### 4. ユニット一覧取得
 ```sql
--- 指定ユニットの単語を取得（級内通し番号で計算）
+-- 指定級のユニット一覧を取得
 SELECT *
-FROM words
+FROM units
 WHERE grade = 3
-  AND grade_word_number BETWEEN (3-1)*10+1 AND 3*10  -- 3級ユニット3の例：21-30
-ORDER BY grade_word_number;
+ORDER BY unit_number;
 ```
 
-#### 5. 復習マーク単語抽出
+#### 5. ユニット単語取得
+```sql
+-- 指定ユニットの単語を取得（JOINでユニット情報と結合）
+SELECT w.*, u.unit_number
+FROM words w
+JOIN units u ON w.unit_id = u.id
+WHERE u.id = 'unit_3_1'
+ORDER BY w.unit_order;
+```
+
+#### 6. 復習マーク単語抽出
 ```sql
 SELECT w.*, ls.marked_date
 FROM words w
@@ -398,7 +438,7 @@ WHERE ls.is_marked_for_review = TRUE
 ORDER BY ls.marked_date ASC;
 ```
 
-#### 6. 間違い選択肢生成（同級ランダム）
+#### 7. 間違い選択肢生成（同級ランダム）
 ```sql
 -- 正解単語以外の同級単語からランダムで3つ選択
 SELECT japanese
