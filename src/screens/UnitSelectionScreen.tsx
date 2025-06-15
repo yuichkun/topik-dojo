@@ -37,9 +37,10 @@ const UnitSelectionScreen: React.FC<UnitSelectionScreenProps> = ({ navigation, r
 
   // ユニット選択のハンドラ
   const handleUnitPress = (unitNumber: number) => {
-    // TODO: 学習画面への遷移
-    console.log(`Selected unit: ${unitNumber} for level ${level}`);
-    // navigation.navigate('Learning', { level, unit: unitNumber });
+    navigation.navigate(SCREEN_NAMES.LEARNING, { 
+      level, 
+      unitNumber 
+    });
   };
 
   // ローディング中の表示
