@@ -46,7 +46,7 @@ const UnitSelectionScreen: React.FC<UnitSelectionScreenProps> = ({ navigation, r
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-white justify-center items-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <ActivityIndicator size="large" color="#3B82F6" testID="activity-indicator" />
         <Text className="mt-4 text-gray-600">ユニット情報を読み込んでいます...</Text>
       </SafeAreaView>
     );
