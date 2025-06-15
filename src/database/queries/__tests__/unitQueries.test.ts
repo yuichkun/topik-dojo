@@ -53,11 +53,10 @@ describe('unitQueries', () => {
 
   describe('getUnit', () => {
     it('should return a specific unit by grade and unit number', async () => {
-      let createdUnit: Unit;
       await database.write(async () => {
-        createdUnit = await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-          unit.grade = 2;
-          unit.unitNumber = 5;
+        await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
+          unitData.grade = 2;
+          unitData.unitNumber = 5;
         });
       });
 
@@ -79,9 +78,9 @@ describe('unitQueries', () => {
     it('should return words for a specific unit sorted by unit_order', async () => {
       let unitId: string;
       await database.write(async () => {
-        const unit = await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-          unit.grade = 1;
-          unit.unitNumber = 1;
+        const unit = await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
+          unitData.grade = 1;
+          unitData.unitNumber = 1;
         });
         unitId = unit.id;
 
@@ -122,9 +121,9 @@ describe('unitQueries', () => {
   describe('getWordsByUnit', () => {
     it('should return words for a specific grade and unit number', async () => {
       await database.write(async () => {
-        const unit = await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-          unit.grade = 3;
-          unit.unitNumber = 10;
+        const unit = await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
+          unitData.grade = 3;
+          unitData.unitNumber = 10;
         });
 
         // ユニット10の単語を作成

@@ -9,9 +9,9 @@ describe('Unit Model', () => {
       const unit = await database.write(async () => {
         return await database.collections
           .get<Unit>(TableName.UNITS)
-          .create((unit) => {
-            unit.grade = 1;
-            unit.unitNumber = 1;
+          .create((unitData) => {
+            unitData.grade = 1;
+            unitData.unitNumber = 1;
           });
       });
 
@@ -22,9 +22,9 @@ describe('Unit Model', () => {
       const unit = await database.write(async () => {
         return await database.collections
           .get<Unit>(TableName.UNITS)
-          .create((unit) => {
-            unit.grade = 3;
-            unit.unitNumber = 15;
+          .create((unitData) => {
+            unitData.grade = 3;
+            unitData.unitNumber = 15;
           });
       });
 
@@ -35,9 +35,9 @@ describe('Unit Model', () => {
       const unit = await database.write(async () => {
         return await database.collections
           .get<Unit>(TableName.UNITS)
-          .create((unit) => {
-            unit.grade = 2;
-            unit.unitNumber = 140;
+          .create((unitData) => {
+            unitData.grade = 2;
+            unitData.unitNumber = 140;
           });
       });
 

@@ -198,9 +198,9 @@ export const generateSampleUnitsAndWords = async (database: Database, grade: num
   await database.write(async () => {
     // 指定された級のユニットを作成
     for (let i = 1; i <= unitCount; i++) {
-      const unit = await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-        unit.grade = grade;
-        unit.unitNumber = i;
+      const unit = await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
+        unitData.grade = grade;
+        unitData.unitNumber = i;
       });
 
       // 各ユニットに10語ずつ単語を作成
