@@ -76,7 +76,7 @@ describe('unitQueries', () => {
 
   describe('getWordsByUnitId', () => {
     it('should return words for a specific unit sorted by unit_order', async () => {
-      let unitId: string;
+      let unitId: string = '';
       await database.write(async () => {
         const unit = await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
           unitData.grade = 1;
