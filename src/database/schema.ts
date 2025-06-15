@@ -1,8 +1,19 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 1,
+  version: 2,
   tables: [
+    // ユニットテーブル
+    tableSchema({
+      name: 'units',
+      columns: [
+        { name: 'grade', type: 'number' },
+        { name: 'unit_number', type: 'number' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ]
+    }),
+
     // 語彙マスターテーブル
     tableSchema({
       name: 'words',
@@ -12,7 +23,8 @@ export default appSchema({
         { name: 'example_korean', type: 'string', isOptional: true },
         { name: 'example_japanese', type: 'string', isOptional: true },
         { name: 'grade', type: 'number' },
-        { name: 'grade_word_number', type: 'number' },
+        { name: 'unit_id', type: 'string' },
+        { name: 'unit_order', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ]
