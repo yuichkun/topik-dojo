@@ -7,13 +7,17 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import SoundPlayer from 'react-native-sound-player';
 import { LearningScreenProps } from '../navigation/types';
 import { Word } from '../database/models';
 import { getWordsByUnit } from '../database/queries/unitQueries';
 
-export default function LearningScreen({ route, navigation }: LearningScreenProps) {
+export default function LearningScreen({
+  route,
+  navigation,
+}: LearningScreenProps) {
   const { level, unitNumber } = route.params;
-  
+
   // 状態管理
   const [words, setWords] = useState<Word[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -21,7 +25,9 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
   const [showExample, setShowExample] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [markedForReview, setMarkedForReview] = useState<Set<string>>(new Set());
+  const [markedForReview, setMarkedForReview] = useState<Set<string>>(
+    new Set(),
+  );
 
   // 単語データ取得
   useEffect(() => {
@@ -29,12 +35,12 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
       try {
         setLoading(true);
         const wordsData = await getWordsByUnit(level, unitNumber);
-        
+
         if (wordsData.length === 0) {
           setError('単語データの読み込みに失敗しました');
           return;
         }
-        
+
         setWords(wordsData);
         setError(null);
       } catch (err) {
@@ -67,7 +73,7 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
             text: 'OK',
             onPress: () => navigation.goBack(),
           },
-        ]
+        ],
       );
     }
   };
@@ -91,9 +97,13 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
         newMarked.add(currentWord.id);
       }
       setMarkedForReview(newMarked);
-      
+
       // TODO: 実際のデータベース更新処理を追加
-      console.log('復習マーク更新:', currentWord.id, !markedForReview.has(currentWord.id));
+      console.log(
+        '復習マーク更新:',
+        currentWord.id,
+        !markedForReview.has(currentWord.id),
+      );
     }
   };
 
@@ -107,21 +117,31 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
     setShowExample(!showExample);
   };
 
-  // 音声再生（プレースホルダー）
+  // 音声再生
   const playWordAudio = () => {
     if (currentWord) {
-      // TODO: 実際の音声再生処理を追加
-      console.log('単語音声再生:', currentWord.wordAudioPath);
-      Alert.alert('音声再生', `${currentWord.korean} の音声を再生します`);
+      try {
+        // テスト用に固定のファイルを再生
+        SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
+        console.log('単語音声再生:', currentWord.wordAudioPath);
+      } catch (_error) {
+        console.error('音声再生エラー:', _error);
+        Alert.alert('エラー', '音声の再生に失敗しました');
+      }
     }
   };
 
-  // 例文音声再生（プレースホルダー）
+  // 例文音声再生
   const playExampleAudio = () => {
     if (currentWord) {
-      // TODO: 実際の音声再生処理を追加
-      console.log('例文音声再生:', currentWord.exampleAudioPath);
-      Alert.alert('音声再生', `例文の音声を再生します`);
+      try {
+        // テスト用に固定のファイルを再生
+        SoundPlayer.playAsset(require('../assets/audio/examples/word_1.mp3'));
+        console.log('例文音声再生:', currentWord.exampleAudioPath);
+      } catch (_error) {
+        console.error('例文音声再生エラー:', _error);
+        Alert.alert('エラー', '例文音声の再生に失敗しました');
+      }
     }
   };
 
@@ -174,7 +194,7 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
           >
             <Text className="text-white font-semibold">← 戻る</Text>
           </TouchableOpacity>
-          
+
           <View className="flex-1 mx-4">
             <Text className="text-white text-center font-bold text-lg">
               {level}級 ユニット{getUnitRange()}
@@ -183,10 +203,10 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
               ({currentIndex + 1}/{words.length})
             </Text>
           </View>
-          
+
           <View className="w-16" />
         </View>
-        
+
         {/* 進捗バー */}
         <View className="bg-white/20 h-2 rounded-full mt-3">
           <View
@@ -201,13 +221,16 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
         {/* 単語カード */}
         <View className="bg-gray-50 rounded-xl p-6 mb-6">
           {/* 韓国語単語 */}
-          <TouchableOpacity onPress={toggleMeaning} className="items-center mb-4">
+          <TouchableOpacity
+            onPress={toggleMeaning}
+            className="items-center mb-4"
+          >
             <Text className="text-4xl font-bold text-gray-800 mb-2">
               {currentWord.korean}
             </Text>
-            
+
             {/* 音声再生ボタン */}
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={playWordAudio}
               className="bg-blue-500 px-4 py-2 rounded-full"
             >
@@ -245,7 +268,9 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
                   {currentWord.exampleKorean && (
                     <View>
                       <View className="flex-row justify-between items-center mb-1">
-                        <Text className="text-gray-600 text-sm">韓国語例文</Text>
+                        <Text className="text-gray-600 text-sm">
+                          韓国語例文
+                        </Text>
                         <TouchableOpacity
                           onPress={playExampleAudio}
                           className="bg-blue-500 px-2 py-1 rounded"
@@ -258,10 +283,12 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
                       </Text>
                     </View>
                   )}
-                  
+
                   {currentWord.exampleJapanese && (
                     <View>
-                      <Text className="text-gray-600 text-sm mb-1">日本語訳</Text>
+                      <Text className="text-gray-600 text-sm mb-1">
+                        日本語訳
+                      </Text>
                       <Text className="text-lg text-gray-700">
                         {currentWord.exampleJapanese}
                       </Text>
@@ -282,14 +309,14 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
             onPress={handlePrevious}
             disabled={currentIndex === 0}
             className={`px-6 py-3 rounded-lg ${
-              currentIndex === 0 
-                ? 'bg-gray-300' 
-                : 'bg-gray-500'
+              currentIndex === 0 ? 'bg-gray-300' : 'bg-gray-500'
             }`}
           >
-            <Text className={`font-semibold ${
-              currentIndex === 0 ? 'text-gray-500' : 'text-white'
-            }`}>
+            <Text
+              className={`font-semibold ${
+                currentIndex === 0 ? 'text-gray-500' : 'text-white'
+              }`}
+            >
               前へ
             </Text>
           </TouchableOpacity>
@@ -303,11 +330,13 @@ export default function LearningScreen({ route, navigation }: LearningScreenProp
                 : 'bg-orange-200'
             }`}
           >
-            <Text className={`font-semibold ${
-              markedForReview.has(currentWord.id)
-                ? 'text-white'
-                : 'text-orange-700'
-            }`}>
+            <Text
+              className={`font-semibold ${
+                markedForReview.has(currentWord.id)
+                  ? 'text-white'
+                  : 'text-orange-700'
+              }`}
+            >
               {markedForReview.has(currentWord.id) ? '復習済み' : '復習に追加'}
             </Text>
           </TouchableOpacity>
