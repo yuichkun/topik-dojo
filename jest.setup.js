@@ -15,6 +15,14 @@ jest.mock(
   },
 );
 
+// Mock react-native-sound-player
+jest.mock('react-native-sound-player', () => ({
+  playAsset: jest.fn(),
+  stop: jest.fn(),
+  pause: jest.fn(),
+  resume: jest.fn(),
+}));
+
 // Global test database cleanup - reset before each test
 beforeEach(async () => {
   const databaseModule = require('./src/database');

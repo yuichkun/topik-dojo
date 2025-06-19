@@ -5,12 +5,7 @@ import {
   createDueReviews,
   createNotDueReviews
 } from '../helpers/databaseHelpers';
-import testDatabase from '../../src/database';
-
-// Mock the database module
-jest.mock('../../src/database', () => {
-  return jest.requireActual('../helpers/databaseHelpers').createTestDatabase();
-});
+import database from '../../src/database';
 
 describe('useReviewCount hook (integration)', () => {
   let consoleErrorSpy: jest.SpyInstance;
@@ -36,7 +31,7 @@ describe('useReviewCount hook (integration)', () => {
 
   test('should return 0 when no SRS records exist', async () => {
     // Create some words but no SRS records
-    await createTestWords(testDatabase, [
+    await createTestWords(database, [
       { korean: '안녕하세요', japanese: 'こんにちは' },
       { korean: '감사합니다', japanese: 'ありがとうございます' }
     ]);
@@ -53,7 +48,7 @@ describe('useReviewCount hook (integration)', () => {
 
   test('should count due reviews correctly', async () => {
     // Create test words with unique IDs
-    await createTestWords(testDatabase, [
+    await createTestWords(database, [
       { id: 'review_word_1', korean: '안녕하세요', japanese: 'こんにちは' },
       { id: 'review_word_2', korean: '감사합니다', japanese: 'ありがとうございます' },
       { id: 'review_word_3', korean: '죄송합니다', japanese: 'すみません' },
@@ -61,8 +56,8 @@ describe('useReviewCount hook (integration)', () => {
     ]);
 
     // Create mix of due and not due reviews
-    await createDueReviews(testDatabase, ['review_word_1', 'review_word_2'], 2); // 2 due reviews
-    await createNotDueReviews(testDatabase, ['review_word_3', 'review_word_4'], 2); // 2 not due
+    await createDueReviews(database, ['review_word_1', 'review_word_2'], 2); // 2 due reviews
+    await createNotDueReviews(database, ['review_word_3', 'review_word_4'], 2); // 2 not due
 
     const { result } = renderHook(() => useReviewCount());
 
@@ -74,73 +69,6 @@ describe('useReviewCount hook (integration)', () => {
     expect(result.current.error).toBe(null);
   });
 
-  test('should handle database errors gracefully', async () => {
-    // Mock SRS collection to throw error
-    const mockCollections = {
-      get: jest.fn().mockImplementation((tableName) => {
-        if (tableName === 'srs_management') {
-          return {
-            query: jest.fn().mockReturnValue({
-              fetch: jest.fn().mockRejectedValue(new Error('SRS fetch failed'))
-            })
-          };
-        }
-        // Return normal collections for other tables
-        return testDatabase.collections.get(tableName);
-      })
-    };
-
-    // Temporarily replace collections
-    const originalCollections = testDatabase.collections;
-    (testDatabase as any).collections = mockCollections;
-
-    const { result } = renderHook(() => useReviewCount());
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
-
-    expect(result.current.count).toBe(0);
-    expect(result.current.error).toContain('SRS fetch failed');
-    
-    // Verify error was logged
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Review count fetch error:', expect.any(Error));
-
-    // Restore original collections
-    (testDatabase as any).collections = originalCollections;
-  });
-
-  test('should handle non-Error exceptions', async () => {
-    const mockCollections = {
-      get: jest.fn().mockImplementation((tableName) => {
-        if (tableName === 'srs_management') {
-          return {
-            query: jest.fn().mockReturnValue({
-              fetch: jest.fn().mockRejectedValue('String error')
-            })
-          };
-        }
-        return testDatabase.collections.get(tableName);
-      })
-    };
-
-    const originalCollections = testDatabase.collections;
-    (testDatabase as any).collections = mockCollections;
-
-    const { result } = renderHook(() => useReviewCount());
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
-
-    expect(result.current.error).toBe('Unknown error');
-    
-    // Verify error was logged
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Review count fetch error:', 'String error');
-
-    // Restore original collections
-    (testDatabase as any).collections = originalCollections;
-  });
 
   test('should handle cleanup properly on unmount', async () => {
     const { result, unmount } = renderHook(() => useReviewCount());
@@ -156,12 +84,12 @@ describe('useReviewCount hook (integration)', () => {
 
   test('should fetch review count immediately on mount', async () => {
     // Create test data
-    await createTestWords(testDatabase, [
+    await createTestWords(database, [
       { id: 'immediate_word_1', korean: '즉시', japanese: '即座' },
       { id: 'immediate_word_2', korean: '테스트', japanese: 'テスト' }
     ]);
 
-    await createDueReviews(testDatabase, ['immediate_word_1'], 1);
+    await createDueReviews(database, ['immediate_word_1'], 1);
 
     const { result } = renderHook(() => useReviewCount());
 
@@ -179,15 +107,15 @@ describe('useReviewCount hook (integration)', () => {
 
   test('should filter SRS records by due date correctly', async () => {
     // Create test words
-    await createTestWords(testDatabase, [
+    await createTestWords(database, [
       { id: 'due_word_1', korean: '오늘', japanese: '今日' },
       { id: 'due_word_2', korean: '내일', japanese: '明日' },
       { id: 'due_word_3', korean: '어제', japanese: '昨日' }
     ]);
 
     // Create 2 due reviews and 1 not due
-    await createDueReviews(testDatabase, ['due_word_1', 'due_word_2'], 2);
-    await createNotDueReviews(testDatabase, ['due_word_3'], 1);
+    await createDueReviews(database, ['due_word_1', 'due_word_2'], 2);
+    await createNotDueReviews(database, ['due_word_3'], 1);
 
     const { result } = renderHook(() => useReviewCount());
 

@@ -139,17 +139,15 @@ describe('UnitSelectionScreen', () => {
       expect(mockUseUnits).toHaveBeenCalledWith(3);
     });
 
-    it('should log unit selection when unit button is pressed', () => {
-      const consoleSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => {});
+    it('should navigate to learning screen when unit button is pressed', () => {
       const { getByText } = renderScreen();
 
       fireEvent.press(getByText('11-20'));
 
-      expect(consoleSpy).toHaveBeenCalledWith('Selected unit: 2 for level 3');
-
-      consoleSpy.mockRestore();
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(SCREEN_NAMES.LEARNING, {
+        level: 3,
+        unitNumber: 2,
+      });
     });
 
     it('should navigate back when back button is pressed', () => {
