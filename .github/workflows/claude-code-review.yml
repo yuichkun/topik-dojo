@@ -3,7 +3,7 @@ name: Claude Code Review
 on:
   # Manual trigger via workflow_dispatch
   workflow_dispatch:
-  
+
   # Or trigger via PR comment containing "@claude review"
   issue_comment:
     types: [created]
@@ -16,7 +16,7 @@ jobs:
       (github.event_name == 'issue_comment' && 
        github.event.issue.pull_request &&
        contains(github.event.comment.body, '@claude review'))
-    
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,7 +24,7 @@ jobs:
       issues: read
       actions: read
       id-token: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,34 +36,31 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          
+
           # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
-          # model: "claude-opus-4-20250514"
-          
+          model: 'claude-opus-4-20250514'
+
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
             このプロジェクトはTOPIK道場（日本人韓国語学習者向けTOPIK対策アプリ）のReact Native開発です。
-            
+
             まず以下を参照してプロジェクト理解を深めてください：
             - CLAUDE.md: 基本ルールと必読ファイル
             - requirements.md: 詳細仕様
             - docs/screen-flows.md: 画面遷移
             - docs/database-design.md: DB設計
-            
+
             CI結果も確認し、lint/test失敗があれば指摘してください。
-            
+
             以下の観点でレビューしてください：
-            - React Native固有のパフォーマンス（FlatList、memo、レンダリング最適化）
-            - ナビゲーション（React Navigation）
-            - 状態管理とデータフロー
-            - アクセシビリティ対応
+            - 対応箇所が仕様が満たせているかどうか
             - コード品質とベストプラクティス
-            - 潜在的なバグや問題
-            - セキュリティ懸念
-            - テストカバレッジ
-            
+              - 重複しているコードがないかどうか（PRに含まれている差分以外のコードベースも含めて）
+            - 潜在的なバグや問題がないかどうか
+
             建設的で親切なフィードバックを提供してください。
-          
+            極端にnitpickなフィードバックをしようとしなくてもいいです。問題がない場合は、単にLGTMでもOKです。
+
           # Optional: Customize review based on file types
           # direct_prompt: |
           #   Review this PR focusing on:
@@ -71,18 +68,17 @@ jobs:
           #   - For API endpoints: Security, input validation, and error handling
           #   - For React components: Performance, accessibility, and best practices
           #   - For tests: Coverage, edge cases, and test quality
-          
+
           # Optional: Different prompts for different authors
           # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
+          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
           #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
           #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
-          
+
           # Optional: Add specific tools for running tests or linting
           # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
-          
+
           # Optional: Skip review for certain conditions
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
           #   !contains(github.event.pull_request.title, '[WIP]')
-
