@@ -11,7 +11,6 @@ import {
   SafeAreaView,
   StatusBar,
   useColorScheme,
-  Alert,
 } from 'react-native';
 import type { TestModeSelectionScreenProps } from '../navigation/types';
 import { SCREEN_NAMES } from '../constants/screens';
@@ -35,16 +34,12 @@ const TestModeSelectionScreen: React.FC<TestModeSelectionScreenProps> = ({
 
   // リスニングテストボタンのタップハンドラ
   const handleListeningPress = () => {
-    // TODO: リスニングテストユニット選択画面への遷移 (05-listening-unit-selection)
-    Alert.alert('リスニングテスト', `${level}級のリスニングテストを開始します`);
-    // navigation.navigate(SCREEN_NAMES.LISTENING_UNIT_SELECTION, { level, mode: 'listening' });
+    navigation.navigate(SCREEN_NAMES.TEST_UNIT_SELECTION, { level, testMode: 'listening' });
   };
 
   // リーディングテストボタンのタップハンドラ
   const handleReadingPress = () => {
-    // TODO: リーディングテストユニット選択画面への遷移 (06-reading-unit-selection)
-    Alert.alert('リーディングテスト', `${level}級のリーディングテストを開始します`);
-    // navigation.navigate(SCREEN_NAMES.READING_UNIT_SELECTION, { level, mode: 'reading' });
+    navigation.navigate(SCREEN_NAMES.TEST_UNIT_SELECTION, { level, testMode: 'reading' });
   };
 
   return (

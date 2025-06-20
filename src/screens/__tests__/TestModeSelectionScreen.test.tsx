@@ -1,12 +1,8 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { Alert } from 'react-native';
 import { SCREEN_NAMES } from '../../constants/screens';
 import TestModeSelectionScreen from '../TestModeSelectionScreen';
-
-// Mock Alert
-jest.spyOn(Alert, 'alert');
 
 // Mock navigation
 const mockNavigation = {
@@ -27,7 +23,7 @@ const renderScreen = (customRoute?: any) => {
     <NavigationContainer>
       <TestModeSelectionScreen
         navigation={mockNavigation as any}
-        route={customRoute || mockRoute as any}
+        route={customRoute || (mockRoute as any)}
       />
     </NavigationContainer>,
   );
@@ -79,74 +75,45 @@ describe('TestModeSelectionScreen', () => {
       expect(getByText('ハングル文字を見て日本語訳を4択から選択')).toBeTruthy();
     });
 
-    it('should show alert when listening button is pressed', () => {
+    it('should navigate to test unit selection when listening button is pressed', () => {
       const { getByText } = renderScreen();
 
       fireEvent.press(getByText('リスニング'));
-      
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'リスニングテスト',
-        '3級のリスニングテストを開始します'
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        SCREEN_NAMES.TEST_UNIT_SELECTION,
+        { level: 3, testMode: 'listening' },
       );
     });
 
-    it('should show alert when reading button is pressed', () => {
+    it('should navigate to test unit selection when reading button is pressed', () => {
       const { getByText } = renderScreen();
 
       fireEvent.press(getByText('リーディング'));
-      
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'リーディングテスト',
-        '3級のリーディングテストを開始します'
-      );
-    });
 
-    // TODO: Update these tests when navigation is implemented
-    it.skip('should navigate to listening unit selection when listening button is pressed', () => {
-      const { getByText } = renderScreen();
-
-      fireEvent.press(getByText('リスニング'));
-      
       expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        SCREEN_NAMES.LISTENING_UNIT_SELECTION,
-        { level: 3, mode: 'listening' }
-      );
-    });
-
-    it.skip('should navigate to reading unit selection when reading button is pressed', () => {
-      const { getByText } = renderScreen();
-
-      fireEvent.press(getByText('リーディング'));
-      
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        SCREEN_NAMES.READING_UNIT_SELECTION,
-        { level: 3, mode: 'reading' }
+        SCREEN_NAMES.TEST_UNIT_SELECTION,
+        { level: 3, testMode: 'reading' },
       );
     });
   });
 
   describe('Different grade levels', () => {
-    it.each([1, 2, 3, 4, 5, 6])('should work with grade %i', (level) => {
+    it.each([1, 2, 3, 4, 5, 6])('should work with grade %i', level => {
       const customRoute = { params: { level } };
       const { getByText } = renderScreen(customRoute);
 
       expect(getByText(`${level}級 テスト`)).toBeTruthy();
     });
 
-    it('should pass correct level to alert messages', () => {
+    it('should pass correct level to navigation when reading is selected', () => {
       const customRoute = { params: { level: 5 } };
       const { getByText } = renderScreen(customRoute);
 
-      fireEvent.press(getByText('リスニング'));
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'リスニングテスト',
-        '5級のリスニングテストを開始します'
-      );
-
       fireEvent.press(getByText('リーディング'));
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'リーディングテスト',
-        '5級のリーディングテストを開始します'
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        SCREEN_NAMES.TEST_UNIT_SELECTION,
+        { level: 5, testMode: 'reading' },
       );
     });
   });
@@ -154,7 +121,7 @@ describe('TestModeSelectionScreen', () => {
   describe('Button interactions', () => {
     it('should have all interactive elements accessible', () => {
       const { getByText } = renderScreen();
-      
+
       // Check that interactive elements exist
       expect(getByText('← 戻る')).toBeTruthy();
       expect(getByText('ホーム')).toBeTruthy();
@@ -191,10 +158,12 @@ describe('TestModeSelectionScreen', () => {
   describe('Dark mode support', () => {
     it('should render correctly in dark mode', () => {
       // Mock dark mode
-      jest.spyOn(require('react-native'), 'useColorScheme').mockReturnValue('dark');
-      
+      jest
+        .spyOn(require('react-native'), 'useColorScheme')
+        .mockReturnValue('dark');
+
       const { getByText } = renderScreen();
-      
+
       // Should still render all elements correctly
       expect(getByText('3級 テスト')).toBeTruthy();
       expect(getByText('リスニング')).toBeTruthy();

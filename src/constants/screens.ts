@@ -8,11 +8,10 @@ export const SCREEN_NAMES = {
   UNIT_SELECTION: 'UnitSelection',
   LEARNING: 'Learning',
   TEST_MODE_SELECTION: 'TestModeSelection',
-  LISTENING_UNIT_SELECTION: 'ListeningUnitSelection',
-  READING_UNIT_SELECTION: 'ReadingUnitSelection',
+  TEST_UNIT_SELECTION: 'TestUnitSelection',
+  READING_TEST: 'ReadingTest',
+  LISTENING_TEST: 'ListeningTest',
   // TODO: 他の画面名を追加
   // RESULTS: 'Results',
-  // LISTENING_TEST: 'ListeningTest',
-  // READING_TEST: 'ReadingTest',
   // REVIEW: 'Review',
 } as const;

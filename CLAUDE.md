@@ -30,8 +30,7 @@ TOPIK道場は、日本人韓国語学習者向けのTOPIK（韓国語能力試�
 - **02-learning-mode-selection.md** - 学習モード選択画面
 - **03-unit-selection.md** - 学習用ユニット選択画面
 - **04-test-mode-selection.md** - テストモード選択画面
-- **05-listening-unit-selection.md** - リスニングテストユニット選択画面
-- **06-reading-unit-selection.md** - リーディングテストユニット選択画面
+- **test-unit-selection.md** - テストユニット選択画面（読解/聴解統合）
 - **07-learning.md** - 学習画面
 - **08-listening-test.md** - リスニングテスト画面
 - **09-reading-test.md** - リーディングテスト画面
