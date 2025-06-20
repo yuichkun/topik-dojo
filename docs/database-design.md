@@ -89,18 +89,6 @@ erDiagram
     }
     
     
-    %% 学習状況テーブル
-    LEARNING_STATUS {
-        integer status_id PK "ステータスID"
-        string word_id FK "単語ID"
-        boolean is_learned "学習済みフラグ"
-        boolean is_marked_for_review "復習マーク"
-        integer learned_date "学習完了日時"
-        integer marked_date "復習マーク日時"
-        integer learning_session_count "学習セッション回数"
-        integer created_at "作成日時"
-        integer updated_at "更新日時"
-    }
     
     
     %% SRS管理テーブル
@@ -113,7 +101,6 @@ erDiagram
         integer interval_days "復習間隔(日)"
         integer mistake_count "間違い回数"
         integer last_reviewed "最終復習日時"
-        string status "学習状態"
         integer created_at "作成日時"
         integer updated_at "更新日時"
     }
@@ -169,7 +156,6 @@ erDiagram
     %% リレーション
     UNITS ||--o{ WORDS : "1対多"
     WORDS ||--|| SRS_MANAGEMENT : "1対1"
-    WORDS ||--|| LEARNING_STATUS : "1対1"
     WORDS ||--o{ TEST_QUESTIONS : "1対多"
     WORDS ||--o{ REVIEW_HISTORY : "1対多"
     TEST_RESULTS ||--o{ TEST_QUESTIONS : "1対多"
@@ -233,13 +219,12 @@ CREATE TABLE words (
 CREATE TABLE srs_management (
     id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
     word_id TEXT NOT NULL,              -- 単語ID（外部キー）
-    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 学習段階0-2, 復習段階3-9）
+    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 0-6=学習中, 7+=習得完了）
     ease_factor REAL DEFAULT 2.5,      -- 易しさ係数（1.3-4.0, デフォルト2.5）
     next_review_date INTEGER,           -- 次回復習日（UnixTimestamp）
     interval_days INTEGER DEFAULT 1,    -- 復習間隔（日数）
     mistake_count INTEGER DEFAULT 0,    -- 間違い回数
     last_reviewed INTEGER,              -- 最終復習日時（UnixTimestamp）
-    status TEXT DEFAULT 'learning',     -- 学習状態（learning/graduated/mastered）
     created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
     updated_at INTEGER NOT NULL,        -- 更新日時（UnixTimestamp）
     FOREIGN KEY (word_id) REFERENCES words(id)
@@ -316,22 +301,6 @@ CREATE TABLE review_history (
 );
 ```
 
-### 8. LEARNING_STATUS（学習状況テーブル）
-学習画面での単語別学習状況を管理
-
-```sql
-CREATE TABLE learning_status (
-    word_id TEXT PRIMARY KEY,        -- 単語ID（主キー兼外部キー）
-    is_learned BOOLEAN DEFAULT FALSE,   -- 学習済みフラグ
-    is_marked_for_review BOOLEAN DEFAULT FALSE,  -- 復習マーク
-    learned_date INTEGER,              -- 学習完了日時
-    marked_date INTEGER,               -- 復習マーク日時
-    learning_session_count INTEGER DEFAULT 0,  -- 学習セッション回数
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (word_id) REFERENCES words(id)
-);
-```
 
 
 ## 設計の考慮点
@@ -354,7 +323,7 @@ SELECT w.*, s.mastery_level, s.mistake_count
 FROM words w
 JOIN srs_management s ON w.word_id = s.word_id
 WHERE s.next_review_date <= DATE('now')
-  AND s.status = 'learning'
+  AND s.mastery_level < 7
 ORDER BY s.next_review_date ASC, s.mistake_count DESC
 LIMIT 50;
 ```
@@ -403,17 +372,8 @@ WHERE u.id = 'unit_3_1'
 ORDER BY w.unit_order;
 ```
 
-#### 6. 復習マーク単語抽出
-```sql
-SELECT w.*, ls.marked_date
-FROM words w
-JOIN learning_status ls ON w.word_id = ls.word_id
-WHERE ls.is_marked_for_review = TRUE
-  AND w.grade = 3
-ORDER BY ls.marked_date ASC;
-```
 
-#### 7. 間違い選択肢生成（同級ランダム）
+#### 6. 間違い選択肢生成（同級ランダム）
 ```sql
 -- 正解単語以外の同級単語からランダムで3つ選択
 SELECT japanese

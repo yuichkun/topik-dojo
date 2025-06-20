@@ -83,12 +83,11 @@ SRS（間隔反復学習）システムに基づいて復習が必要な単語�
 ```javascript
 {
   word_id: "word_001",
-  mastery_level: 2,  // 習得レベル（0-5）
+  mastery_level: 2,  // 習得レベル（0-9: 0-6=学習中, 7+=習得完了）
   next_review_date: "2025-06-14T09:00:00Z",
   interval_days: 3,  // 現在の復習間隔
   mistake_count: 1,  // 間違い回数
-  last_reviewed: "2025-06-13T10:30:00Z",
-  status: "learning"  // learning/mastered
+  last_reviewed: "2025-06-13T10:30:00Z"
 }
 ```
 
@@ -116,7 +115,7 @@ SRS（間隔反復学習）システムに基づいて復習が必要な単語�
 - **更新タイミング**: 復習セッション終了時
 - **計算方法**: 
   ```javascript
-  mastered_words_count = SRS管理データで status="mastered" の件数
+  mastered_words_count = SRS管理データで mastery_level >= 7 の件数
   progress_rate = (mastered_words_count / total_words_count) * 100
   ```
 

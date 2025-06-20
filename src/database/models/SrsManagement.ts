@@ -13,7 +13,6 @@ export default class SrsManagement extends Model {
   @field('interval_days') intervalDays!: number;
   @field('mistake_count') mistakeCount!: number;
   @field('last_reviewed') lastReviewed?: number;
-  @field('status') status!: string;
 
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
@@ -38,16 +37,12 @@ export default class SrsManagement extends Model {
     return nextReview <= today;
   }
 
-  // SRSステータスの判定
+  // SRSステータスの判定（mastery_levelベース）
   get isLearning(): boolean {
-    return this.status === 'learning';
-  }
-
-  get isGraduated(): boolean {
-    return this.status === 'graduated';
+    return this.masteryLevel < 7;
   }
 
   get isMastered(): boolean {
-    return this.status === 'mastered';
+    return this.masteryLevel >= 7;
   }
 }

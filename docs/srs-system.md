@@ -14,7 +14,7 @@ TOPIK道場では、Anki SM-2アルゴリズムに基づいた簡易SRSシステ
 リスニング・リーディングテストで間違えた単語は自動的に復習対象に追加されます。
 
 ### 2. 学習モードでマークされた単語
-学習画面で「復習に追加」ボタンでマークされた単語。
+学習画面で「復習に追加」ボタンでマークされた単語。テスト間違い時と同じ初期状態でSrsManagementに登録されます。
 
 ### 3. SRS間隔到達単語
 前回の復習から指定された間隔が経過し、復習予定日（next_review_date）に到達した単語。
@@ -26,13 +26,12 @@ TOPIK道場では、Anki SM-2アルゴリズムに基づいた簡易SRSシステ
 CREATE TABLE srs_management (
     id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
     word_id TEXT NOT NULL,              -- 単語ID（外部キー）
-    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9）
+    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 0-6=学習中, 7+=習得完了）
     ease_factor REAL DEFAULT 2.5,      -- 易しさ係数（1.3-4.0）
     next_review_date INTEGER,           -- 次回復習日（UnixTimestamp）
     interval_days INTEGER DEFAULT 1,    -- 復習間隔（日数）
     mistake_count INTEGER DEFAULT 0,    -- 間違い回数
     last_reviewed INTEGER,              -- 最終復習日時（UnixTimestamp）
-    status TEXT DEFAULT 'learning',     -- 学習状態（learning/graduated/mastered）
     created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
     updated_at INTEGER NOT NULL,        -- 更新日時（UnixTimestamp）
 );
@@ -62,8 +61,7 @@ ease_factorを使用した動的間隔で復習：
   ease_factor: 現在の値（変更なし）,            // 維持
   interval_days: 新しい間隔,                   // 上記ルールで計算
   next_review_date: 今日 + interval_days,      // 次回復習日
-  last_reviewed: 現在時刻,
-  status: mastery_level >= 7 ? 'mastered' : 'learning'
+  last_reviewed: 現在時刻
 }
 ```
 
@@ -75,8 +73,7 @@ ease_factorを使用した動的間隔で復習：
   interval_days: 1,                            // 間隔リセット
   next_review_date: 明日,                      // 1日後に再復習
   mistake_count: 現在の値 + 1,                 // 間違い回数増加
-  last_reviewed: 現在時刻,
-  status: 'learning'                           // 学習中に戻る
+  last_reviewed: 現在時刻
 }
 ```
 
@@ -85,7 +82,9 @@ ease_factorを使用した動的間隔で復習：
 - **最大間隔**: 365日（1年）
 - **最大mastery_level**: 9
 
-## テスト間違い時の処理
+## 復習対象登録処理
+
+### テスト間違い時の処理
 
 ### A) 単語が復習リストに未登録の場合
 新規SRS_MANAGEMENTレコードを作成：
@@ -97,13 +96,31 @@ ease_factorを使用した動的間隔で復習：
   next_review_date: 明日,
   interval_days: 1,
   mistake_count: 1,
-  last_reviewed: null,
-  status: 'learning'
+  last_reviewed: null
 }
 ```
 
 ### B) 単語が既に復習リストに登録済みの場合
 「覚えてない」と同じ処理を適用（上記参照）
+
+### 学習モードでの「復習に追加」処理
+
+#### A) 単語が復習リストに未登録の場合
+テスト間違い時と同じ初期状態で新規SRS_MANAGEMENTレコードを作成：
+```javascript
+{
+  word_id: "学習中の単語ID",
+  mastery_level: 0,
+  ease_factor: 2.5,
+  next_review_date: 明日,
+  interval_days: 1,
+  mistake_count: 0,  // 学習モードでは0からスタート
+  last_reviewed: null
+}
+```
+
+#### B) 単語が既に復習リストに登録済みの場合
+学習画面では「○日後に復習予定」と表示し、復習ボタンを非活性化。
 
 ## 復習優先度の計算
 
