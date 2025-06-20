@@ -219,7 +219,7 @@ CREATE TABLE words (
 CREATE TABLE srs_management (
     id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
     word_id TEXT NOT NULL,              -- 単語ID（外部キー）
-    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 0-6=学習中, 7+=習得完了）
+    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 0-8=復習対象, 9=習得完了）
     ease_factor REAL DEFAULT 2.5,      -- 易しさ係数（1.3-4.0, デフォルト2.5）
     next_review_date INTEGER,           -- 次回復習日（UnixTimestamp）
     interval_days INTEGER DEFAULT 1,    -- 復習間隔（日数）
@@ -323,7 +323,7 @@ SELECT w.*, s.mastery_level, s.mistake_count
 FROM words w
 JOIN srs_management s ON w.word_id = s.word_id
 WHERE s.next_review_date <= DATE('now')
-  AND s.mastery_level < 7
+  AND s.mastery_level < 9
 ORDER BY s.next_review_date ASC, s.mistake_count DESC
 LIMIT 50;
 ```

@@ -39,10 +39,10 @@ export default class SrsManagement extends Model {
 
   // SRSステータスの判定（mastery_levelベース）
   get isLearning(): boolean {
-    return this.masteryLevel < 7;
+    return this.masteryLevel < 9;
   }
 
   get isMastered(): boolean {
-    return this.masteryLevel >= 7;
+    return this.masteryLevel >= 9;
   }
 }

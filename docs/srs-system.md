@@ -26,7 +26,7 @@ TOPIK道場では、Anki SM-2アルゴリズムに基づいた簡易SRSシステ
 CREATE TABLE srs_management (
     id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
     word_id TEXT NOT NULL,              -- 単語ID（外部キー）
-    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 0-6=学習中, 7+=習得完了）
+    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 0-8=復習対象, 9=習得完了）
     ease_factor REAL DEFAULT 2.5,      -- 易しさ係数（1.3-4.0）
     next_review_date INTEGER,           -- 次回復習日（UnixTimestamp）
     interval_days INTEGER DEFAULT 1,    -- 復習間隔（日数）
@@ -47,17 +47,18 @@ CREATE TABLE srs_management (
 - **Level 1 → 2**: 3日後に復習  
 - **Level 2 → 3**: 3日後に復習（その後、復習段階へ卒業）
 
-#### 復習段階（mastery_level 3-9）
+#### 復習段階（mastery_level 3-8）
 ease_factorを使用した動的間隔で復習：
 - **Level 3**: 6日後（卒業初期値・固定）
-- **Level 4以降**: `新間隔 = 前回間隔（interval_days） × ease_factor`
+- **Level 4-8**: `新間隔 = 前回間隔（interval_days） × ease_factor`
+- **Level 9**: 習得完了で復習対象外
 
 ### フィードバック処理
 
 #### 「覚えた」を選択した場合
 ```javascript
 {
-  mastery_level: 現在のレベル + 1,              // 最大9まで
+  mastery_level: 現在のレベル + 1,              // 最大9まで（習得完了）
   ease_factor: 現在の値（変更なし）,            // 維持
   interval_days: 新しい間隔,                   // 上記ルールで計算
   next_review_date: 今日 + interval_days,      // 次回復習日
@@ -148,7 +149,7 @@ function calculateNextInterval(srsData) {
   // 復習段階（3以降）
   if (mastery_level === 3) return 6; // 卒業初期値
   
-  // Level 4以降はease_factor計算
+  // Level 4-8はease_factor計算
   const newInterval = Math.round(interval_days * ease_factor);
   return Math.min(newInterval, 365); // 最大365日
 }
