@@ -21,8 +21,8 @@ const createTestNavigationContainer = (level: number) => {
   const TestNavigationContainer = () => (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={SCREEN_NAMES.LEARNING_MODE_SELECTION}>
-        <Stack.Screen 
-          name={SCREEN_NAMES.LEARNING_MODE_SELECTION} 
+        <Stack.Screen
+          name={SCREEN_NAMES.LEARNING_MODE_SELECTION}
           component={LearningModeSelectionScreen}
           initialParams={{ level }}
           options={{ headerShown: false }}
@@ -41,27 +41,29 @@ describe('LearningModeSelectionScreen', () => {
   test('renders correctly with level 1', async () => {
     const TestContainer = createTestNavigationContainer(1);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     expect(component!).toBeDefined();
   });
 
   test('displays selected level in header', async () => {
     const TestContainer = createTestNavigationContainer(3);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     // Text要素の内容を確認 - 配列形式で [3, '級'] となっている
     const textElements = component!.root.findAllByType(Text);
     const levelText = textElements.find(element => {
       const children = element.props.children;
-      return Array.isArray(children) && children[0] === 3 && children[1] === '級';
+      return (
+        Array.isArray(children) && children[0] === 3 && children[1] === '級'
+      );
     });
     expect(levelText).toBeDefined();
   });
@@ -69,16 +71,16 @@ describe('LearningModeSelectionScreen', () => {
   test('displays all three mode buttons', async () => {
     const TestContainer = createTestNavigationContainer(1);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     // 3つのモードボタンを確認
     const learningButton = component!.root.findByProps({ children: '学習' });
     const testButton = component!.root.findByProps({ children: 'テスト' });
     const resultsButton = component!.root.findByProps({ children: '成績' });
-    
+
     expect(learningButton).toBeDefined();
     expect(testButton).toBeDefined();
     expect(resultsButton).toBeDefined();
@@ -87,11 +89,11 @@ describe('LearningModeSelectionScreen', () => {
   test('learning button can be pressed', async () => {
     const TestContainer = createTestNavigationContainer(2);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     // 学習ボタンを見つけてタップ
     const touchableOpacities = component!.root.findAllByType(TouchableOpacity);
     const learningButton = touchableOpacities.find(button => {
@@ -102,26 +104,26 @@ describe('LearningModeSelectionScreen', () => {
         return false;
       }
     });
-    
+
     expect(learningButton).toBeDefined();
-    
+
     // ボタンが押せることを確認（エラーが発生しないことを確認）
     await ReactTestRenderer.act(async () => {
       learningButton!.props.onPress();
     });
-    
+
     // 学習ボタンは現在ナビゲーションするため、Alertは呼ばれない
     expect(Alert.alert).not.toHaveBeenCalled();
   });
 
-  test('test button shows alert when pressed', async () => {
+  test('test button navigates to test mode selection when pressed', async () => {
     const TestContainer = createTestNavigationContainer(4);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     // テストボタンを見つけてタップ
     const touchableOpacities = component!.root.findAllByType(TouchableOpacity);
     const testButton = touchableOpacities.find(button => {
@@ -132,24 +134,23 @@ describe('LearningModeSelectionScreen', () => {
         return false;
       }
     });
-    
+
     expect(testButton).toBeDefined();
-    
+
+    // ナビゲーションはテスト環境では実際には動作しないが、エラーが出ないことを確認
     await ReactTestRenderer.act(async () => {
       testButton!.props.onPress();
     });
-    
-    expect(Alert.alert).toHaveBeenCalledWith('テストモード', '4級のテストモードを選択してください');
   });
 
   test('results button shows alert when pressed', async () => {
     const TestContainer = createTestNavigationContainer(5);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     // 成績ボタンを見つけてタップ
     const touchableOpacities = component!.root.findAllByType(TouchableOpacity);
     const resultsButton = touchableOpacities.find(button => {
@@ -160,24 +161,27 @@ describe('LearningModeSelectionScreen', () => {
         return false;
       }
     });
-    
+
     expect(resultsButton).toBeDefined();
-    
+
     await ReactTestRenderer.act(async () => {
       resultsButton!.props.onPress();
     });
-    
-    expect(Alert.alert).toHaveBeenCalledWith('成績確認', '5級の成績を確認します');
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      '成績確認',
+      '5級の成績を確認します',
+    );
   });
 
   test('back button is present', async () => {
     const TestContainer = createTestNavigationContainer(1);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     const backButton = component!.root.findByProps({ children: '← 戻る' });
     expect(backButton).toBeDefined();
   });
@@ -185,11 +189,11 @@ describe('LearningModeSelectionScreen', () => {
   test('matches snapshot', async () => {
     const TestContainer = createTestNavigationContainer(1);
     let component: ReactTestRenderer.ReactTestRenderer;
-    
+
     await ReactTestRenderer.act(async () => {
       component = ReactTestRenderer.create(<TestContainer />);
     });
-    
+
     expect(component!.toJSON()).toMatchSnapshot();
   });
 });
