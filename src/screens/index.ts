@@ -7,3 +7,5 @@ export { default as LearningModeSelectionScreen } from './LearningModeSelectionS
 export { default as UnitSelectionScreen } from './UnitSelectionScreen';
 export { default as LearningScreen } from './LearningScreen';
 export { default as TestModeSelectionScreen } from './TestModeSelectionScreen';
+export { default as TestUnitSelectionScreen } from './TestUnitSelectionScreen';
+export { default as ReadingTestScreen } from './ReadingTestScreen';
