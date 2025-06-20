@@ -35,8 +35,7 @@ const LearningModeSelectionScreen: React.FC<LearningModeSelectionScreenProps> = 
 
   // テストボタンのタップハンドラ
   const handleTestPress = () => {
-    // TODO: テストモード選択画面への遷移 (04-test-mode-selection)
-    Alert.alert('テストモード', `${level}級のテストモードを選択してください`);
+    navigation.navigate(SCREEN_NAMES.TEST_MODE_SELECTION, { level });
   };
 
   // 成績ボタンのタップハンドラ
