@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   StatusBar,
   useColorScheme,
-  Alert,
   SafeAreaView,
 } from 'react-native';
 import { useReviewCount } from '../hooks/useReviewCount';
@@ -27,8 +26,7 @@ const TopScreen: React.FC<TopScreenProps> = ({ navigation }) => {
       return; // 復習対象が0件の場合は何もしない
     }
     
-    // TODO: 復習画面への遷移
-    Alert.alert('復習画面', `${reviewCount}語の復習を開始します`);
+    navigation.navigate(SCREEN_NAMES.REVIEW);
   };
 
   // 級選択ボタンのタップハンドラ
