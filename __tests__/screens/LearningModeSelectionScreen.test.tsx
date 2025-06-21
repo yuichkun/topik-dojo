@@ -4,7 +4,7 @@
 
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { Alert, TouchableOpacity, Text } from 'react-native';
+import { Alert, TouchableOpacity, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LearningModeSelectionScreen from '../../src/screens/LearningModeSelectionScreen';
@@ -16,6 +16,10 @@ jest.spyOn(Alert, 'alert');
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Mock screens for navigation targets
+const MockUnitSelectionScreen = () => <View><Text>Mock Unit Selection</Text></View>;
+const MockTestModeSelectionScreen = () => <View><Text>Mock Test Mode Selection</Text></View>;
+
 // テスト用のナビゲーションコンテナーを作成
 const createTestNavigationContainer = (level: number) => {
   const TestNavigationContainer = () => (
@@ -25,6 +29,16 @@ const createTestNavigationContainer = (level: number) => {
           name={SCREEN_NAMES.LEARNING_MODE_SELECTION}
           component={LearningModeSelectionScreen}
           initialParams={{ level }}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREEN_NAMES.UNIT_SELECTION}
+          component={MockUnitSelectionScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREEN_NAMES.TEST_MODE_SELECTION}
+          component={MockTestModeSelectionScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
