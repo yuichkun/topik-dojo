@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 2,
+  version: 3,
   tables: [
     // ユニットテーブル
     tableSchema({
@@ -47,47 +47,13 @@ export default appSchema({
     }),
 
 
-    // テスト結果テーブル
+    // 語彙習得管理テーブル
     tableSchema({
-      name: 'test_results',
+      name: 'word_mastery',
       columns: [
-        { name: 'grade', type: 'number' },
-        { name: 'unit', type: 'number' },
+        { name: 'word_id', type: 'string' },
         { name: 'test_type', type: 'string' },
-        { name: 'correct_answers', type: 'number' },
-        { name: 'total_questions', type: 'number' },
-        { name: 'accuracy_rate', type: 'number' },
-        { name: 'duration_seconds', type: 'number', isOptional: true },
-        { name: 'test_date', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-    // テスト問題詳細テーブル
-    tableSchema({
-      name: 'test_questions',
-      columns: [
-        { name: 'test_result_id', type: 'string' },
-        { name: 'word_id', type: 'string' },
-        { name: 'is_correct', type: 'boolean' },
-        { name: 'user_answer', type: 'string', isOptional: true },
-        { name: 'correct_answer', type: 'string' },
-        { name: 'response_time_ms', type: 'number', isOptional: true },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-    // 復習履歴テーブル
-    tableSchema({
-      name: 'review_history',
-      columns: [
-        { name: 'word_id', type: 'string' },
-        { name: 'feedback', type: 'string' },
-        { name: 'previous_mastery_level', type: 'number', isOptional: true },
-        { name: 'new_mastery_level', type: 'number' },
-        { name: 'review_date', type: 'number' },
+        { name: 'mastered_date', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ]
@@ -97,11 +63,11 @@ export default appSchema({
     tableSchema({
       name: 'learning_progress',
       columns: [
-        { name: 'progress_date', type: 'string' },
+        { name: 'date', type: 'string' },
         { name: 'grade', type: 'number' },
-        { name: 'mastered_words_count', type: 'number' },
+        { name: 'listening_mastered_count', type: 'number' },
+        { name: 'reading_mastered_count', type: 'number' },
         { name: 'total_words_count', type: 'number' },
-        { name: 'progress_rate', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ]

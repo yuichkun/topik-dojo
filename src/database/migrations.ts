@@ -27,5 +27,23 @@ export default schemaMigrations({
         }),
       ],
     },
+    
+    // Version 3: WORD_MASTERYテーブル追加とLEARNING_PROGRESSテーブル修正
+    {
+      toVersion: 3,
+      steps: [
+        // 1. WORD_MASTERYテーブルを作成
+        createTable({
+          name: 'word_mastery',
+          columns: [
+            { name: 'word_id', type: 'string' },
+            { name: 'test_type', type: 'string' },
+            { name: 'mastered_date', type: 'number' },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
   ],
 });
