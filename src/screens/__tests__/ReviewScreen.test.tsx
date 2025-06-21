@@ -14,6 +14,7 @@ import {
   createTestWord,
   createTestSrsRecord,
 } from '../../../__tests__/helpers/databaseHelpers';
+import { SrsManagement } from '../../database/models';
 import database from '../../database';
 
 // react-native-sound-playerのモック
@@ -52,10 +53,9 @@ describe('ReviewScreen', () => {
 
   test('renders correctly when no review words available', async () => {
     const TestContainer = createTestNavigationContainer();
-    let component: ReactTestRenderer.ReactTestRenderer;
 
     await ReactTestRenderer.act(async () => {
-      component = ReactTestRenderer.create(<TestContainer />);
+      ReactTestRenderer.create(<TestContainer />);
     });
 
     // 復習対象がない場合、Alertが表示される
@@ -449,7 +449,7 @@ describe('ReviewScreen', () => {
 
       // SRSデータが更新されたことを確認（データベースから再取得）
       const srsRecords = await database.collections
-        .get(srs.table)
+        .get<SrsManagement>(srs.table)
         .find(srs.id);
       expect(srsRecords.masteryLevel).toBe(2); // 1→2
       expect(srsRecords.intervalDays).toBe(3); // レベル2は3日固定
@@ -494,7 +494,7 @@ describe('ReviewScreen', () => {
 
       // SRSデータが更新されたことを確認（データベースから再取得）
       const srsRecords = await database.collections
-        .get(srs.table)
+        .get<SrsManagement>(srs.table)
         .find(srs.id);
       expect(srsRecords.masteryLevel).toBe(2); // 3→2
       expect(srsRecords.intervalDays).toBe(1); // リセット

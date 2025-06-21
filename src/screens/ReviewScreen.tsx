@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -67,20 +67,13 @@ export default function ReviewScreen({ navigation }: ReviewScreenProps) {
     loadReviewWords();
   }, [navigation]);
 
-  // 現在の単語表示時に音声自動再生
-  useEffect(() => {
-    if (reviewWords.length > 0 && currentIndex < reviewWords.length) {
-      playWordAudio();
-    }
-  }, [currentIndex, reviewWords]);
-
   // 現在の単語データ
   const currentWordData = reviewWords[currentIndex];
   const currentWord = currentWordData?.word;
   const remainingCount = reviewWords.length - currentIndex;
 
   // 音声再生
-  const playWordAudio = () => {
+  const playWordAudio = useCallback(() => {
     if (currentWord) {
       try {
         // テスト用に固定のファイルを再生
@@ -90,7 +83,14 @@ export default function ReviewScreen({ navigation }: ReviewScreenProps) {
         console.warn('音声の再生に失敗しました');
       }
     }
-  };
+  }, [currentWord]);
+
+  // 現在の単語表示時に音声自動再生
+  useEffect(() => {
+    if (reviewWords.length > 0 && currentIndex < reviewWords.length) {
+      playWordAudio();
+    }
+  }, [currentIndex, reviewWords, playWordAudio]);
 
   // 例文音声再生
   const playExampleAudio = () => {
