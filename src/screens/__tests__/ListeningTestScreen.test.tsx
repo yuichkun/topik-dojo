@@ -1,5 +1,5 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor, act } from '@testing-library/react-native';
 import React from 'react';
 import { Alert } from 'react-native';
 import SoundPlayer from 'react-native-sound-player';
@@ -128,7 +128,9 @@ describe('ListeningTestScreen', () => {
     });
 
     it('should eventually load test content after loading state', async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
 
       const { getByText } = renderScreen();
 
@@ -154,14 +156,16 @@ describe('ListeningTestScreen', () => {
 
     it('should show error message when no questions are available', async () => {
       // Create unit but no words
-      await database.write(async () => {
-        return await database.collections
-          .get<Unit>(TableName.UNITS)
-          .create(unit => {
-            unit._raw.id = 'unit_3_1';
-            unit.grade = 3;
-            unit.unitNumber = 1;
-          });
+      await act(async () => {
+        await database.write(async () => {
+          return await database.collections
+            .get<Unit>(TableName.UNITS)
+            .create(unit => {
+              unit._raw.id = 'unit_3_1';
+              unit.grade = 3;
+              unit.unitNumber = 1;
+            });
+        });
       });
 
       const { getByText } = renderScreen();
@@ -175,7 +179,9 @@ describe('ListeningTestScreen', () => {
 
   describe('Successful test flow', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should render test screen with correct header information', async () => {
@@ -353,7 +359,9 @@ describe('ListeningTestScreen', () => {
 
   describe('Navigation', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should show confirmation dialog when back button is pressed', async () => {
@@ -404,7 +412,9 @@ describe('ListeningTestScreen', () => {
 
   describe('Answer selection and feedback', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should disable answer buttons after selection', async () => {
@@ -423,44 +433,47 @@ describe('ListeningTestScreen', () => {
     it('should track correct and incorrect answers', async () => {
       const { getByText, queryByText } = renderScreen();
 
-      await waitFor(async () => {
-        // Answer first question correctly
+      // Answer first question correctly
+      await waitFor(() => {
+        expect(getByText('ユニット 1-10 (1/3)')).toBeTruthy();
         fireEvent.press(getByText('こんにちは'));
         fireEvent.press(getByText('次の問題へ'));
+      });
 
-        // Answer second question incorrectly (find a wrong answer)
-        await waitFor(() => {
-          expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
-        });
+      // Answer second question incorrectly (find a wrong answer)
+      await waitFor(() => {
+        expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
+      });
 
-        // Press a wrong answer if available, otherwise press correct
-        const wrongAnswers = ['学生', '先生', '学校'];
-        let foundWrongAnswer = false;
+      // Press a wrong answer if available, otherwise press correct
+      const wrongAnswers = ['学生', '先生', '学校'];
+      let foundWrongAnswer = false;
 
-        for (const wrongAnswer of wrongAnswers) {
-          const wrongElement = queryByText(wrongAnswer);
-          if (wrongElement) {
-            fireEvent.press(wrongElement);
-            foundWrongAnswer = true;
-            break;
-          }
+      for (const wrongAnswer of wrongAnswers) {
+        const wrongElement = queryByText(wrongAnswer);
+        if (wrongElement) {
+          fireEvent.press(wrongElement);
+          foundWrongAnswer = true;
+          break;
         }
+      }
 
-        if (!foundWrongAnswer) {
-          // If no wrong answers visible, press correct answer
-          fireEvent.press(getByText('ありがとうございます'));
-        }
+      if (!foundWrongAnswer) {
+        // If no wrong answers visible, press correct answer
+        fireEvent.press(getByText('ありがとうございます'));
+      }
 
-        fireEvent.press(getByText('次の問題へ'));
+      fireEvent.press(getByText('次の問題へ'));
 
-        // Complete third question
-        await waitFor(() => {
-          expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
-        });
-        fireEvent.press(getByText('すみません'));
-        fireEvent.press(getByText('テスト完了'));
+      // Complete third question
+      await waitFor(() => {
+        expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
+      });
+      fireEvent.press(getByText('すみません'));
+      fireEvent.press(getByText('テスト完了'));
 
-        // Should show results with accuracy
+      // Should show results with accuracy
+      await waitFor(() => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'テスト完了！',
           expect.stringMatching(/正答率: \d+% \(\d+\/3問正解\)/),
@@ -472,7 +485,9 @@ describe('ListeningTestScreen', () => {
 
   describe('Progress tracking', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should show correct progress throughout the test', async () => {
@@ -506,7 +521,9 @@ describe('ListeningTestScreen', () => {
 
   describe('Audio functionality', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should auto-play audio when advancing to next question', async () => {
@@ -551,24 +568,26 @@ describe('ListeningTestScreen', () => {
 
   describe('Different grade levels', () => {
     it('should work with different grade levels', async () => {
-      // Create data for grade 5
-      await database.write(async () => {
-        return await database.collections
-          .get<Unit>(TableName.UNITS)
-          .create(unit => {
-            unit._raw.id = 'unit_5_1';
-            unit.grade = 5;
-            unit.unitNumber = 1;
-          });
-      });
+      await act(async () => {
+        // Create data for grade 5
+        await database.write(async () => {
+          return await database.collections
+            .get<Unit>(TableName.UNITS)
+            .create(unit => {
+              unit._raw.id = 'unit_5_1';
+              unit.grade = 5;
+              unit.unitNumber = 1;
+            });
+        });
 
-      await createTestWord(database, {
-        id: 'word_5_1',
-        korean: '컴퓨터',
-        japanese: 'コンピューター',
-        grade: 5,
-        unitId: 'unit_5_1',
-        unitOrder: 1,
+        await createTestWord(database, {
+          id: 'word_5_1',
+          korean: '컴퓨터',
+          japanese: 'コンピューター',
+          grade: 5,
+          unitId: 'unit_5_1',
+          unitOrder: 1,
+        });
       });
 
       const customRoute = { params: { level: 5, unitNumber: 1 } };
@@ -583,24 +602,26 @@ describe('ListeningTestScreen', () => {
 
   describe('Edge cases', () => {
     it('should handle insufficient wrong answer options', async () => {
-      // Create unit with only one word (not enough for wrong options)
-      await database.write(async () => {
-        return await database.collections
-          .get<Unit>(TableName.UNITS)
-          .create(unit => {
-            unit._raw.id = 'unit_3_1';
-            unit.grade = 3;
-            unit.unitNumber = 1;
-          });
-      });
+      await act(async () => {
+        // Create unit with only one word (not enough for wrong options)
+        await database.write(async () => {
+          return await database.collections
+            .get<Unit>(TableName.UNITS)
+            .create(unit => {
+              unit._raw.id = 'unit_3_1';
+              unit.grade = 3;
+              unit.unitNumber = 1;
+            });
+        });
 
-      await createTestWord(database, {
-        id: 'word_only',
-        korean: '유일한',
-        japanese: '唯一の',
-        grade: 3,
-        unitId: 'unit_3_1',
-        unitOrder: 1,
+        await createTestWord(database, {
+          id: 'word_only',
+          korean: '유일한',
+          japanese: '唯一の',
+          grade: 3,
+          unitId: 'unit_3_1',
+          unitOrder: 1,
+        });
       });
 
       const { getByText } = renderScreen();
@@ -615,7 +636,9 @@ describe('ListeningTestScreen', () => {
 
   describe('Sound player error handling', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should handle sound player errors gracefully', async () => {
@@ -653,7 +676,9 @@ describe('ListeningTestScreen', () => {
 
   describe('UI Theme consistency', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should use purple theme throughout the interface', async () => {
@@ -683,7 +708,9 @@ describe('ListeningTestScreen', () => {
 
   describe('復習リスト登録機能', () => {
     beforeEach(async () => {
-      await createTestData();
+      await act(async () => {
+        await createTestData();
+      });
     });
 
     it('should register incorrect answers to SRS review list for new words', async () => {
