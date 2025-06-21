@@ -2424,6 +2424,65 @@ PODS:
     - Yoga
   - RNSoundPlayer (0.14.5):
     - React-Core
+  - RNSVG (15.12.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RNSVG/common (= 15.12.0)
+    - SocketRocket
+    - Yoga
+  - RNSVG/common (15.12.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - simdjson (3.1.0-wmelon1)
   - SocketRocket (0.7.1)
   - WatermelonDB (0.27.1):
@@ -2508,6 +2567,7 @@ DEPENDENCIES:
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSoundPlayer (from `../node_modules/react-native-sound-player`)
+  - RNSVG (from `../node_modules/react-native-svg`)
   - "simdjson (from `../node_modules/@nozbe/simdjson`)"
   - SocketRocket (~> 0.7.1)
   - "WatermelonDB (from `../node_modules/@nozbe/watermelondb`)"
@@ -2669,6 +2729,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screens"
   RNSoundPlayer:
     :path: "../node_modules/react-native-sound-player"
+  RNSVG:
+    :path: "../node_modules/react-native-svg"
   simdjson:
     :path: "../node_modules/@nozbe/simdjson"
   WatermelonDB:
@@ -2752,6 +2814,7 @@ SPEC CHECKSUMS:
   RNReanimated: bc1ddb7a5352648bcf0d592256069833bf935a46
   RNScreens: ee2abe7e0c548eed14e92742e81ed991165c56aa
   RNSoundPlayer: 7961678d02c7339d9e9cfb78b9f3e8fde17f9df2
+  RNSVG: 341f555dbcd83a34d1f058e88df387de7bbc3347
   simdjson: e6bfae9ce4bcdc80452d388d593816f1ca2106f3
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   WatermelonDB: 358332faedb8dd4aa699a178e308586e4e3a8b23
