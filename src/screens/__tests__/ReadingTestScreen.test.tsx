@@ -6,7 +6,7 @@ import SoundPlayer from 'react-native-sound-player';
 import { createTestWord } from '../../../__tests__/helpers/databaseHelpers';
 import database from '../../database';
 import { TableName } from '../../database/constants';
-import { Unit, SrsManagement } from '../../database/models';
+import { Unit, SrsManagement, WordMastery } from '../../database/models';
 import ReadingTestScreen from '../ReadingTestScreen';
 
 // Mock Alert
@@ -720,6 +720,159 @@ describe('ReadingTestScreen', () => {
           }
         });
       });
+    });
+  });
+
+  describe('語彙習得記録機能', () => {
+    beforeEach(async () => {
+      await createTestData();
+    });
+
+    it('should record correct answers to WORD_MASTERY table', async () => {
+      const { getByText } = renderScreen();
+
+      // Answer all questions correctly
+      await waitFor(async () => {
+        // First question
+        expect(getByText('안녕하세요')).toBeTruthy();
+        fireEvent.press(getByText('こんにちは'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Second question
+        await waitFor(() => {
+          expect(getByText('감사합니다')).toBeTruthy();
+        });
+        fireEvent.press(getByText('ありがとうございます'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Third question
+        await waitFor(() => {
+          expect(getByText('죄송합니다')).toBeTruthy();
+        });
+        fireEvent.press(getByText('すみません'));
+        fireEvent.press(getByText('テスト完了'));
+      });
+
+      // Verify WORD_MASTERY records were created for all correct answers
+      const masteryRecords = await database.collections
+        .get<WordMastery>(TableName.WORD_MASTERY)
+        .query()
+        .fetch();
+
+      expect(masteryRecords.length).toBe(3); // All 3 answers were correct
+      
+      // Check all records have correct test_type
+      masteryRecords.forEach(mastery => {
+        expect(mastery.testType).toBe('reading');
+        expect(mastery.masteredDate).toBeDefined();
+      });
+
+      // Check specific word IDs are recorded
+      const wordIds = masteryRecords.map(m => m.wordId).sort();
+      expect(wordIds).toEqual(['word_1', 'word_2', 'word_3']);
+    });
+
+    it('should not create duplicate WORD_MASTERY records for already mastered words', async () => {
+      // Pre-create a mastery record
+      await database.write(async () => {
+        await database.collections
+          .get<WordMastery>(TableName.WORD_MASTERY)
+          .create(mastery => {
+            mastery.wordId = 'word_1';
+            mastery.testType = 'reading';
+            mastery.masteredDate = Date.now() - 86400000; // Yesterday
+          });
+      });
+
+      const { getByText } = renderScreen();
+
+      // Answer all questions correctly
+      await waitFor(async () => {
+        // First question (already mastered)
+        expect(getByText('안녕하세요')).toBeTruthy();
+        fireEvent.press(getByText('こんにちは'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Second question
+        await waitFor(() => {
+          expect(getByText('감사합니다')).toBeTruthy();
+        });
+        fireEvent.press(getByText('ありがとうございます'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Third question
+        await waitFor(() => {
+          expect(getByText('죄송합니다')).toBeTruthy();
+        });
+        fireEvent.press(getByText('すみません'));
+        fireEvent.press(getByText('テスト完了'));
+      });
+
+      // Verify only 3 WORD_MASTERY records exist (1 pre-existing + 2 new)
+      const masteryRecords = await database.collections
+        .get<WordMastery>(TableName.WORD_MASTERY)
+        .query()
+        .fetch();
+
+      expect(masteryRecords.length).toBe(3);
+      
+      // Verify no duplicate for word_1
+      const word1Records = masteryRecords.filter(m => m.wordId === 'word_1' && m.testType === 'reading');
+      expect(word1Records.length).toBe(1);
+    });
+
+    it('should record only correct answers, not incorrect ones', async () => {
+      const { getByText, queryByText } = renderScreen();
+
+      await waitFor(async () => {
+        // Answer first question incorrectly
+        expect(getByText('안녕하세요')).toBeTruthy();
+        const wrongAnswers = ['学生', '先生', '学校'];
+        let foundWrongAnswer = false;
+        for (const wrongAnswer of wrongAnswers) {
+          const wrongElement = queryByText(wrongAnswer);
+          if (wrongElement) {
+            fireEvent.press(wrongElement);
+            foundWrongAnswer = true;
+            break;
+          }
+        }
+        if (!foundWrongAnswer) fireEvent.press(getByText('こんにちは'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Answer second question correctly
+        await waitFor(() => {
+          expect(getByText('감사합니다')).toBeTruthy();
+        });
+        fireEvent.press(getByText('ありがとうございます'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Answer third question correctly
+        await waitFor(() => {
+          expect(getByText('죄송합니다')).toBeTruthy();
+        });
+        fireEvent.press(getByText('すみません'));
+        fireEvent.press(getByText('テスト完了'));
+      });
+
+      // Verify only correct answers are recorded in WORD_MASTERY
+      const masteryRecords = await database.collections
+        .get<WordMastery>(TableName.WORD_MASTERY)
+        .query()
+        .fetch();
+
+      // Should have 2 records (for questions 2 and 3 that were answered correctly)
+      expect(masteryRecords.length).toBeGreaterThanOrEqual(2);
+      expect(masteryRecords.length).toBeLessThanOrEqual(2);
+      
+      // Check that all records are for reading test type
+      masteryRecords.forEach(mastery => {
+        expect(mastery.testType).toBe('reading');
+      });
+
+      // The incorrect answer (word_1) should not be in mastery records
+      const word1Mastery = masteryRecords.find(m => m.wordId === 'word_1');
+      expect(word1Mastery).toBeUndefined();
     });
   });
 });
