@@ -24,6 +24,7 @@ import {
   updateSrsForMistake,
 } from '../database/queries/srsQueries';
 import { createWordMastery } from '../database/queries/wordMasteryQueries';
+import { updateOrCreateLearningProgress } from '../database/queries/learningProgressQueries';
 import { useUnits } from '../hooks/useUnits';
 import database from '../database';
 import { Q } from '@nozbe/watermelondb';
@@ -234,6 +235,9 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
         }
       }
     }
+
+    // 学習進捗スナップショットを更新
+    await updateOrCreateLearningProgress(level);
 
     Alert.alert(
       'テスト完了！',
