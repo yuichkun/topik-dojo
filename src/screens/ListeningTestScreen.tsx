@@ -18,6 +18,11 @@ import SoundPlayer from 'react-native-sound-player';
 import { SCREEN_NAMES } from '../constants/screens';
 import { Word } from '../database/models';
 import { getRandomWordsByGrade } from '../database/queries/wordQueries';
+import {
+  getSrsManagementByWordId,
+  createSrsManagement,
+  updateSrsForMistake,
+} from '../database/queries/srsQueries';
 import { useUnits } from '../hooks/useUnits';
 import database from '../database';
 import { Q } from '@nozbe/watermelondb';
@@ -156,9 +161,12 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
       console.log('単語音声再生: ListeningTest');
       
       // 再生完了時の処理
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setIsPlaying(false);
       }, 2000); // 2秒後に再生完了とみなす
+      
+      // クリーンアップ関数で返す
+      return () => clearTimeout(timer);
     } catch (error) {
       console.warn('音声再生エラー:', error);
       setIsPlaying(false);
@@ -202,14 +210,30 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
   };
 
   // テスト完了処理
-  const handleTestComplete = () => {
+  const handleTestComplete = async () => {
     const correctCount = results.filter(r => r.correct).length;
     const totalQuestions = questions.length;
     const accuracy = Math.round((correctCount / totalQuestions) * 100);
 
+    // 間違えた問題を復習リストに登録
+    const incorrectResults = results.filter(r => !r.correct);
+    for (const result of incorrectResults) {
+      const question = questions.find(q => q.word.id === result.wordId);
+      if (question) {
+        const existingSrs = await getSrsManagementByWordId(question.word.id);
+        if (!existingSrs) {
+          // 新規登録（テスト間違いなのでfromMistake=true）
+          await createSrsManagement(question.word.id, true);
+        } else {
+          // 既存の場合は「覚えてない」処理を適用
+          await updateSrsForMistake(existingSrs);
+        }
+      }
+    }
+
     Alert.alert(
       'テスト完了！',
-      `正答率: ${accuracy}% (${correctCount}/${totalQuestions}問正解)`,
+      `正答率: ${accuracy}% (${correctCount}/${totalQuestions}問正解)${incorrectResults.length > 0 ? '\n\n間違えた単語は復習リストに追加されました。' : ''}`,
       [{ text: 'OK', onPress: () => navigation.goBack() }],
     );
   };
