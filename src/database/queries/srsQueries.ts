@@ -59,6 +59,40 @@ export const createSrsManagement = async (
 };
 
 /**
+ * 既存のSRSレコードを「覚えてない」として更新
+ */
+export const updateSrsForMistake = async (
+  srs: SrsManagement,
+): Promise<SrsManagement | null> => {
+  try {
+    const updatedSrs = await database.write(async () => {
+      return await srs.update(record => {
+        // mastery_levelを下げる（最小0）
+        record.masteryLevel = Math.max(0, record.masteryLevel - 1);
+        // ease_factorを減少（最小1.3）
+        record.easeFactor = Math.max(1.3, record.easeFactor - 0.2);
+        // 間隔を1日にリセット
+        record.intervalDays = 1;
+        // 明日に設定
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        record.nextReviewDate = tomorrow.getTime();
+        // 間違い回数を増加
+        record.mistakeCount = record.mistakeCount + 1;
+        // 最終復習日時を更新
+        record.lastReviewed = Date.now();
+      });
+    });
+
+    return updatedSrs;
+  } catch (error) {
+    console.error('SRS update error:', error);
+    return null;
+  }
+};
+
+/**
  * 次回復習予定日までの日数を計算
  */
 export const calculateDaysToReview = (nextReviewDate: number): number => {
