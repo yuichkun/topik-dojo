@@ -141,13 +141,12 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
 
   // 音声再生ボタンのハンドラ
   const handlePlayAudio = () => {
+    // テスト用に固定のファイルを再生（学習画面と同じ方式）
+    // TODO: あとで変える
     try {
-      // テスト用に固定のファイルを再生（学習画面と同じ方式）
       SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
-      console.log('単語音声再生: ReadingTest');
-    } catch (error) {
-      console.warn('音声再生エラー:', error);
-      // 音声再生エラーは無視（オプション機能のため）
+    } catch (e) {
+      Alert.alert('エラー', '音声再生に失敗しました');
     }
   };
 

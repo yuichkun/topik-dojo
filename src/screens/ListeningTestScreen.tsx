@@ -158,19 +158,16 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
       setIsPlaying(true);
       // テスト用に固定のファイルを再生（学習画面と同じ方式）
       SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
-      console.log('単語音声再生: ListeningTest');
-      
+
       // 再生完了時の処理
       const timer = setTimeout(() => {
         setIsPlaying(false);
       }, 2000); // 2秒後に再生完了とみなす
-      
+
       // クリーンアップ関数で返す
       return () => clearTimeout(timer);
     } catch (error) {
-      console.warn('音声再生エラー:', error);
       setIsPlaying(false);
-      // 音声再生エラーは無視（オプション機能のため）
     }
   };
 
@@ -233,7 +230,11 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
 
     Alert.alert(
       'テスト完了！',
-      `正答率: ${accuracy}% (${correctCount}/${totalQuestions}問正解)${incorrectResults.length > 0 ? '\n\n間違えた単語は復習リストに追加されました。' : ''}`,
+      `正答率: ${accuracy}% (${correctCount}/${totalQuestions}問正解)${
+        incorrectResults.length > 0
+          ? '\n\n間違えた単語は復習リストに追加されました。'
+          : ''
+      }`,
       [{ text: 'OK', onPress: () => navigation.goBack() }],
     );
   };
@@ -362,9 +363,7 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
             }`}
             onPress={handlePlayAudio}
           >
-            <Text className="text-4xl">
-              {isPlaying ? '⏸️' : '▶️'}
-            </Text>
+            <Text className="text-4xl">{isPlaying ? '⏸️' : '▶️'}</Text>
           </TouchableOpacity>
 
           <Text className="text-sm text-gray-500 mt-4">

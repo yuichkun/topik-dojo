@@ -30,9 +30,7 @@ export default function LearningScreen({
   const [showExample, setShowExample] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [srsData, setSrsData] = useState<Map<string, SrsManagement>>(
-    new Map(),
-  );
+  const [srsData, setSrsData] = useState<Map<string, SrsManagement>>(new Map());
 
   // 単語データ取得
   useEffect(() => {
@@ -140,9 +138,7 @@ export default function LearningScreen({
       try {
         // テスト用に固定のファイルを再生
         SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
-        console.log('単語音声再生:', currentWord.wordAudioPath);
       } catch (_error) {
-        console.error('音声再生エラー:', _error);
         Alert.alert('エラー', '音声の再生に失敗しました');
       }
     }
@@ -154,9 +150,7 @@ export default function LearningScreen({
       try {
         // テスト用に固定のファイルを再生
         SoundPlayer.playAsset(require('../assets/audio/examples/word_1.mp3'));
-        console.log('例文音声再生:', currentWord.exampleAudioPath);
       } catch (_error) {
-        console.error('例文音声再生エラー:', _error);
         Alert.alert('エラー', '例文音声の再生に失敗しました');
       }
     }
@@ -342,11 +336,15 @@ export default function LearningScreen({
           {(() => {
             const existingSrs = srsData.get(currentWord.id);
             if (existingSrs) {
-              const daysToReview = calculateDaysToReview(existingSrs.nextReviewDate || 0);
+              const daysToReview = calculateDaysToReview(
+                existingSrs.nextReviewDate || 0,
+              );
               return (
                 <View className="px-6 py-3 rounded-lg bg-gray-200">
                   <Text className="font-semibold text-gray-700 text-center">
-                    {daysToReview === 0 ? '今日復習予定' : `${daysToReview}日後に復習予定`}
+                    {daysToReview === 0
+                      ? '今日復習予定'
+                      : `${daysToReview}日後に復習予定`}
                   </Text>
                 </View>
               );
