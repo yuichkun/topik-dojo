@@ -11,7 +11,6 @@ import {
   SafeAreaView,
   StatusBar,
   useColorScheme,
-  Alert,
 } from 'react-native';
 import { LearningModeSelectionScreenProps } from '../navigation/types';
 import { SCREEN_NAMES } from '../constants/screens';
@@ -40,8 +39,7 @@ const LearningModeSelectionScreen: React.FC<LearningModeSelectionScreenProps> = 
 
   // 成績ボタンのタップハンドラ
   const handleResultsPress = () => {
-    // TODO: 成績確認画面への遷移 (10-results)
-    Alert.alert('成績確認', `${level}級の成績を確認します`);
+    navigation.navigate(SCREEN_NAMES.RESULTS, { level });
   };
 
   return (
