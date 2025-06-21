@@ -27,7 +27,7 @@ jest.mock('react-native-sound-player', () => ({
 beforeEach(async () => {
   const databaseModule = require('./src/database');
   const database = databaseModule.default || databaseModule;
-  
+
   if (database && typeof database.write === 'function') {
     await database.write(async () => {
       await database.unsafeResetDatabase();
@@ -42,18 +42,17 @@ afterAll(async () => {
     const testDbFiles = [
       `${DATABASE_CONFIG.name}.db`,
       `${DATABASE_CONFIG.name}.db-shm`,
-      `${DATABASE_CONFIG.name}.db-wal`
+      `${DATABASE_CONFIG.name}.db-wal`,
     ];
-    
+
     for (const dbFile of testDbFiles) {
       const dbPath = path.join(__dirname, dbFile);
       try {
         if (fs.existsSync(dbPath)) {
           fs.unlinkSync(dbPath);
-          console.log(`Cleaned up test database file: ${dbFile}`);
         }
       } catch (error) {
-        console.warn(`Failed to clean up ${dbFile}:`, error.message);
+        console.error(`Failed to clean up ${dbFile}:`, error.message);
       }
     }
   } catch (error) {
