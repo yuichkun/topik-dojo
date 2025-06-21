@@ -113,7 +113,6 @@ const testSrsData = [
     intervalDays: 1,
     mistakeCount: 0,
     lastReviewed: null,
-    status: 'learning',
   },
   {
     id: 'srs_2',
@@ -124,7 +123,6 @@ const testSrsData = [
     intervalDays: 3,
     mistakeCount: 0,
     lastReviewed: Date.now() - (1 * 24 * 60 * 60 * 1000), // 1日前
-    status: 'learning',
   },
   {
     id: 'srs_3',
@@ -135,7 +133,6 @@ const testSrsData = [
     intervalDays: 6,
     mistakeCount: 1,
     lastReviewed: Date.now() - (1 * 24 * 60 * 60 * 1000), // 1日前
-    status: 'graduated',
   }
 ];
 
@@ -216,8 +213,8 @@ async function seedDatabase(): Promise<void> {
     
     // SRSデータを挿入
     const insertSrs = db.prepare(`
-      INSERT INTO srs_management (id, word_id, mastery_level, ease_factor, next_review_date, interval_days, mistake_count, last_reviewed, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO srs_management (id, word_id, mastery_level, ease_factor, next_review_date, interval_days, mistake_count, last_reviewed, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     for (const srs of testSrsData) {
@@ -230,7 +227,6 @@ async function seedDatabase(): Promise<void> {
         srs.intervalDays,
         srs.mistakeCount,
         srs.lastReviewed ?? null,
-        srs.status,
         now,
         now
       );

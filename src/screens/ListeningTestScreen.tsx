@@ -1,6 +1,6 @@
 /**
- * リーディングテスト画面
- * 韓国語単語を表示し、4択の日本語訳から正解を選ぶテスト画面
+ * リスニングテスト画面
+ * 音声を聞いて、4択の日本語訳から正解を選ぶテスト画面
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -28,7 +28,7 @@ import database from '../database';
 import { Q } from '@nozbe/watermelondb';
 import { TableName } from '../database/constants';
 
-import { ReadingTestScreenProps } from '../navigation/types';
+import { ListeningTestScreenProps } from '../navigation/types';
 
 interface TestQuestion {
   word: Word;
@@ -42,7 +42,7 @@ interface TestResult {
   timeMs: number;
 }
 
-const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
+const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
   navigation,
   route,
 }) => {
@@ -58,6 +58,7 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
     Date.now(),
   );
   const [showNextButton, setShowNextButton] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // ユニット情報を取得
   const { units } = useUnits(level);
@@ -117,6 +118,13 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
     generateQuestions();
   }, [generateQuestions]);
 
+  // 音声自動再生（問題表示時）
+  useEffect(() => {
+    if (questions.length > 0 && !loading) {
+      handlePlayAudio();
+    }
+  }, [currentQuestionIndex, questions, loading]);
+
   // 戻るボタンのハンドラ
   const handleBackPress = () => {
     Alert.alert(
@@ -146,12 +154,20 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
 
   // 音声再生ボタンのハンドラ
   const handlePlayAudio = () => {
-    // テスト用に固定のファイルを再生（学習画面と同じ方式）
-    // TODO: あとで変える
     try {
+      setIsPlaying(true);
+      // テスト用に固定のファイルを再生（学習画面と同じ方式）
       SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
-    } catch (e) {
-      Alert.alert('エラー', '音声再生に失敗しました');
+
+      // 再生完了時の処理
+      const timer = setTimeout(() => {
+        setIsPlaying(false);
+      }, 2000); // 2秒後に再生完了とみなす
+
+      // クリーンアップ関数で返す
+      return () => clearTimeout(timer);
+    } catch (error) {
+      setIsPlaying(false);
     }
   };
 
@@ -269,7 +285,7 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-white justify-center items-center">
-        <ActivityIndicator size="large" color="#14B8A6" />
+        <ActivityIndicator size="large" color="#8B5CF6" />
         <Text className="mt-4 text-gray-600">問題を準備しています...</Text>
       </SafeAreaView>
     );
@@ -282,7 +298,7 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
           問題データが見つかりません
         </Text>
         <TouchableOpacity
-          className="bg-teal-500 px-6 py-3 rounded-lg"
+          className="bg-purple-500 px-6 py-3 rounded-lg"
           onPress={() => navigation.goBack()}
         >
           <Text className="text-white font-medium">戻る</Text>
@@ -305,15 +321,15 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
       <View className="px-4 py-4 border-b border-gray-200">
         <View className="flex-row items-center justify-between mb-2">
           <TouchableOpacity onPress={handleBackPress}>
-            <Text className="text-teal-500 text-base">← 戻る</Text>
+            <Text className="text-purple-500 text-base">← 戻る</Text>
           </TouchableOpacity>
 
           <Text className="text-lg font-semibold text-gray-800">
-            {level}級 リーディングテスト
+            {level}級 リスニングテスト
           </Text>
 
           <TouchableOpacity onPress={handleHomePress}>
-            <Text className="text-teal-500 text-base">ホーム</Text>
+            <Text className="text-purple-500 text-base">ホーム</Text>
           </TouchableOpacity>
         </View>
 
@@ -325,7 +341,7 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
           </Text>
           <View className="bg-gray-200 rounded-full h-2">
             <View
-              className="bg-teal-500 h-2 rounded-full"
+              className="bg-purple-500 h-2 rounded-full"
               style={{ width: `${progress}%` }}
             />
           </View>
@@ -334,19 +350,25 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
 
       {/* メインコンテンツ */}
       <View className="flex-1 px-6 py-8">
-        {/* 韓国語単語表示 */}
+        {/* 音声プレイヤーエリア */}
         <View className="items-center mb-8">
-          <Text className="text-4xl font-bold text-gray-800 mb-4 text-center">
-            {currentQuestion.word.korean}
+          <Text className="text-lg text-gray-600 mb-6 text-center">
+            🎧 音声を聞いて正しい日本語訳を選んでください
           </Text>
 
-          {/* 音声再生ボタン */}
+          {/* 大きな音声再生ボタン */}
           <TouchableOpacity
-            className="bg-teal-100 p-3 rounded-full"
+            className={`w-32 h-32 rounded-full items-center justify-center shadow-lg ${
+              isPlaying ? 'bg-purple-600' : 'bg-purple-500'
+            }`}
             onPress={handlePlayAudio}
           >
-            <Text className="text-2xl">🔊</Text>
+            <Text className="text-4xl">{isPlaying ? '⏸️' : '▶️'}</Text>
           </TouchableOpacity>
+
+          <Text className="text-sm text-gray-500 mt-4">
+            タップして音声を再生
+          </Text>
         </View>
 
         {/* 4択選択肢 */}
@@ -370,7 +392,7 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
         {/* 次へボタン */}
         {showNextButton && (
           <TouchableOpacity
-            className="bg-teal-500 py-4 rounded-lg mt-4"
+            className="bg-purple-500 py-4 rounded-lg mt-4"
             onPress={handleNextQuestion}
           >
             <Text className="text-white text-lg font-semibold text-center">
@@ -385,4 +407,4 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
   );
 };
 
-export default ReadingTestScreen;
+export default ListeningTestScreen;

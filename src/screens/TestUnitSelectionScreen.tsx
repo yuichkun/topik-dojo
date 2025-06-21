@@ -47,8 +47,6 @@ const TestUnitSelectionScreen: React.FC<TestUnitSelectionScreenProps> = ({
         unitNumber,
       });
     } else if (testMode === 'listening') {
-      // TODO: リスニングテスト画面への遷移
-      // @ts-expect-error まだスクリーンがないため。できたら、このコメントを消す
       navigation.navigate(SCREEN_NAMES.LISTENING_TEST, {
         level,
         unitNumber,

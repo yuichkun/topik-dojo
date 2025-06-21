@@ -1,5 +1,10 @@
 import { Model, Relation } from '@nozbe/watermelondb';
-import { field, date, readonly, relation } from '@nozbe/watermelondb/decorators';
+import {
+  field,
+  date,
+  readonly,
+  relation,
+} from '@nozbe/watermelondb/decorators';
 import { TableName } from '../constants';
 import Word from './Word';
 
@@ -17,9 +22,9 @@ export default class ReviewHistory extends Model {
 
   @relation(TableName.WORDS, 'word_id') word!: Relation<Word>;
 
-  // 復習日をDateオブジェクトで取得
-  get reviewDateObj(): Date {
-    return new Date(this.reviewDate);
+  // 復習日をタイムスタンプとして取得
+  get reviewDateTimestamp(): number {
+    return this.reviewDate;
   }
 
   // フィードバックの判定
@@ -58,7 +63,7 @@ export default class ReviewHistory extends Model {
   get reviewSummary(): string {
     const feedbackText = this.wasRemembered ? '覚えた' : '覚えてない';
     const levelChange = this.masteryLevelChange;
-    
+
     if (levelChange > 0) {
       return `${feedbackText} (レベル+${levelChange})`;
     } else if (levelChange < 0) {

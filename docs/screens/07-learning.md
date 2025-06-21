@@ -6,7 +6,7 @@
 ## レイアウト構成
 - **ヘッダー**: 級+ユニット表示、進捗表示、戻るボタン
 - **メインエリア**: 単語カード表示エリア
-- **フッター**: 操作ボタン（復習に追加、次へ、前へ）
+- **フッター**: 操作ボタン（復習に追加/復習予定表示、次へ、前へ）
 
 ## UI要素詳細
 
@@ -24,7 +24,9 @@
 - **配置**: 画面中央の大部分を占める
 
 ### 操作ボタン
-- **復習に追加ボタン**: この単語を復習リストに追加
+- **復習ボタン/復習予定表示**: 
+  - 未登録の場合: 「復習に追加」ボタン（タップでSRSに登録）
+  - 登録済みの場合: 「○日後に復習予定」テキスト表示（非活性）
 - **次へボタン**: 次の単語へ進む
 - **前へボタン**: 前の単語に戻る（最初の問題以外で表示）
 - **配置**: 画面下部
@@ -38,8 +40,8 @@
 
 ### 学習進捗管理
 - **現在位置**: 何問目かをローカル状態で管理
-- **復習マーク**: 復習に追加された単語のリストをローカルストレージに保存
-- **学習完了状況**: ユニット別の学習完了状況を管理
+- **復習登録状況**: 各単語のSRS_MANAGEMENTテーブル登録状況をリアルタイム取得
+- **次回復習予定**: 登録済み単語の復習予定日を取得して日数表示
 
 ## データ構造
 
@@ -59,6 +61,31 @@
   unit_id: "unit_3_1",
   unit_order: 1,
   audio_url: "/audio/word_001.mp3"  // ファイルパスルールで生成
+}
+```
+
+### SRS登録データ（復習に追加時）
+```javascript
+{
+  word_id: "word_001",
+  mastery_level: 0,
+  ease_factor: 2.5,
+  next_review_date: 明日のUnixTimestamp,
+  interval_days: 1,
+  mistake_count: 0,  // 学習モードでは0からスタート
+  last_reviewed: null
+}
+```
+
+### 復習予定日数計算
+```javascript
+// 今日から次回復習予定日までの日数を計算
+function calculateDaysToReview(nextReviewDate) {
+  const today = new Date();
+  const reviewDate = new Date(nextReviewDate);
+  const diffTime = reviewDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays); // 負の値は0にする
 }
 ```
 

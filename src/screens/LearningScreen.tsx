@@ -9,8 +9,13 @@ import {
 } from 'react-native';
 import SoundPlayer from 'react-native-sound-player';
 import { LearningScreenProps } from '../navigation/types';
-import { Word } from '../database/models';
+import { Word, SrsManagement } from '../database/models';
 import { getWordsByUnit } from '../database/queries/unitQueries';
+import {
+  getSrsManagementByWordId,
+  createSrsManagement,
+  calculateDaysToReview,
+} from '../database/queries/srsQueries';
 
 export default function LearningScreen({
   route,
@@ -25,9 +30,7 @@ export default function LearningScreen({
   const [showExample, setShowExample] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [markedForReview, setMarkedForReview] = useState<Set<string>>(
-    new Set(),
-  );
+  const [srsData, setSrsData] = useState<Map<string, SrsManagement>>(new Map());
 
   // 単語データ取得
   useEffect(() => {
@@ -43,6 +46,16 @@ export default function LearningScreen({
 
         setWords(wordsData);
         setError(null);
+
+        // 各単語のSRS状況を取得
+        const srsMap = new Map<string, SrsManagement>();
+        for (const word of wordsData) {
+          const srs = await getSrsManagementByWordId(word.id);
+          if (srs) {
+            srsMap.set(word.id, srs);
+          }
+        }
+        setSrsData(srsMap);
       } catch (err) {
         console.error('単語データ取得エラー:', err);
         setError('単語データの読み込みに失敗しました');
@@ -88,22 +101,24 @@ export default function LearningScreen({
   };
 
   // 復習に追加
-  const handleMarkForReview = () => {
+  const handleMarkForReview = async () => {
     if (currentWord) {
-      const newMarked = new Set(markedForReview);
-      if (newMarked.has(currentWord.id)) {
-        newMarked.delete(currentWord.id);
-      } else {
-        newMarked.add(currentWord.id);
+      try {
+        const existingSrs = srsData.get(currentWord.id);
+        if (!existingSrs) {
+          // 新規登録
+          const newSrs = await createSrsManagement(currentWord.id, false);
+          if (newSrs) {
+            const newSrsData = new Map(srsData);
+            newSrsData.set(currentWord.id, newSrs);
+            setSrsData(newSrsData);
+            Alert.alert('復習登録', '復習リストに追加しました');
+          }
+        }
+      } catch (err) {
+        console.error('復習登録エラー:', err);
+        Alert.alert('エラー', '復習登録に失敗しました');
       }
-      setMarkedForReview(newMarked);
-
-      // TODO: 実際のデータベース更新処理を追加
-      console.log(
-        '復習マーク更新:',
-        currentWord.id,
-        !markedForReview.has(currentWord.id),
-      );
     }
   };
 
@@ -123,9 +138,7 @@ export default function LearningScreen({
       try {
         // テスト用に固定のファイルを再生
         SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
-        console.log('単語音声再生:', currentWord.wordAudioPath);
       } catch (_error) {
-        console.error('音声再生エラー:', _error);
         Alert.alert('エラー', '音声の再生に失敗しました');
       }
     }
@@ -137,9 +150,7 @@ export default function LearningScreen({
       try {
         // テスト用に固定のファイルを再生
         SoundPlayer.playAsset(require('../assets/audio/examples/word_1.mp3'));
-        console.log('例文音声再生:', currentWord.exampleAudioPath);
       } catch (_error) {
-        console.error('例文音声再生エラー:', _error);
         Alert.alert('エラー', '例文音声の再生に失敗しました');
       }
     }
@@ -321,25 +332,35 @@ export default function LearningScreen({
             </Text>
           </TouchableOpacity>
 
-          {/* 復習に追加ボタン */}
-          <TouchableOpacity
-            onPress={handleMarkForReview}
-            className={`px-6 py-3 rounded-lg ${
-              markedForReview.has(currentWord.id)
-                ? 'bg-orange-500'
-                : 'bg-orange-200'
-            }`}
-          >
-            <Text
-              className={`font-semibold ${
-                markedForReview.has(currentWord.id)
-                  ? 'text-white'
-                  : 'text-orange-700'
-              }`}
-            >
-              {markedForReview.has(currentWord.id) ? '復習済み' : '復習に追加'}
-            </Text>
-          </TouchableOpacity>
+          {/* 復習ボタン/復習予定表示 */}
+          {(() => {
+            const existingSrs = srsData.get(currentWord.id);
+            if (existingSrs) {
+              const daysToReview = calculateDaysToReview(
+                existingSrs.nextReviewDate || 0,
+              );
+              return (
+                <View className="px-6 py-3 rounded-lg bg-gray-200">
+                  <Text className="font-semibold text-gray-700 text-center">
+                    {daysToReview === 0
+                      ? '今日復習予定'
+                      : `${daysToReview}日後に復習予定`}
+                  </Text>
+                </View>
+              );
+            } else {
+              return (
+                <TouchableOpacity
+                  onPress={handleMarkForReview}
+                  className="px-6 py-3 rounded-lg bg-orange-200"
+                >
+                  <Text className="font-semibold text-orange-700">
+                    復習に追加
+                  </Text>
+                </TouchableOpacity>
+              );
+            }
+          })()}
 
           {/* 次へボタン */}
           <TouchableOpacity

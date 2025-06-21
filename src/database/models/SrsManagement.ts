@@ -13,41 +13,35 @@ export default class SrsManagement extends Model {
   @field('interval_days') intervalDays!: number;
   @field('mistake_count') mistakeCount!: number;
   @field('last_reviewed') lastReviewed?: number;
-  @field('status') status!: string;
 
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
 
   @relation(TableName.WORDS, 'word_id') word!: Relation<Word>;
 
-  // 次回復習日をDateオブジェクトで取得
-  get nextReviewDateObj(): Date | null {
-    return this.nextReviewDate ? new Date(this.nextReviewDate) : null;
+  // 次回復習日をタイムスタンプとして取得
+  get nextReviewDateTimestamp(): number | null {
+    return this.nextReviewDate || null;
   }
 
-  // 最終復習日をDateオブジェクトで取得
-  get lastReviewedObj(): Date | null {
-    return this.lastReviewed ? new Date(this.lastReviewed) : null;
+  // 最終復習日をタイムスタンプとして取得
+  get lastReviewedTimestamp(): number | null {
+    return this.lastReviewed || null;
   }
 
   // 今日復習すべきかどうかを判定
   get isDueToday(): boolean {
     if (!this.nextReviewDate) return false;
-    const today = new Date();
-    const nextReview = new Date(this.nextReviewDate);
-    return nextReview <= today;
+    const today = Date.now();
+    return this.nextReviewDate <= today;
   }
 
-  // SRSステータスの判定
+  // SRSステータスの判定（mastery_levelベース）
   get isLearning(): boolean {
-    return this.status === 'learning';
-  }
-
-  get isGraduated(): boolean {
-    return this.status === 'graduated';
+    return this.masteryLevel < 9;
   }
 
   get isMastered(): boolean {
-    return this.status === 'mastered';
+    return this.masteryLevel >= 9;
   }
 }

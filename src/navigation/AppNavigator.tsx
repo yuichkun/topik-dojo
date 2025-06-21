@@ -16,6 +16,7 @@ import LearningScreen from '../screens/LearningScreen';
 import TestModeSelectionScreen from '../screens/TestModeSelectionScreen';
 import TestUnitSelectionScreen from '../screens/TestUnitSelectionScreen';
 import ReadingTestScreen from '../screens/ReadingTestScreen';
+import ListeningTestScreen from '../screens/ListeningTestScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -35,6 +36,7 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name={SCREEN_NAMES.TEST_MODE_SELECTION} component={TestModeSelectionScreen} />
         <Stack.Screen name={SCREEN_NAMES.TEST_UNIT_SELECTION} component={TestUnitSelectionScreen} />
         <Stack.Screen name={SCREEN_NAMES.READING_TEST} component={ReadingTestScreen} />
+        <Stack.Screen name={SCREEN_NAMES.LISTENING_TEST} component={ListeningTestScreen} />
         {/* TODO: 他の画面を追加 */}
       </Stack.Navigator>
     </NavigationContainer>

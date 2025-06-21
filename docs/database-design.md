@@ -55,7 +55,7 @@ TOPIK道場アプリのSQLiteデータベース設計
 **データ操作:**
 - 書き込み: テスト結果（問題別詳細 + 全体スコア）の保存
 - 書き込み: テスト履歴（日時、スコア、所要時間）の記録
-- 書き込み: 間違えた問題の記録（復習用）
+- 書き込み: 間違えた問題の記録（復習用、詳細は[SRSシステム仕様書](./srs-system.md)参照）
 - 読み取り: 指定級の全テスト結果データ取得
 - 読み取り: テスト結果履歴データの取得
 - 書き込み: 進捗スナップショットの保存
@@ -89,18 +89,6 @@ erDiagram
     }
     
     
-    %% 学習状況テーブル
-    LEARNING_STATUS {
-        integer status_id PK "ステータスID"
-        string word_id FK "単語ID"
-        boolean is_learned "学習済みフラグ"
-        boolean is_marked_for_review "復習マーク"
-        integer learned_date "学習完了日時"
-        integer marked_date "復習マーク日時"
-        integer learning_session_count "学習セッション回数"
-        integer created_at "作成日時"
-        integer updated_at "更新日時"
-    }
     
     
     %% SRS管理テーブル
@@ -113,7 +101,6 @@ erDiagram
         integer interval_days "復習間隔(日)"
         integer mistake_count "間違い回数"
         integer last_reviewed "最終復習日時"
-        string status "学習状態"
         integer created_at "作成日時"
         integer updated_at "更新日時"
     }
@@ -169,7 +156,6 @@ erDiagram
     %% リレーション
     UNITS ||--o{ WORDS : "1対多"
     WORDS ||--|| SRS_MANAGEMENT : "1対1"
-    WORDS ||--|| LEARNING_STATUS : "1対1"
     WORDS ||--o{ TEST_QUESTIONS : "1対多"
     WORDS ||--o{ REVIEW_HISTORY : "1対多"
     TEST_RESULTS ||--o{ TEST_QUESTIONS : "1対多"
@@ -233,45 +219,19 @@ CREATE TABLE words (
 CREATE TABLE srs_management (
     id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
     word_id TEXT NOT NULL,              -- 単語ID（外部キー）
-    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 学習段階0-2, 復習段階3-9）
+    mastery_level INTEGER DEFAULT 0,    -- 習得レベル（0-9: 0-8=復習対象, 9=習得完了）
     ease_factor REAL DEFAULT 2.5,      -- 易しさ係数（1.3-4.0, デフォルト2.5）
     next_review_date INTEGER,           -- 次回復習日（UnixTimestamp）
     interval_days INTEGER DEFAULT 1,    -- 復習間隔（日数）
     mistake_count INTEGER DEFAULT 0,    -- 間違い回数
     last_reviewed INTEGER,              -- 最終復習日時（UnixTimestamp）
-    status TEXT DEFAULT 'learning',     -- 学習状態（learning/graduated/mastered）
     created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
     updated_at INTEGER NOT NULL,        -- 更新日時（UnixTimestamp）
     FOREIGN KEY (word_id) REFERENCES words(id)
 );
 ```
 
-**SRS間隔アルゴリズム（Anki SM-2準拠）:**
-
-**学習段階（mastery_level 0-2）:**
-- Level 0 → 1: 1日後
-- Level 1 → 2: 3日後  
-- Level 2 → 3: 卒業して復習段階へ
-
-**復習段階（mastery_level 3-9）:**
-- 基本計算式: `新間隔 = 前回間隔 × ease_factor`
-- Level 3: 6日後（卒業初期値）
-- Level 4以降: ease_factorによる自動調整
-
-**フィードバック反映:**
-- **覚えてない**: mastery_level-1, ease_factor-0.2, 間隔リセット
-- **覚えた**: mastery_level+1, ease_factor維持, 間隔延長
-
-**制限値:**
-- 最小ease_factor: 1.3
-- 最大間隔: 365日（1年）
-- 最大mastery_level: 9（実質無制限習得）
-
-**具体例（ease_factor=2.5の場合）:**
-```
-Level 3: 6日 → Level 4: 15日 → Level 5: 38日 
-→ Level 6: 95日 → Level 7: 238日 → Level 8: 365日（上限）
-```
+**SRS詳細仕様**: [SRSシステム仕様書](./srs-system.md)を参照
 
 ### 4. LEARNING_PROGRESS（学習進捗テーブル）
 日別・級別の学習進捗スナップショットを保存
@@ -341,22 +301,6 @@ CREATE TABLE review_history (
 );
 ```
 
-### 8. LEARNING_STATUS（学習状況テーブル）
-学習画面での単語別学習状況を管理
-
-```sql
-CREATE TABLE learning_status (
-    word_id TEXT PRIMARY KEY,        -- 単語ID（主キー兼外部キー）
-    is_learned BOOLEAN DEFAULT FALSE,   -- 学習済みフラグ
-    is_marked_for_review BOOLEAN DEFAULT FALSE,  -- 復習マーク
-    learned_date INTEGER,              -- 学習完了日時
-    marked_date INTEGER,               -- 復習マーク日時
-    learning_session_count INTEGER DEFAULT 0,  -- 学習セッション回数
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (word_id) REFERENCES words(id)
-);
-```
 
 
 ## 設計の考慮点
@@ -379,7 +323,7 @@ SELECT w.*, s.mastery_level, s.mistake_count
 FROM words w
 JOIN srs_management s ON w.word_id = s.word_id
 WHERE s.next_review_date <= DATE('now')
-  AND s.status = 'learning'
+  AND s.mastery_level < 9
 ORDER BY s.next_review_date ASC, s.mistake_count DESC
 LIMIT 50;
 ```
@@ -428,17 +372,8 @@ WHERE u.id = 'unit_3_1'
 ORDER BY w.unit_order;
 ```
 
-#### 6. 復習マーク単語抽出
-```sql
-SELECT w.*, ls.marked_date
-FROM words w
-JOIN learning_status ls ON w.word_id = ls.word_id
-WHERE ls.is_marked_for_review = TRUE
-  AND w.grade = 3
-ORDER BY ls.marked_date ASC;
-```
 
-#### 7. 間違い選択肢生成（同級ランダム）
+#### 6. 間違い選択肢生成（同級ランダム）
 ```sql
 -- 正解単語以外の同級単語からランダムで3つ選択
 SELECT japanese

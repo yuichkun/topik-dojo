@@ -41,26 +41,11 @@ export default appSchema({
         { name: 'interval_days', type: 'number' },
         { name: 'mistake_count', type: 'number' },
         { name: 'last_reviewed', type: 'number', isOptional: true },
-        { name: 'status', type: 'string' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ]
     }),
 
-    // 学習状況テーブル
-    tableSchema({
-      name: 'learning_status',
-      columns: [
-        { name: 'word_id', type: 'string' },
-        { name: 'is_learned', type: 'boolean' },
-        { name: 'is_marked_for_review', type: 'boolean' },
-        { name: 'learned_date', type: 'number', isOptional: true },
-        { name: 'marked_date', type: 'number', isOptional: true },
-        { name: 'learning_session_count', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
 
     // テスト結果テーブル
     tableSchema({

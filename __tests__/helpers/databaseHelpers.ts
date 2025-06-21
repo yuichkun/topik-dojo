@@ -90,7 +90,6 @@ export const createTestSrsRecord = async (
         srs.intervalDays = srsData.intervalDays || 1;
         srs.mistakeCount = srsData.mistakeCount || 0;
         srs.lastReviewed = srsData.lastReviewed ?? undefined;
-        srs.status = srsData.status || 'learning';
       });
   });
 };
