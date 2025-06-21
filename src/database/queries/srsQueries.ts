@@ -1,6 +1,7 @@
 import database from '../index';
 import { SrsManagement } from '../models';
 import { TableName } from '../constants';
+import { addDays, startOfDay } from 'date-fns';
 
 /**
  * SRS管理関連のクエリ関数
@@ -41,9 +42,7 @@ export const createSrsManagement = async (
           srs.masteryLevel = 0;
           srs.easeFactor = 2.5;
           // 明日の日付を設定
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          tomorrow.setHours(0, 0, 0, 0);
+          const tomorrow = addDays(startOfDay(Date.now()), 1);
           srs.nextReviewDate = tomorrow.getTime();
           srs.intervalDays = 1;
           srs.mistakeCount = fromMistake ? 1 : 0;
@@ -74,9 +73,7 @@ export const updateSrsForMistake = async (
         // 間隔を1日にリセット
         record.intervalDays = 1;
         // 明日に設定
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
+        const tomorrow = addDays(startOfDay(Date.now()), 1);
         record.nextReviewDate = tomorrow.getTime();
         // 間違い回数を増加
         record.mistakeCount = record.mistakeCount + 1;
@@ -96,10 +93,8 @@ export const updateSrsForMistake = async (
  * 次回復習予定日までの日数を計算
  */
 export const calculateDaysToReview = (nextReviewDate: number): number => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const reviewDate = new Date(nextReviewDate);
-  reviewDate.setHours(0, 0, 0, 0);
+  const today = startOfDay(Date.now());
+  const reviewDate = startOfDay(nextReviewDate);
   const diffTime = reviewDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays);

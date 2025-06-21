@@ -3,6 +3,7 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 import { Alert } from 'react-native';
 import SoundPlayer from 'react-native-sound-player';
+import { addDays, startOfDay } from 'date-fns';
 import { createTestWord, createTestSrsRecord } from '../../../__tests__/helpers/databaseHelpers';
 import database from '../../database';
 import { TableName } from '../../database/constants';
@@ -815,11 +816,8 @@ describe('ListeningTestScreen', () => {
       expect(updatedSrs.mistakeCount).toBe(1); // Increased from 0 to 1
       
       // Check next review date is set to tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      const nextReviewDate = new Date(updatedSrs.nextReviewDate!);
-      nextReviewDate.setHours(0, 0, 0, 0);
+      const tomorrow = addDays(startOfDay(Date.now()), 1);
+      const nextReviewDate = startOfDay(updatedSrs.nextReviewDate!);
       expect(nextReviewDate.getTime()).toBe(tomorrow.getTime());
     });
 

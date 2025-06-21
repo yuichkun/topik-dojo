@@ -14,9 +14,9 @@ export default class LearningProgress extends Model {
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
 
-  // 進捗日をDateオブジェクトで取得
-  get progressDateObj(): Date {
-    return new Date(this.progressDate);
+  // 進捗日をタイムスタンプで取得
+  get progressDateTimestamp(): number {
+    return Date.parse(this.progressDate);
   }
 
   // 未習得単語数を計算

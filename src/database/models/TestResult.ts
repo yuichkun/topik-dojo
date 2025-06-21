@@ -1,5 +1,10 @@
 import { Model, Query } from '@nozbe/watermelondb';
-import { field, date, readonly, children } from '@nozbe/watermelondb/decorators';
+import {
+  field,
+  date,
+  readonly,
+  children,
+} from '@nozbe/watermelondb/decorators';
 import { TableName } from '../constants';
 import TestQuestion from './TestQuestion';
 
@@ -20,9 +25,9 @@ export default class TestResult extends Model {
 
   @children(TableName.TEST_QUESTIONS) testQuestions!: Query<TestQuestion>;
 
-  // テスト実施日をDateオブジェクトで取得
-  get testDateObj(): Date {
-    return new Date(this.testDate);
+  // テスト実施日をタイムスタンプとして取得
+  get testDateTimestamp(): number {
+    return this.testDate;
   }
 
   // 所要時間を分単位で取得

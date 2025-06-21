@@ -7,6 +7,7 @@ import ReactTestRenderer from 'react-test-renderer';
 import { Alert, TouchableOpacity, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { addDays, startOfDay } from 'date-fns';
 import LearningScreen from '../../src/screens/LearningScreen';
 import { RootStackParamList } from '../../src/navigation/types';
 import { SCREEN_NAMES } from '../../src/constants/screens';
@@ -262,9 +263,7 @@ describe('LearningScreen', () => {
 
     test('既にSRS登録済みの単語は復習予定日が表示される', async () => {
       // 事前にSRSレコードを作成
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+      const tomorrow = addDays(startOfDay(Date.now()), 1);
 
       await createTestSrsRecord(database, {
         id: 'srs_1',
@@ -300,8 +299,7 @@ describe('LearningScreen', () => {
 
     test('本日復習予定の単語は「今日復習予定」と表示される', async () => {
       // 本日の日付でSRSレコードを作成
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = startOfDay(Date.now());
 
       await createTestSrsRecord(database, {
         id: 'srs_1',
@@ -341,9 +339,7 @@ describe('LearningScreen', () => {
       });
 
       // word_2のみSRS登録
-      const threeDaysLater = new Date();
-      threeDaysLater.setDate(threeDaysLater.getDate() + 3);
-      threeDaysLater.setHours(0, 0, 0, 0);
+      const threeDaysLater = addDays(startOfDay(Date.now()), 3);
 
       await createTestSrsRecord(database, {
         id: 'srs_2',
