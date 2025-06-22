@@ -7,6 +7,7 @@
 
 import { execSync } from 'child_process';
 import Database from 'better-sqlite3';
+import { format } from 'date-fns';
 
 // テスト用ユニットデータ
 const testUnits = [
@@ -642,9 +643,8 @@ function generate2YearLearningData() {
 
   // 2年間分の日付をループ
   for (let dayOffset = 0; dayOffset < 730; dayOffset++) {
-    const currentDate = new Date(startDate + dayOffset * 24 * 60 * 60 * 1000);
-    const dateString = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-    const dayTimestamp = currentDate.getTime();
+    const dayTimestamp = startDate + dayOffset * 24 * 60 * 60 * 1000;
+    const dateString = format(dayTimestamp, 'yyyy-MM-dd');
 
     // 学習進捗のカーブを計算（2年間で0% → 90%）
     const progress = dayOffset / 730; // 0 to 1
