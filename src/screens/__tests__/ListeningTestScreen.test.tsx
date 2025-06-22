@@ -7,7 +7,7 @@ import { addDays, startOfDay } from 'date-fns';
 import { createTestWord, createTestSrsRecord } from '../../../__tests__/helpers/databaseHelpers';
 import database from '../../database';
 import { TableName } from '../../database/constants';
-import { Unit, SrsManagement } from '../../database/models';
+import { Unit, SrsManagement, WordMastery } from '../../database/models';
 import ListeningTestScreen from '../ListeningTestScreen';
 
 // Mock Alert
@@ -272,8 +272,10 @@ describe('ListeningTestScreen', () => {
         // Select the correct answer
         const correctAnswer = getByText('こんにちは');
         fireEvent.press(correctAnswer);
+      });
 
-        // Should show next button
+      // Wait for the next button to appear after answer selection
+      await waitFor(() => {
         expect(getByText('次の問題へ')).toBeTruthy();
       });
     });
@@ -285,12 +287,16 @@ describe('ListeningTestScreen', () => {
         // Select an answer
         const correctAnswer = getByText('こんにちは');
         fireEvent.press(correctAnswer);
+      });
 
-        // Press next button
+      // Wait for next button to appear and press it
+      await waitFor(() => {
         const nextButton = getByText('次の問題へ');
         fireEvent.press(nextButton);
+      });
 
-        // Should show next question (2/3)
+      // Wait for next question to load
+      await waitFor(() => {
         expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
       });
     });
@@ -327,27 +333,43 @@ describe('ListeningTestScreen', () => {
     it('should show completion alert when test is finished', async () => {
       const { getByText } = renderScreen();
 
-      // Complete all three questions
-      await waitFor(async () => {
-        // First question
+      // First question
+      await waitFor(() => {
         fireEvent.press(getByText('こんにちは'));
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('次の問題へ'));
+      });
 
-        // Second question
-        await waitFor(() => {
-          expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
-        });
+      // Second question
+      await waitFor(() => {
+        expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('ありがとうございます'));
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('次の問題へ'));
+      });
 
-        // Third question
-        await waitFor(() => {
-          expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
-        });
+      // Third question
+      await waitFor(() => {
+        expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('すみません'));
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('テスト完了'));
+      });
 
-        // Should show completion alert
+      // Should show completion alert
+      await waitFor(() => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'テスト完了！',
           expect.stringContaining('正答率'),
@@ -950,6 +972,158 @@ describe('ListeningTestScreen', () => {
         expect(srs.intervalDays).toBe(1);
         expect(srs.mistakeCount).toBe(1);
       });
+    });
+  });
+
+  describe('語彙習得記録機能', () => {
+    beforeEach(async () => {
+      await act(async () => {
+        await createTestData();
+      });
+    });
+
+    it('should record correct answers to WORD_MASTERY table', async () => {
+      const { getByText } = renderScreen();
+
+      // Answer all questions correctly
+      await waitFor(async () => {
+        // First question
+        fireEvent.press(getByText('こんにちは'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Second question
+        await waitFor(() => {
+          expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
+        });
+        fireEvent.press(getByText('ありがとうございます'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Third question
+        await waitFor(() => {
+          expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
+        });
+        fireEvent.press(getByText('すみません'));
+        fireEvent.press(getByText('テスト完了'));
+      });
+
+      // Verify WORD_MASTERY records were created for all correct answers
+      const masteryRecords = await database.collections
+        .get<WordMastery>(TableName.WORD_MASTERY)
+        .query()
+        .fetch();
+
+      expect(masteryRecords.length).toBe(3); // All 3 answers were correct
+      
+      // Check all records have correct test_type
+      masteryRecords.forEach(mastery => {
+        expect(mastery.testType).toBe('listening');
+        expect(mastery.masteredDate).toBeDefined();
+      });
+
+      // Check specific word IDs are recorded
+      const wordIds = masteryRecords.map(m => m.wordId).sort();
+      expect(wordIds).toEqual(['word_1', 'word_2', 'word_3']);
+    });
+
+    it('should not create duplicate WORD_MASTERY records for already mastered words', async () => {
+      // Pre-create a mastery record
+      await database.write(async () => {
+        await database.collections
+          .get<WordMastery>(TableName.WORD_MASTERY)
+          .create(mastery => {
+            mastery.wordId = 'word_1';
+            mastery.testType = 'listening';
+            mastery.masteredDate = Date.now() - 86400000; // Yesterday
+          });
+      });
+
+      const { getByText } = renderScreen();
+
+      // Answer all questions correctly
+      await waitFor(async () => {
+        // First question (already mastered)
+        fireEvent.press(getByText('こんにちは'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Second question
+        await waitFor(() => {
+          expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
+        });
+        fireEvent.press(getByText('ありがとうございます'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Third question
+        await waitFor(() => {
+          expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
+        });
+        fireEvent.press(getByText('すみません'));
+        fireEvent.press(getByText('テスト完了'));
+      });
+
+      // Verify only 3 WORD_MASTERY records exist (1 pre-existing + 2 new)
+      const masteryRecords = await database.collections
+        .get<WordMastery>(TableName.WORD_MASTERY)
+        .query()
+        .fetch();
+
+      expect(masteryRecords.length).toBe(3);
+      
+      // Verify no duplicate for word_1
+      const word1Records = masteryRecords.filter(m => m.wordId === 'word_1' && m.testType === 'listening');
+      expect(word1Records.length).toBe(1);
+    });
+
+    it('should record only correct answers, not incorrect ones', async () => {
+      const { getByText, queryByText } = renderScreen();
+
+      await waitFor(async () => {
+        // Answer first question incorrectly
+        const wrongAnswers = ['学生', '先生', '学校'];
+        let foundWrongAnswer = false;
+        for (const wrongAnswer of wrongAnswers) {
+          const wrongElement = queryByText(wrongAnswer);
+          if (wrongElement) {
+            fireEvent.press(wrongElement);
+            foundWrongAnswer = true;
+            break;
+          }
+        }
+        if (!foundWrongAnswer) fireEvent.press(getByText('こんにちは'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Answer second question correctly
+        await waitFor(() => {
+          expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
+        });
+        fireEvent.press(getByText('ありがとうございます'));
+        fireEvent.press(getByText('次の問題へ'));
+
+        // Answer third question correctly
+        await waitFor(() => {
+          expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
+        });
+        fireEvent.press(getByText('すみません'));
+        fireEvent.press(getByText('テスト完了'));
+      });
+
+      // Verify only correct answers are recorded in WORD_MASTERY
+      const masteryRecords = await database.collections
+        .get<WordMastery>(TableName.WORD_MASTERY)
+        .query()
+        .fetch();
+
+      // Should have 2 records (for questions 2 and 3 that were answered correctly)
+      expect(masteryRecords.length).toBeGreaterThanOrEqual(2);
+      expect(masteryRecords.length).toBeLessThanOrEqual(2);
+      
+      // Check that all records are for listening test type
+      masteryRecords.forEach(mastery => {
+        expect(mastery.testType).toBe('listening');
+      });
+
+      // The incorrect answer (word_1) should not be in mastery records
+      const word1Mastery = masteryRecords.find(m => m.wordId === 'word_1');
+      expect(word1Mastery).toBeUndefined();
     });
   });
 });

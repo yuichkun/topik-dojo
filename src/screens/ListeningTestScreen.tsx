@@ -23,6 +23,8 @@ import {
   createSrsManagement,
   updateSrsForMistake,
 } from '../database/queries/srsQueries';
+import { createWordMastery } from '../database/queries/wordMasteryQueries';
+import { updateOrCreateLearningProgress } from '../database/queries/learningProgressQueries';
 import { useUnits } from '../hooks/useUnits';
 import database from '../database';
 import { Q } from '@nozbe/watermelondb';
@@ -212,6 +214,12 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
     const totalQuestions = questions.length;
     const accuracy = Math.round((correctCount / totalQuestions) * 100);
 
+    // 正解した問題をWORD_MASTERYに記録
+    const correctResults = results.filter(r => r.correct);
+    for (const result of correctResults) {
+      await createWordMastery(result.wordId, 'listening');
+    }
+
     // 間違えた問題を復習リストに登録
     const incorrectResults = results.filter(r => !r.correct);
     for (const result of incorrectResults) {
@@ -227,6 +235,9 @@ const ListeningTestScreen: React.FC<ListeningTestScreenProps> = ({
         }
       }
     }
+
+    // 学習進捗スナップショットを更新
+    await updateOrCreateLearningProgress(level);
 
     Alert.alert(
       'テスト完了！',

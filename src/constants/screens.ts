@@ -12,6 +12,5 @@ export const SCREEN_NAMES = {
   READING_TEST: 'ReadingTest',
   LISTENING_TEST: 'ListeningTest',
   REVIEW: 'Review',
-  // TODO: 他の画面名を追加
-  // RESULTS: 'Results',
+  RESULTS: 'Results',
 } as const;

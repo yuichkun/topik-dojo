@@ -33,8 +33,9 @@ export type RootStackParamList = {
     unitNumber: number; 
   };
   Review: undefined;
-  // TODO: 他の画面のパラメータ定義を追加
-  // Results: { level: number };
+  Results: { 
+    level: number; 
+  };
 };
 
 // 各画面のプロップス型定義
@@ -47,6 +48,7 @@ export type TestUnitSelectionScreenProps = NativeStackScreenProps<RootStackParam
 export type ReadingTestScreenProps = NativeStackScreenProps<RootStackParamList, 'ReadingTest'>;
 export type ListeningTestScreenProps = NativeStackScreenProps<RootStackParamList, 'ListeningTest'>;
 export type ReviewScreenProps = NativeStackScreenProps<RootStackParamList, 'Review'>;
+export type ResultsScreenProps = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
 declare global {
   namespace ReactNavigation {

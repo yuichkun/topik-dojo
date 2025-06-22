@@ -8,7 +8,7 @@ module.exports = {
     '\\.(png|jpg|jpeg|gif|svg|mp3|wav)$': 'identity-obj-proxy',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-vector-icons|nativewind|react-native-css-interop|@nozbe|@react-navigation|react-native-sound-player)/)',
+    'node_modules/(?!(react-native|@react-native|react-native-vector-icons|nativewind|react-native-css-interop|@nozbe|@react-navigation|react-native-sound-player|react-native-chart-kit|react-native-svg)/)',
   ],
   testPathIgnorePatterns: [
     '<rootDir>/__tests__/helpers/',
