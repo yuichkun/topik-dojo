@@ -136,8 +136,10 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ navigation, route }) => {
   const listeningPieData = generateListeningPieChartData(gradeResults);
   const readingPieData = generateReadingPieChartData(gradeResults);
 
-  // 線グラフデータの生成
-  const chartData = dailyData.length > 0 ? generateStackedChartData(dailyData) : null;
+  const chartData = dailyData.length > 0 ? {
+    ...generateStackedChartData(dailyData),
+    legend: undefined,
+  } : null;
 
   const chartConfig = {
     backgroundColor: '#ffffff',
@@ -223,30 +225,38 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ navigation, route }) => {
 
         {/* 進捗グラフエリア */}
         {chartData && chartData.datasets[0].data.length > 0 && (
-          <View className="px-4 py-6 border-t border-gray-200">
-            <Text className="text-lg font-bold text-gray-800 mb-4 text-center">
-              習得進捗（最近30日間）
+          <View className="py-6 border-t border-gray-200">
+            <Text className="text-lg font-bold text-gray-800 mb-4 text-center px-4">
+              習得進捗（{dailyData.length > 30 ? '1年間' : '最近30日間'}）
             </Text>
-            <View className="my-2 rounded-2xl">
-              <LineChart
-                data={chartData}
-                width={screenWidth - 32}
-                height={220}
-                chartConfig={chartConfig}
-                bezier
-                formatYLabel={(value) => `${value}%`}
-              />
-            </View>
-            <View className="flex-row justify-center mt-2">
-              <View className="flex-row items-center mr-4">
-                <View className="w-3 h-3 bg-emerald-500 rounded-full mr-2" />
-                <Text className="text-sm text-gray-600">リスニング</Text>
+            <ScrollView 
+              horizontal={true}
+              showsHorizontalScrollIndicator={true}
+              className="px-4"
+              contentContainerStyle={styles.scrollContainer}
+            >
+              <View className="my-2 rounded-2xl">
+                <LineChart
+                  data={chartData}
+                  width={Math.max(screenWidth - 32, dailyData.length * 12)}
+                  height={260}
+                  chartConfig={chartConfig}
+                  bezier
+                  formatYLabel={(value) => `${value}%`}
+                  verticalLabelRotation={45}
+                  yAxisInterval={1}
+                  withHorizontalLabels={true}
+                  withVerticalLabels={true}
+                  fromZero={true}
+                  segments={5}
+                />
               </View>
-              <View className="flex-row items-center">
-                <View className="w-3 h-3 bg-blue-500 rounded-full mr-2" />
-                <Text className="text-sm text-gray-600">リーディング</Text>
-              </View>
-            </View>
+            </ScrollView>
+            {dailyData.length > 30 && (
+              <Text className="text-xs text-gray-500 text-center mt-2 px-4">
+                ※ 左右にスクロールして全期間を確認できます
+              </Text>
+            )}
           </View>
         )}
 
@@ -254,7 +264,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ navigation, route }) => {
         {(!chartData || chartData.datasets[0].data.length === 0) && (
           <View className="px-4 py-6 border-t border-gray-200">
             <Text className="text-lg font-bold text-gray-800 mb-4 text-center">
-              習得進捗（最近30日間）
+              習得進捗
             </Text>
             <View className="py-8">
               <Text className="text-center text-gray-500">
@@ -272,6 +282,12 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ navigation, route }) => {
       </ScrollView>
     </SafeAreaView>
   );
+};
+
+const styles = {
+  scrollContainer: {
+    paddingBottom: 20,
+  },
 };
 
 export default ResultsScreen;
