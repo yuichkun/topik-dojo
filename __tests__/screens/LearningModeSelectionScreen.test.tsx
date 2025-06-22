@@ -19,6 +19,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // Mock screens for navigation targets
 const MockUnitSelectionScreen = () => <View><Text>Mock Unit Selection</Text></View>;
 const MockTestModeSelectionScreen = () => <View><Text>Mock Test Mode Selection</Text></View>;
+const MockResultsScreen = () => <View><Text>Mock Results</Text></View>;
 
 // テスト用のナビゲーションコンテナーを作成
 const createTestNavigationContainer = (level: number) => {
@@ -39,6 +40,11 @@ const createTestNavigationContainer = (level: number) => {
         <Stack.Screen
           name={SCREEN_NAMES.TEST_MODE_SELECTION}
           component={MockTestModeSelectionScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREEN_NAMES.RESULTS}
+          component={MockResultsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
@@ -157,7 +163,7 @@ describe('LearningModeSelectionScreen', () => {
     });
   });
 
-  test('results button shows alert when pressed', async () => {
+  test('results button navigates to results screen when pressed', async () => {
     const TestContainer = createTestNavigationContainer(5);
     let component: ReactTestRenderer.ReactTestRenderer;
 
@@ -182,10 +188,12 @@ describe('LearningModeSelectionScreen', () => {
       resultsButton!.props.onPress();
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      '成績確認',
-      '5級の成績を確認します',
-    );
+    // Should navigate to results screen instead of showing alert
+    // Verify that the MockResultsScreen is rendered
+    await ReactTestRenderer.act(async () => {
+      const mockResultsText = component!.root.findByProps({ children: 'Mock Results' });
+      expect(mockResultsText).toBeDefined();
+    });
   });
 
   test('back button is present', async () => {

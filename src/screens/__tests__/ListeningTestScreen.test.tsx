@@ -272,8 +272,10 @@ describe('ListeningTestScreen', () => {
         // Select the correct answer
         const correctAnswer = getByText('こんにちは');
         fireEvent.press(correctAnswer);
+      });
 
-        // Should show next button
+      // Wait for the next button to appear after answer selection
+      await waitFor(() => {
         expect(getByText('次の問題へ')).toBeTruthy();
       });
     });
@@ -285,12 +287,16 @@ describe('ListeningTestScreen', () => {
         // Select an answer
         const correctAnswer = getByText('こんにちは');
         fireEvent.press(correctAnswer);
+      });
 
-        // Press next button
+      // Wait for next button to appear and press it
+      await waitFor(() => {
         const nextButton = getByText('次の問題へ');
         fireEvent.press(nextButton);
+      });
 
-        // Should show next question (2/3)
+      // Wait for next question to load
+      await waitFor(() => {
         expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
       });
     });
@@ -327,27 +333,43 @@ describe('ListeningTestScreen', () => {
     it('should show completion alert when test is finished', async () => {
       const { getByText } = renderScreen();
 
-      // Complete all three questions
-      await waitFor(async () => {
-        // First question
+      // First question
+      await waitFor(() => {
         fireEvent.press(getByText('こんにちは'));
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('次の問題へ'));
+      });
 
-        // Second question
-        await waitFor(() => {
-          expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
-        });
+      // Second question
+      await waitFor(() => {
+        expect(getByText('ユニット 1-10 (2/3)')).toBeTruthy();
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('ありがとうございます'));
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('次の問題へ'));
+      });
 
-        // Third question
-        await waitFor(() => {
-          expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
-        });
+      // Third question
+      await waitFor(() => {
+        expect(getByText('ユニット 1-10 (3/3)')).toBeTruthy();
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('すみません'));
+      });
+      
+      await waitFor(() => {
         fireEvent.press(getByText('テスト完了'));
+      });
 
-        // Should show completion alert
+      // Should show completion alert
+      await waitFor(() => {
         expect(Alert.alert).toHaveBeenCalledWith(
           'テスト完了！',
           expect.stringContaining('正答率'),
