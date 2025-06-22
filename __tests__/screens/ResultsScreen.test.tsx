@@ -201,7 +201,7 @@ describe('ResultsScreen', () => {
 
     // 進捗グラフのタイトルが表示されることを確認
     const progressTitle = component!.root.findByProps({
-      children: '習得進捗（最近30日間）',
+      children: '習得進捗',
     });
     expect(progressTitle).toBeDefined();
   });

@@ -227,7 +227,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ navigation, route }) => {
         {chartData && chartData.datasets[0].data.length > 0 && (
           <View className="py-6 border-t border-gray-200">
             <Text className="text-lg font-bold text-gray-800 mb-4 text-center px-4">
-              習得進捗（{dailyData.length > 30 ? '1年間' : '最近30日間'}）
+              習得進捗
             </Text>
             <ScrollView 
               horizontal={true}
