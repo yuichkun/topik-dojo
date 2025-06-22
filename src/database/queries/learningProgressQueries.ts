@@ -35,30 +35,34 @@ export async function getLearningProgressByDate(
 /**
  * 指定級の最近N日間の学習進捗データを取得
  * @param grade 級
- * @param days 取得日数（デフォルト30日）
+ * @param days 取得日数（省略時は全期間）
  * @returns 学習進捗データ配列（日付降順）
  */
 export async function getRecentLearningProgress(
   grade: number,
-  days: number = 30
+  days?: number
 ): Promise<LearningProgress[]> {
   try {
-    const endDate = Date.now();
-    const startDate = endDate - (days - 1) * 24 * 60 * 60 * 1000;
+    let query = Q.and(Q.where('grade', grade));
 
-    const startDateStr = format(startDate, 'yyyy-MM-dd');
-    const endDateStr = format(endDate, 'yyyy-MM-dd');
+    // days が指定されている場合のみ日付制限を追加
+    if (days !== undefined) {
+      const endDate = Date.now();
+      const startDate = endDate - (days - 1) * 24 * 60 * 60 * 1000;
+
+      const startDateStr = format(startDate, 'yyyy-MM-dd');
+      const endDateStr = format(endDate, 'yyyy-MM-dd');
+
+      query = Q.and(
+        Q.where('grade', grade),
+        Q.where('date', Q.gte(startDateStr)),
+        Q.where('date', Q.lte(endDateStr))
+      );
+    }
 
     const progress = await database.collections
       .get<LearningProgress>(TableName.LEARNING_PROGRESS)
-      .query(
-        Q.and(
-          Q.where('grade', grade),
-          Q.where('date', Q.gte(startDateStr)),
-          Q.where('date', Q.lte(endDateStr))
-        ),
-        Q.sortBy('date', Q.desc)
-      )
+      .query(query, Q.sortBy('date', Q.desc))
       .fetch();
 
     return progress;

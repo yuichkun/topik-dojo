@@ -115,13 +115,13 @@ export async function getTotalWordsCount(grade: number): Promise<number> {
 }
 
 /**
- * 指定級の日毎進捗データを取得（最近30日間）
+ * 指定級の日毎進捗データを取得（全期間）
  * @param grade 級
  * @returns 日毎進捗データ配列
  */
 export async function getDailyProgressData(grade: number): Promise<DailyProgressData[]> {
   try {
-    const progressRecords = await getRecentLearningProgress(grade, 30);
+    const progressRecords = await getRecentLearningProgress(grade);
 
     const dailyData: DailyProgressData[] = progressRecords.map(progress => {
       const listeningPercentage = progress.totalWordsCount > 0 
@@ -214,10 +214,19 @@ export function generateReadingPieChartData(gradeResults: GradeResults): PieChar
  * @returns 積み重ね式グラフデータ
  */
 export function generateStackedChartData(dailyData: DailyProgressData[]) {
-  const labels = dailyData.map(data => {
+  // データが多い場合は7日ごとに表示（週単位）
+  const labelInterval = dailyData.length > 30 ? 7 : 1;
+  
+  const labels = dailyData.map((data, index) => {
+    // ラベル間隔に基づいて表示/非表示を決定
+    if (index % labelInterval !== 0) {
+      return '';
+    }
+    
     // data.date is already in YYYY-MM-DD format
-    const [year, month, day] = data.date.split('-');
-    return `${year}/${month}/${day}`;
+    const [, month, day] = data.date.split('-');
+    // スペース節約のためMM/DD形式を使用
+    return `${month}/${day}`;
   });
 
   const listeningData = dailyData.map(data => data.listeningPercentage);
