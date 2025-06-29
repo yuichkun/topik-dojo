@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import SoundPlayer from 'react-native-sound-player';
+import { playAudio } from '../utils/audioPlayer';
 import { LearningScreenProps } from '../navigation/types';
 import { Word, SrsManagement } from '../database/models';
 import { getWordsByUnit } from '../database/queries/unitQueries';
@@ -133,11 +133,10 @@ export default function LearningScreen({
   };
 
   // 音声再生
-  const playWordAudio = () => {
+  const playWordAudio = async () => {
     if (currentWord) {
       try {
-        // テスト用に固定のファイルを再生
-        SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
+        await playAudio(currentWord.korean, 'word');
       } catch (_error) {
         Alert.alert('エラー', '音声の再生に失敗しました');
       }
@@ -145,11 +144,11 @@ export default function LearningScreen({
   };
 
   // 例文音声再生
-  const playExampleAudio = () => {
-    if (currentWord) {
+  const playExampleAudio = async () => {
+    if (currentWord && currentWord.exampleKorean) {
       try {
-        // テスト用に固定のファイルを再生
-        SoundPlayer.playAsset(require('../assets/audio/examples/word_1.mp3'));
+        // Use the korean word as key, not the example sentence
+        await playAudio(currentWord.korean, 'example');
       } catch (_error) {
         Alert.alert('エラー', '例文音声の再生に失敗しました');
       }

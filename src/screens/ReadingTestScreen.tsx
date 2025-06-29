@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import SoundPlayer from 'react-native-sound-player';
+import { playAudio } from '../utils/audioPlayer';
 import { SCREEN_NAMES } from '../constants/screens';
 import { Word } from '../database/models';
 import { getRandomWordsByGrade } from '../database/queries/wordQueries';
@@ -147,13 +147,14 @@ const ReadingTestScreen: React.FC<ReadingTestScreenProps> = ({
   };
 
   // 音声再生ボタンのハンドラ
-  const handlePlayAudio = () => {
-    // テスト用に固定のファイルを再生（学習画面と同じ方式）
-    // TODO: あとで変える
-    try {
-      SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
-    } catch (e) {
-      Alert.alert('エラー', '音声再生に失敗しました');
+  const handlePlayAudio = async () => {
+    const currentQuestion = questions[currentQuestionIndex];
+    if (currentQuestion) {
+      try {
+        await playAudio(currentQuestion.word.korean, 'word');
+      } catch (e) {
+        Alert.alert('エラー', '音声再生に失敗しました');
+      }
     }
   };
 

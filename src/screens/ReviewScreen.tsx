@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import SoundPlayer from 'react-native-sound-player';
+import { playAudio } from '../utils/audioPlayer';
 import { ReviewScreenProps } from '../navigation/types';
 import { Word, SrsManagement } from '../database/models';
 import { 
@@ -73,11 +73,10 @@ export default function ReviewScreen({ navigation }: ReviewScreenProps) {
   const remainingCount = reviewWords.length - currentIndex;
 
   // 音声再生
-  const playWordAudio = useCallback(() => {
+  const playWordAudio = useCallback(async () => {
     if (currentWord) {
       try {
-        // テスト用に固定のファイルを再生
-        SoundPlayer.playAsset(require('../assets/audio/words/word_1.mp3'));
+        await playAudio(currentWord.korean, 'word');
       } catch (_error) {
         // 音声再生失敗時はログのみ記録（アラートは表示しない）
         console.warn('音声の再生に失敗しました');
@@ -93,11 +92,11 @@ export default function ReviewScreen({ navigation }: ReviewScreenProps) {
   }, [currentIndex, reviewWords, playWordAudio]);
 
   // 例文音声再生
-  const playExampleAudio = () => {
-    if (currentWord) {
+  const playExampleAudio = async () => {
+    if (currentWord && currentWord.exampleKorean) {
       try {
-        // テスト用に固定のファイルを再生
-        SoundPlayer.playAsset(require('../assets/audio/examples/word_1.mp3'));
+        // Use the korean word as key, not the example sentence
+        await playAudio(currentWord.korean, 'example');
       } catch (_error) {
         console.warn('例文音声の再生に失敗しました');
       }

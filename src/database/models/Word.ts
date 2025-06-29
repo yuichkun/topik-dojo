@@ -18,13 +18,4 @@ export default class Word extends Model {
   @readonly @date('updated_at') updatedAt!: Date;
 
   @relation('units', 'unit_id') unit!: Unit;
-
-  // 音声ファイルパスを取得
-  get wordAudioPath(): string {
-    return `audio/words/${this.id}.mp3`;
-  }
-
-  get exampleAudioPath(): string {
-    return `audio/examples/${this.id}.mp3`;
-  }
 }
