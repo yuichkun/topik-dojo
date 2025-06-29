@@ -1,21 +1,22 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { View, Text } from 'react-native';
+import Popover from 'react-native-popover-view';
 import { Word } from '../database/models';
 
 interface WordTooltipProps {
   visible: boolean;
   word: Word | null;
   onClose: () => void;
+  fromView: React.RefObject<any> | null;
 }
 
-export default function WordTooltip({ visible, word, onClose }: WordTooltipProps) {
-  if (!word) return null;
+export default function WordTooltip({
+  visible,
+  word,
+  onClose,
+  fromView,
+}: WordTooltipProps) {
+  if (!word || !fromView) return null;
 
   // Calculate unit range display (e.g., "21-30" for unit 3)
   const getUnitRange = (unitOrder: number) => {
@@ -26,46 +27,42 @@ export default function WordTooltip({ visible, word, onClose }: WordTooltipProps
   };
 
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
+    <Popover
+      isVisible={visible}
+      from={fromView}
       onRequestClose={onClose}
+      animationConfig={{ duration: 200 }}
+      popoverStyle={{
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 0,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+      }}
+      backgroundStyle={{ backgroundColor: 'transparent' }}
+      arrowSize={{ width: 16, height: 8 }}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <TouchableWithoutFeedback>
-            <View className="bg-white rounded-lg p-6 mx-4 max-w-sm w-full shadow-lg">
-              {/* 韓国語単語 */}
-              <Text className="text-2xl font-bold text-gray-800 mb-3 text-center">
-                {word.korean}
-              </Text>
-              
-              {/* 日本語訳 */}
-              <Text className="text-lg text-gray-700 text-center mb-2">
-                {word.japanese}
-              </Text>
-              
-              {/* 級とユニット情報 */}
-              <View className="bg-gray-100 rounded-lg px-3 py-2 mb-4">
-                <Text className="text-sm text-gray-600 text-center">
-                  {word.grade}級 ユニット{getUnitRange(word.unitOrder)}
-                </Text>
-              </View>
-              
-              {/* 閉じるボタン */}
-              <TouchableOpacity
-                onPress={onClose}
-                className="bg-blue-500 px-4 py-2 rounded-lg"
-              >
-                <Text className="text-white text-center font-semibold">
-                  閉じる
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableWithoutFeedback>
+      <View className="p-4 min-w-[200px] max-w-[280px]">
+        {/* 韓国語単語 */}
+        <Text className="text-xl font-bold text-gray-800 text-center">
+          {word.korean}
+        </Text>
+
+        {/* 日本語訳 */}
+        <Text className="text-base text-gray-700 text-center mt-1">
+          {word.japanese}
+        </Text>
+
+        {/* 級とユニット情報 */}
+        <View className="bg-gray-100 rounded px-2 py-1 mt-2">
+          <Text className="text-xs text-gray-600 text-center">
+            {word.grade}級 ユニット{getUnitRange(word.unitOrder)}
+          </Text>
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+      </View>
+    </Popover>
   );
 }

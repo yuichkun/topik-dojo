@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, useRef } from 'react';
 import {
   View,
   Text,
@@ -22,15 +22,14 @@ import {
 import WordTooltip from '../components/WordTooltip';
 
 // Component for individual clickable words
-function ClickableWord({
-  segment,
-  isCurrentWord,
-  onPress,
-}: {
-  segment: string;
-  isCurrentWord: boolean;
-  onPress: (segment: string) => void;
-}) {
+const ClickableWord = React.forwardRef<
+  any,
+  {
+    segment: string;
+    isCurrentWord: boolean;
+    onPress: (segment: string, ref: React.RefObject<any>) => void;
+  }
+>(({ segment, isCurrentWord, onPress }, ref) => {
   const [hasDefinition, setHasDefinition] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -59,13 +58,14 @@ function ClickableWord({
 
   return (
     <TouchableOpacity
-      onPress={() => onPress(segment)}
+      ref={ref}
+      onPress={() => onPress(segment, ref as React.RefObject<any>)}
       disabled={!hasDefinition || isCurrentWord}
     >
       <Text className={textStyle}>{segment}</Text>
     </TouchableOpacity>
   );
-}
+});
 
 export default function LearningScreen({
   route,
@@ -83,6 +83,8 @@ export default function LearningScreen({
   const [srsData, setSrsData] = useState<Map<string, SrsManagement>>(new Map());
   const [tooltipWord, setTooltipWord] = useState<Word | null>(null);
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipFromRef, setTooltipFromRef] = useState<React.RefObject<any> | null>(null);
+  const wordRefs = useRef<Map<number, React.RefObject<any>>>(new Map());
 
   // 単語データ取得
   useEffect(() => {
@@ -128,6 +130,8 @@ export default function LearningScreen({
       setCurrentIndex(currentIndex + 1);
       setShowMeaning(false);
       setShowExample(false);
+      // Clear word refs when moving to next word
+      wordRefs.current.clear();
     } else {
       // 学習完了
       Alert.alert(
@@ -149,6 +153,8 @@ export default function LearningScreen({
       setCurrentIndex(currentIndex - 1);
       setShowMeaning(false);
       setShowExample(false);
+      // Clear word refs when moving to previous word
+      wordRefs.current.clear();
     }
   };
 
@@ -215,7 +221,7 @@ export default function LearningScreen({
   };
 
   // 単語タップ時の処理
-  const handleWordTap = async (segment: string) => {
+  const handleWordTap = async (segment: string, ref: React.RefObject<any>) => {
     // Generate possible lemmas
     const lemmas = guessLemmas(segment);
 
@@ -224,6 +230,7 @@ export default function LearningScreen({
 
     if (foundWord) {
       setTooltipWord(foundWord);
+      setTooltipFromRef(ref);
       setTooltipVisible(true);
     }
   };
@@ -232,6 +239,7 @@ export default function LearningScreen({
   const closeTooltip = () => {
     setTooltipVisible(false);
     setTooltipWord(null);
+    setTooltipFromRef(null);
   };
 
   if (loading) {
@@ -381,9 +389,16 @@ export default function LearningScreen({
                               findWordInExample(currentWord.korean, segment) !==
                               null;
 
+                            // Get or create ref for this word
+                            if (!wordRefs.current.has(index)) {
+                              wordRefs.current.set(index, React.createRef());
+                            }
+                            const ref = wordRefs.current.get(index)!;
+
                             return (
                               <Fragment key={index}>
                                 <ClickableWord
+                                  ref={ref}
                                   segment={segment}
                                   isCurrentWord={isCurrentWord}
                                   onPress={handleWordTap}
@@ -483,6 +498,7 @@ export default function LearningScreen({
         visible={tooltipVisible}
         word={tooltipWord}
         onClose={closeTooltip}
+        fromView={tooltipFromRef}
       />
     </View>
   );
