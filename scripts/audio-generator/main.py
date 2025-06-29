@@ -58,8 +58,13 @@ def main(limit: int | None = None):
         # Progress logging every 5 words
         if processed_count > 0 and processed_count % 5 == 0:
             elapsed = time.time() - start_time
-            avg_time = elapsed / processed_count
-            remaining = (total_words - processed_count) * avg_time
+            actual_generated = generated_words + generated_examples
+            if actual_generated > 0:
+                avg_time = elapsed / actual_generated
+                remaining = (total_words - processed_count) * avg_time
+            else:
+                avg_time = 0
+                remaining = 0
             print(
                 f"\n--- Progress: {processed_count}/{total_words} ({processed_count/total_words*100:.1f}%) ---"
             )
