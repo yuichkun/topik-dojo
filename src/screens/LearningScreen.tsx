@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,63 @@ import {
 } from 'react-native';
 import { playAudio } from '../utils/audioPlayer';
 import { findWordInExample } from '../utils/koreanTextUtils';
+import { segmentKoreanText, guessLemmas } from '../utils/koreanLemmatizer';
 import { LearningScreenProps } from '../navigation/types';
 import { Word, SrsManagement } from '../database/models';
 import { getWordsByUnit } from '../database/queries/unitQueries';
+import { searchWordsByKorean } from '../database/queries/wordQueries';
 import {
   getSrsManagementByWordId,
   createSrsManagement,
   calculateDaysToReview,
 } from '../database/queries/srsQueries';
+import WordTooltip from '../components/WordTooltip';
+
+// Component for individual clickable words
+function ClickableWord({
+  segment,
+  isCurrentWord,
+  onPress,
+}: {
+  segment: string;
+  isCurrentWord: boolean;
+  onPress: (segment: string) => void;
+}) {
+  const [hasDefinition, setHasDefinition] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkDefinition = async () => {
+      const lemmas = guessLemmas(segment);
+      const foundWord = await searchWordsByKorean(lemmas);
+      setHasDefinition(!!foundWord);
+    };
+
+    if (!isCurrentWord) {
+      checkDefinition();
+    }
+  }, [segment, isCurrentWord]);
+
+  // Style based on word type
+  let textStyle = 'text-lg ';
+  if (isCurrentWord) {
+    textStyle += 'bg-yellow-200 font-semibold underline';
+  } else if (hasDefinition) {
+    // Words with definitions - using blue color for now
+    textStyle += 'text-blue-600 font-medium';
+  } else {
+    // Normal words without definitions
+    textStyle += 'text-gray-800';
+  }
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(segment)}
+      disabled={!hasDefinition || isCurrentWord}
+    >
+      <Text className={textStyle}>{segment}</Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function LearningScreen({
   route,
@@ -32,6 +81,8 @@ export default function LearningScreen({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [srsData, setSrsData] = useState<Map<string, SrsManagement>>(new Map());
+  const [tooltipWord, setTooltipWord] = useState<Word | null>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
 
   // 単語データ取得
   useEffect(() => {
@@ -163,6 +214,26 @@ export default function LearningScreen({
     return `${start}-${end}`;
   };
 
+  // 単語タップ時の処理
+  const handleWordTap = async (segment: string) => {
+    // Generate possible lemmas
+    const lemmas = guessLemmas(segment);
+
+    // Search in database
+    const foundWord = await searchWordsByKorean(lemmas);
+
+    if (foundWord) {
+      setTooltipWord(foundWord);
+      setTooltipVisible(true);
+    }
+  };
+
+  // ツールチップを閉じる
+  const closeTooltip = () => {
+    setTooltipVisible(false);
+    setTooltipWord(null);
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
@@ -289,29 +360,42 @@ export default function LearningScreen({
                           <Text className="text-white text-xs">🔊</Text>
                         </TouchableOpacity>
                       </View>
-                      <Text className="text-lg text-gray-800 mb-3">
+                      <View className="flex-row flex-wrap">
                         {(() => {
-                          const highlightResult = findWordInExample(
-                            currentWord.korean,
-                            currentWord.exampleKorean
-                          );
-                          
-                          if (highlightResult) {
+                          if (!currentWord.exampleKorean) {
                             return (
-                              <>
-                                {highlightResult.before}
-                                <Text className="bg-yellow-200 font-semibold underline">
-                                  {highlightResult.highlighted}
-                                </Text>
-                                {highlightResult.after}
-                              </>
+                              <Text className="text-lg text-gray-800 mb-3">
+                                예문이 없습니다
+                              </Text>
                             );
-                          } else {
-                            // No highlighting if word not found or is a grammar pattern
-                            return currentWord.exampleKorean;
                           }
+
+                          // Segment the example text
+                          const segments = segmentKoreanText(
+                            currentWord.exampleKorean,
+                          );
+
+                          return segments.map((segment, index) => {
+                            // Check if this segment contains the current word
+                            const isCurrentWord =
+                              findWordInExample(currentWord.korean, segment) !==
+                              null;
+
+                            return (
+                              <Fragment key={index}>
+                                <ClickableWord
+                                  segment={segment}
+                                  isCurrentWord={isCurrentWord}
+                                  onPress={handleWordTap}
+                                />
+                                {index < segments.length - 1 && (
+                                  <Text className="text-lg"> </Text>
+                                )}
+                              </Fragment>
+                            );
+                          });
                         })()}
-                      </Text>
+                      </View>
                     </View>
                   )}
 
@@ -393,6 +477,13 @@ export default function LearningScreen({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Word Tooltip */}
+      <WordTooltip
+        visible={tooltipVisible}
+        word={tooltipWord}
+        onClose={closeTooltip}
+      />
     </View>
   );
 }

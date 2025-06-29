@@ -70,3 +70,28 @@ export const getWordCountByGrade = async (grade: number): Promise<number> => {
     .query(Q.where('grade', grade))
     .fetchCount();
 };
+
+/**
+ * 韓国語の候補リストから単語を検索
+ * @param koreanCandidates 韓国語の候補リスト（原形推測結果）
+ * @returns 最初に見つかった単語（見つからない場合はnull）
+ */
+export const searchWordsByKorean = async (
+  koreanCandidates: string[]
+): Promise<Word | null> => {
+  if (koreanCandidates.length === 0) {
+    return null;
+  }
+
+  try {
+    const words = await database.collections
+      .get<Word>(TableName.WORDS)
+      .query(Q.where('korean', Q.oneOf(koreanCandidates)))
+      .fetch();
+    
+    return words.length > 0 ? words[0] : null;
+  } catch (error) {
+    console.error('Error searching words by Korean:', error);
+    return null;
+  }
+};
