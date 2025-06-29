@@ -3,6 +3,14 @@ import os
 import time
 from datetime import datetime
 from generator import generate_audio
+import re
+
+
+def sanitize_filename(filename):
+    """Sanitize filename by replacing invalid characters"""
+    # Replace invalid filesystem characters with underscore
+    invalid_chars = r'[<>:"/\\|?*]'
+    return re.sub(invalid_chars, '_', filename)
 
 
 def main(limit: int | None = None):
@@ -63,7 +71,8 @@ def main(limit: int | None = None):
 
         # Generate word audio
         if korean:
-            word_output_path = os.path.join(words_dir, f"{korean}.mp3")
+            sanitized_korean = sanitize_filename(korean)
+            word_output_path = os.path.join(words_dir, f"{sanitized_korean}.mp3")
             if os.path.exists(word_output_path):
                 skipped_words += 1
             else:
@@ -71,14 +80,15 @@ def main(limit: int | None = None):
                     f"[{processed_count + 1}/{total_words}] Generating word audio: {korean}"
                 )
                 try:
-                    generate_audio(korean, os.path.join(words_dir, korean))
+                    generate_audio(korean, os.path.join(words_dir, sanitized_korean))
                     generated_words += 1
                 except Exception as e:
                     print(f"  ERROR generating word audio: {e}")
 
         # Generate example audio
         if korean_example and korean:  # Need korean for filename
-            example_output_path = os.path.join(examples_dir, f"{korean}.mp3")
+            sanitized_korean = sanitize_filename(korean)
+            example_output_path = os.path.join(examples_dir, f"{sanitized_korean}.mp3")
             if os.path.exists(example_output_path):
                 skipped_examples += 1
             else:
@@ -86,7 +96,7 @@ def main(limit: int | None = None):
                     f"[{processed_count + 1}/{total_words}] Generating example audio: {korean_example[:50]}..."
                 )
                 try:
-                    generate_audio(korean_example, os.path.join(examples_dir, korean))
+                    generate_audio(korean_example, os.path.join(examples_dir, sanitized_korean))
                     generated_examples += 1
                 except Exception as e:
                     print(f"  ERROR generating example audio: {e}")

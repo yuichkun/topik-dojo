@@ -1,6 +1,14 @@
 import os
 import json
 from datetime import datetime
+import re
+
+
+def sanitize_filename(filename):
+    """Sanitize filename by replacing invalid characters"""
+    # Replace invalid filesystem characters with underscore
+    invalid_chars = r'[<>:"/\\|?*]'
+    return re.sub(invalid_chars, '_', filename)
 
 
 def scan_audio_files(audio_dir):
@@ -43,26 +51,35 @@ def create_audio_mappings(word_files, example_files):
     with open(words_path, "r", encoding="utf-8") as f:
         words_data = json.load(f)
     
-    # Validate that all audio files have corresponding entries in words.json
-    valid_word_files = set()
-    valid_example_files = set()
+    # Create sets of expected sanitized filenames from words.json
+    expected_word_files = set()
+    expected_example_files = set()
+    korean_words = {}  # Map original korean -> sanitized filename for mapping generation
+    
+    for word in words_data.values():
+        if word.get("korean"):
+            original = word["korean"]
+            sanitized = sanitize_filename(original)
+            korean_words[original] = sanitized
+            expected_word_files.add(sanitized)
+            
+            # If there's an example sentence, expect example file too
+            if word.get("korean_example_sentence"):
+                expected_example_files.add(sanitized)
+    
+    # Find orphaned files by comparing actual vs expected
     orphaned_files = []
+    orphaned_word_files = word_files - expected_word_files
+    orphaned_example_files = example_files - expected_example_files
     
-    all_korean_words = {word["korean"] for word in words_data.values() if word.get("korean")}
+    for orphaned in orphaned_word_files:
+        orphaned_files.append(f"words/{orphaned}.mp3")
+    for orphaned in orphaned_example_files:
+        orphaned_files.append(f"examples/{orphaned}.mp3")
     
-    # Check word files
-    for korean in word_files:
-        if korean in all_korean_words:
-            valid_word_files.add(korean)
-        else:
-            orphaned_files.append(f"words/{korean}.mp3")
-    
-    # Check example files
-    for korean in example_files:
-        if korean in all_korean_words:
-            valid_example_files.add(korean)
-        else:
-            orphaned_files.append(f"examples/{korean}.mp3")
+    # Get valid files (intersection of actual and expected)
+    valid_word_files = word_files & expected_word_files
+    valid_example_files = example_files & expected_example_files
     
     # Write the mappings file
     with open(mappings_path, "w", encoding="utf-8") as f:
@@ -72,25 +89,29 @@ def create_audio_mappings(word_files, example_files):
         
         # Write word audio mappings
         f.write("export const wordAudioMap = {\n")
-        for korean in sorted(valid_word_files):
-            # Escape single quotes and backslashes in the key
-            escaped_korean = korean.replace("\\", "\\\\").replace("'", "\\'")
-            # Also escape in the require path
-            escaped_path = korean.replace("\\", "\\\\").replace("'", "\\'")
-            f.write(f"  '{escaped_korean}': require('./audio/words/{escaped_path}.mp3'),\n")
+        for original_korean, sanitized_filename in sorted(korean_words.items()):
+            # Only include if the audio file actually exists
+            if sanitized_filename in valid_word_files:
+                # Escape single quotes and backslashes in the key (use original Korean)
+                escaped_korean = original_korean.replace("\\", "\\\\").replace("'", "\\'")
+                # Use sanitized filename for the require path
+                escaped_path = sanitized_filename.replace("\\", "\\\\").replace("'", "\\'")
+                f.write(f"  '{escaped_korean}': require('./audio/words/{escaped_path}.mp3'),\n")
         f.write("};\n\n")
         
         # Write example audio mappings
         f.write("export const exampleAudioMap = {\n")
-        for korean in sorted(valid_example_files):
-            # Escape single quotes and backslashes in the key
-            escaped_korean = korean.replace("\\", "\\\\").replace("'", "\\'")
-            # Also escape in the require path
-            escaped_path = korean.replace("\\", "\\\\").replace("'", "\\'")
-            f.write(f"  '{escaped_korean}': require('./audio/examples/{escaped_path}.mp3'),\n")
+        for original_korean, sanitized_filename in sorted(korean_words.items()):
+            # Only include if the audio file actually exists
+            if sanitized_filename in valid_example_files:
+                # Escape single quotes and backslashes in the key (use original Korean)
+                escaped_korean = original_korean.replace("\\", "\\\\").replace("'", "\\'")
+                # Use sanitized filename for the require path
+                escaped_path = sanitized_filename.replace("\\", "\\\\").replace("'", "\\'")
+                f.write(f"  '{escaped_korean}': require('./audio/examples/{escaped_path}.mp3'),\n")
         f.write("};\n")
     
-    return mappings_path, valid_word_files, valid_example_files, orphaned_files
+    return mappings_path, len(valid_word_files), len(valid_example_files), orphaned_files
 
 
 def main():
@@ -122,11 +143,11 @@ def main():
     
     # Create the mappings
     print("\nGenerating audio mappings...")
-    mappings_path, valid_words, valid_examples, orphaned = create_audio_mappings(word_files, example_files)
+    mappings_path, valid_word_count, valid_example_count, orphaned = create_audio_mappings(word_files, example_files)
     
     print(f"\nCreated audio mappings file: {mappings_path}")
-    print(f"  - Valid word mappings: {len(valid_words)}")
-    print(f"  - Valid example mappings: {len(valid_examples)}")
+    print(f"  - Valid word mappings: {valid_word_count}")
+    print(f"  - Valid example mappings: {valid_example_count}")
     
     if orphaned:
         print(f"\nWARNING: Found {len(orphaned)} orphaned audio files (no matching entry in words.json):")
@@ -145,12 +166,12 @@ def main():
     total_words = len([w for w in words_data.values() if w.get("korean")])
     total_examples = len([w for w in words_data.values() if w.get("korean_example_sentence")])
     
-    word_coverage = (len(valid_words) / total_words * 100) if total_words > 0 else 0
-    example_coverage = (len(valid_examples) / total_examples * 100) if total_examples > 0 else 0
+    word_coverage = (valid_word_count / total_words * 100) if total_words > 0 else 0
+    example_coverage = (valid_example_count / total_examples * 100) if total_examples > 0 else 0
     
     print(f"\nCoverage Statistics:")
-    print(f"  - Words: {len(valid_words)}/{total_words} ({word_coverage:.1f}%)")
-    print(f"  - Examples: {len(valid_examples)}/{total_examples} ({example_coverage:.1f}%)")
+    print(f"  - Words: {valid_word_count}/{total_words} ({word_coverage:.1f}%)")
+    print(f"  - Examples: {valid_example_count}/{total_examples} ({example_coverage:.1f}%)")
     
     print("\nDone!")
 
