@@ -4,6 +4,7 @@ import Popover from 'react-native-popover-view';
 import { Word } from '../database/models';
 import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
+import { playAudio } from '../utils/audioPlayer';
 
 interface WordTooltipProps {
   visible: boolean;
@@ -44,6 +45,15 @@ export default function WordTooltip({
     });
   };
 
+  const handlePlayAudio = async () => {
+    if (!word) return;
+    try {
+      await playAudio(word.korean, 'word');
+    } catch (error) {
+      console.error('Failed to play audio:', error);
+    }
+  };
+
   return (
     <Popover
       isVisible={visible}
@@ -64,13 +74,21 @@ export default function WordTooltip({
       arrowSize={{ width: 16, height: 8 }}
     >
       <View className="p-4 min-w-[200px] max-w-[280px]">
-        {/* 韓国語単語 */}
-        <Text className="text-xl font-bold text-gray-800 text-center">
-          {word.korean}
-        </Text>
+        {/* 韓国語単語 with audio button */}
+        <View className="flex-row items-center justify-center mb-2">
+          <Text className="text-xl font-bold text-gray-800 mr-2">
+            {word.korean}
+          </Text>
+          <TouchableOpacity
+            onPress={handlePlayAudio}
+            className="bg-blue-500 rounded-full p-1.5 active:bg-blue-600"
+          >
+            <Text className="text-white text-xs">🔊</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* 日本語訳 */}
-        <Text className="text-base text-gray-700 text-center mt-1">
+        <Text className="text-base text-gray-700 text-center">
           {word.japanese}
         </Text>
 
