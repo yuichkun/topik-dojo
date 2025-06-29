@@ -499,6 +499,7 @@ export default function LearningScreen({
         word={tooltipWord}
         onClose={closeTooltip}
         fromView={tooltipFromRef}
+        navigation={navigation}
       />
     </View>
   );

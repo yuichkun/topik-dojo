@@ -1,13 +1,16 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import Popover from 'react-native-popover-view';
 import { Word } from '../database/models';
+import { NavigationProp } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/types';
 
 interface WordTooltipProps {
   visible: boolean;
   word: Word | null;
   onClose: () => void;
   fromView: React.RefObject<any> | null;
+  navigation: NavigationProp<RootStackParamList>;
 }
 
 export default function WordTooltip({
@@ -15,6 +18,7 @@ export default function WordTooltip({
   word,
   onClose,
   fromView,
+  navigation,
 }: WordTooltipProps) {
   if (!word || !fromView) return null;
 
@@ -24,6 +28,20 @@ export default function WordTooltip({
     const start = (unitNumber - 1) * 10 + 1;
     const end = unitNumber * 10;
     return `${start}-${end}`;
+  };
+
+  const getUnitNumber = (unitOrder: number) => {
+    return Math.ceil(unitOrder / 10);
+  };
+
+  const handleUnitPress = () => {
+    if (!word) return;
+    onClose();
+    // Navigate to the learning screen for this unit
+    navigation.navigate('Learning', {
+      level: word.grade,
+      unitNumber: getUnitNumber(word.unitOrder),
+    });
   };
 
   return (
@@ -57,11 +75,14 @@ export default function WordTooltip({
         </Text>
 
         {/* 級とユニット情報 */}
-        <View className="bg-gray-100 rounded px-2 py-1 mt-2">
-          <Text className="text-xs text-gray-600 text-center">
+        <TouchableOpacity
+          onPress={handleUnitPress}
+          className="bg-gray-100 rounded px-2 py-1 mt-2 active:bg-gray-200"
+        >
+          <Text className="text-xs text-blue-600 text-center underline">
             {word.grade}級 ユニット{getUnitRange(word.unitOrder)}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </Popover>
   );
