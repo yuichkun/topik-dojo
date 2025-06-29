@@ -11,7 +11,7 @@ def generate_audio(text: str, output_file_name: str):
     )
     audio = elevenlabs.text_to_speech.convert(
         text=text,
-        voice_id="JBFqnCBsd6RMkjVDRZzb",
+        voice_id="xi3rF0t7dg7uN2M0WUhr",  # Yuna
         model_id="eleven_multilingual_v2",
         output_format="mp3_44100_128",
     )
