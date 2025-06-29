@@ -162,6 +162,18 @@ export default function LearningScreen({
     return `${start}-${end}`;
   };
 
+  // 例文内の単語をハイライト
+  const highlightWordInExample = (example: string, word: string) => {
+    const wordIndex = example.indexOf(word);
+    if (wordIndex === -1) return { before: example, highlighted: '', after: '' };
+    
+    const before = example.substring(0, wordIndex);
+    const highlighted = word;
+    const after = example.substring(wordIndex + word.length);
+    
+    return { before, highlighted, after };
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
@@ -289,7 +301,21 @@ export default function LearningScreen({
                         </TouchableOpacity>
                       </View>
                       <Text className="text-lg text-gray-800 mb-3">
-                        {currentWord.exampleKorean}
+                        {(() => {
+                          const parts = highlightWordInExample(
+                            currentWord.exampleKorean,
+                            currentWord.korean
+                          );
+                          return (
+                            <>
+                              {parts.before}
+                              <Text className="bg-yellow-200 font-semibold underline">
+                                {parts.highlighted}
+                              </Text>
+                              {parts.after}
+                            </>
+                          );
+                        })()}
                       </Text>
                     </View>
                   )}
