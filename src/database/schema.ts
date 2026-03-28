@@ -1,110 +1,110 @@
-import { appSchema, tableSchema } from '@nozbe/watermelondb';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
-export default appSchema({
-  version: 2,
-  tables: [
-    // ユニットテーブル
-    tableSchema({
-      name: 'units',
-      columns: [
-        { name: 'grade', type: 'number' },
-        { name: 'unit_number', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-    // 語彙マスターテーブル
-    tableSchema({
-      name: 'words',
-      columns: [
-        { name: 'korean', type: 'string' },
-        { name: 'japanese', type: 'string' },
-        { name: 'example_korean', type: 'string', isOptional: true },
-        { name: 'example_japanese', type: 'string', isOptional: true },
-        { name: 'grade', type: 'number' },
-        { name: 'unit_id', type: 'string' },
-        { name: 'unit_order', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-    // SRS管理テーブル
-    tableSchema({
-      name: 'srs_management',
-      columns: [
-        { name: 'word_id', type: 'string' },
-        { name: 'mastery_level', type: 'number' },
-        { name: 'ease_factor', type: 'number' },
-        { name: 'next_review_date', type: 'number', isOptional: true },
-        { name: 'interval_days', type: 'number' },
-        { name: 'mistake_count', type: 'number' },
-        { name: 'last_reviewed', type: 'number', isOptional: true },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-
-    // テスト結果テーブル
-    tableSchema({
-      name: 'test_results',
-      columns: [
-        { name: 'grade', type: 'number' },
-        { name: 'unit', type: 'number' },
-        { name: 'test_type', type: 'string' },
-        { name: 'correct_answers', type: 'number' },
-        { name: 'total_questions', type: 'number' },
-        { name: 'accuracy_rate', type: 'number' },
-        { name: 'duration_seconds', type: 'number', isOptional: true },
-        { name: 'test_date', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-    // テスト問題詳細テーブル
-    tableSchema({
-      name: 'test_questions',
-      columns: [
-        { name: 'test_result_id', type: 'string' },
-        { name: 'word_id', type: 'string' },
-        { name: 'is_correct', type: 'boolean' },
-        { name: 'user_answer', type: 'string', isOptional: true },
-        { name: 'correct_answer', type: 'string' },
-        { name: 'response_time_ms', type: 'number', isOptional: true },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-    // 復習履歴テーブル
-    tableSchema({
-      name: 'review_history',
-      columns: [
-        { name: 'word_id', type: 'string' },
-        { name: 'feedback', type: 'string' },
-        { name: 'previous_mastery_level', type: 'number', isOptional: true },
-        { name: 'new_mastery_level', type: 'number' },
-        { name: 'review_date', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-
-    // 学習進捗テーブル
-    tableSchema({
-      name: 'learning_progress',
-      columns: [
-        { name: 'progress_date', type: 'string' },
-        { name: 'grade', type: 'number' },
-        { name: 'mastered_words_count', type: 'number' },
-        { name: 'total_words_count', type: 'number' },
-        { name: 'progress_rate', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ]
-    }),
-  ]
+export const units = sqliteTable('units', {
+  id: text('id').primaryKey(),
+  grade: integer('grade').notNull(),
+  unitNumber: integer('unit_number').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
 });
+
+export const words = sqliteTable('words', {
+  id: text('id').primaryKey(),
+  korean: text('korean').notNull(),
+  japanese: text('japanese').notNull(),
+  exampleKorean: text('example_korean'),
+  exampleJapanese: text('example_japanese'),
+  grade: integer('grade').notNull(),
+  unitId: text('unit_id')
+    .notNull()
+    .references(() => units.id),
+  unitOrder: integer('unit_order').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
+export const srsManagement = sqliteTable('srs_management', {
+  id: text('id').primaryKey(),
+  wordId: text('word_id')
+    .notNull()
+    .references(() => words.id),
+  masteryLevel: integer('mastery_level').notNull(),
+  easeFactor: real('ease_factor').notNull(),
+  nextReviewDate: integer('next_review_date'),
+  intervalDays: integer('interval_days').notNull(),
+  mistakeCount: integer('mistake_count').notNull(),
+  lastReviewed: integer('last_reviewed'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
+export const testResults = sqliteTable('test_results', {
+  id: text('id').primaryKey(),
+  grade: integer('grade').notNull(),
+  unit: integer('unit').notNull(),
+  testType: text('test_type').notNull(),
+  correctAnswers: integer('correct_answers').notNull(),
+  totalQuestions: integer('total_questions').notNull(),
+  accuracyRate: real('accuracy_rate').notNull(),
+  durationSeconds: integer('duration_seconds'),
+  testDate: integer('test_date').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
+export const testQuestions = sqliteTable('test_questions', {
+  id: text('id').primaryKey(),
+  testResultId: text('test_result_id')
+    .notNull()
+    .references(() => testResults.id),
+  wordId: text('word_id')
+    .notNull()
+    .references(() => words.id),
+  isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
+  userAnswer: text('user_answer'),
+  correctAnswer: text('correct_answer').notNull(),
+  responseTimeMs: integer('response_time_ms'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
+export const reviewHistory = sqliteTable('review_history', {
+  id: text('id').primaryKey(),
+  wordId: text('word_id')
+    .notNull()
+    .references(() => words.id),
+  feedback: text('feedback').notNull(),
+  previousMasteryLevel: integer('previous_mastery_level'),
+  newMasteryLevel: integer('new_mastery_level').notNull(),
+  reviewDate: integer('review_date').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
+export const learningProgress = sqliteTable('learning_progress', {
+  id: text('id').primaryKey(),
+  progressDate: text('progress_date').notNull(),
+  grade: integer('grade').notNull(),
+  masteredWordsCount: integer('mastered_words_count').notNull(),
+  totalWordsCount: integer('total_words_count').notNull(),
+  progressRate: real('progress_rate').notNull(),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
+export type Unit = InferSelectModel<typeof units>;
+export type Word = InferSelectModel<typeof words>;
+export type SrsManagement = InferSelectModel<typeof srsManagement>;
+export type TestResult = InferSelectModel<typeof testResults>;
+export type TestQuestion = InferSelectModel<typeof testQuestions>;
+export type ReviewHistory = InferSelectModel<typeof reviewHistory>;
+export type LearningProgress = InferSelectModel<typeof learningProgress>;
+
+export type InsertUnit = InferInsertModel<typeof units>;
+export type InsertWord = InferInsertModel<typeof words>;
+export type InsertSrsManagement = InferInsertModel<typeof srsManagement>;
+export type InsertTestResult = InferInsertModel<typeof testResults>;
+export type InsertTestQuestion = InferInsertModel<typeof testQuestions>;
+export type InsertReviewHistory = InferInsertModel<typeof reviewHistory>;
+export type InsertLearningProgress = InferInsertModel<typeof learningProgress>;
