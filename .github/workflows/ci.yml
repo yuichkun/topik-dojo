@@ -2,98 +2,60 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
       - name: Install dependencies
-        run: npm ci
-      
+        run: npm ci --legacy-peer-deps
       - name: Run linter
         run: npm run lint
-      
       - name: Run TypeScript type checking
         run: npm run typecheck
-      
       - name: Run tests
         run: npm test -- --coverage --watchAll=false
 
   build-android:
     runs-on: ubuntu-latest
     needs: test
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
-      
-      - name: Install dependencies
-        run: npm ci
-      
+          java-version: '17'
+      - name: Generate native project (CNG)
+        run: npx expo prebuild --platform android --non-interactive
       - name: Build Android APK
-        run: |
-          cd android
-          ./gradlew assembleDebug --no-daemon
+        run: cd android && ./gradlew assembleDebug --no-daemon
 
-  build-ios:
-    runs-on: macos-latest
-    needs: test
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.1'
-          bundler-cache: true
-      
-      - name: Install CocoaPods dependencies
-        run: |
-          cd ios
-          bundle exec pod install
-      
-      - name: Build iOS app
-        run: |
-          cd ios
-          xcodebuild -workspace TopikDojo.xcworkspace \
-                     -scheme TopikDojo \
-                     -configuration Debug \
-                     -destination 'generic/platform=iOS Simulator' \
-                     -archivePath TopikDojo.xcarchive \
-                     build
+  # iOS build requires macOS runner and expo prebuild
+  # Uncomment when needed:
+  # build-ios:
+  #   runs-on: macos-latest
+  #   needs: test
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #         cache: 'npm'
+  #     - run: npm ci --legacy-peer-deps
+  #     - run: npx expo prebuild --platform ios --non-interactive
+  #     - run: cd ios && xcodebuild -workspace TopikDojo.xcworkspace -scheme TopikDojo -configuration Debug -destination 'generic/platform=iOS Simulator' build

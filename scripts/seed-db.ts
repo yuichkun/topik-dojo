@@ -2,43 +2,122 @@
 
 /**
  * データベースにfixtureデータを流し込むスクリプト
- * iOS Simulatorの中のDBを更新する
+ * assets/TopikDojo.db にシードDBを生成する
  */
 
-import { execSync } from 'child_process';
-import Database from 'better-sqlite3';
+import BetterSqlite3 from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { units, words, srsManagement } from '../src/database/schema';
+import * as schema from '../src/database/schema';
+import path from 'path';
+import fs from 'fs';
+
+const DB_PATH = path.join(__dirname, '../assets/TopikDojo.db');
+
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+if (fs.existsSync(DB_PATH)) fs.unlinkSync(DB_PATH);
+
+const sqlite = new BetterSqlite3(DB_PATH);
+const db = drizzle(sqlite, { schema });
+
+// テーブル作成（test-client.ts と同じDDL）
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS units (
+    id TEXT PRIMARY KEY,
+    grade INTEGER NOT NULL,
+    unit_number INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS words (
+    id TEXT PRIMARY KEY,
+    korean TEXT NOT NULL,
+    japanese TEXT NOT NULL,
+    example_korean TEXT,
+    example_japanese TEXT,
+    grade INTEGER NOT NULL,
+    unit_id TEXT NOT NULL,
+    unit_order INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS srs_management (
+    id TEXT PRIMARY KEY,
+    word_id TEXT NOT NULL,
+    mastery_level INTEGER NOT NULL,
+    ease_factor REAL NOT NULL,
+    next_review_date INTEGER,
+    interval_days INTEGER NOT NULL,
+    mistake_count INTEGER NOT NULL,
+    last_reviewed INTEGER,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS test_results (
+    id TEXT PRIMARY KEY,
+    grade INTEGER NOT NULL,
+    unit INTEGER NOT NULL,
+    test_type TEXT NOT NULL,
+    correct_answers INTEGER NOT NULL,
+    total_questions INTEGER NOT NULL,
+    accuracy_rate REAL NOT NULL,
+    duration_seconds INTEGER,
+    test_date INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS test_questions (
+    id TEXT PRIMARY KEY,
+    test_result_id TEXT NOT NULL,
+    word_id TEXT NOT NULL,
+    is_correct INTEGER NOT NULL,
+    user_answer TEXT,
+    correct_answer TEXT NOT NULL,
+    response_time_ms INTEGER,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS review_history (
+    id TEXT PRIMARY KEY,
+    word_id TEXT NOT NULL,
+    feedback TEXT NOT NULL,
+    previous_mastery_level INTEGER,
+    new_mastery_level INTEGER NOT NULL,
+    review_date INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS learning_progress (
+    id TEXT PRIMARY KEY,
+    progress_date TEXT NOT NULL,
+    grade INTEGER NOT NULL,
+    mastered_words_count INTEGER NOT NULL,
+    total_words_count INTEGER NOT NULL,
+    progress_rate REAL NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+`);
+
+const now = Date.now();
 
 // テスト用ユニットデータ
 const testUnits = [
-  {
-    id: 'unit_1_1',
-    grade: 1,
-    unitNumber: 1,
-  },
-  {
-    id: 'unit_1_2',
-    grade: 1,
-    unitNumber: 2,
-  },
-  {
-    id: 'unit_2_1',
-    grade: 2,
-    unitNumber: 1,
-  },
-  {
-    id: 'unit_3_1',
-    grade: 3,
-    unitNumber: 1,
-  },
-  {
-    id: 'unit_3_10',
-    grade: 3,
-    unitNumber: 10,
-  },
+  { id: 'unit_1_1', grade: 1, unitNumber: 1, createdAt: now, updatedAt: now },
+  { id: 'unit_1_2', grade: 1, unitNumber: 2, createdAt: now, updatedAt: now },
+  { id: 'unit_2_1', grade: 2, unitNumber: 1, createdAt: now, updatedAt: now },
+  { id: 'unit_3_1', grade: 3, unitNumber: 1, createdAt: now, updatedAt: now },
+  { id: 'unit_3_10', grade: 3, unitNumber: 10, createdAt: now, updatedAt: now },
 ];
 
+// テスト用単語データ
 const testWords = [
-  // 1級ユニット1の単語（1-3語目）
   {
     id: 'word_1',
     korean: '안녕하세요',
@@ -48,9 +127,11 @@ const testWords = [
     grade: 1,
     unitId: 'unit_1_1',
     unitOrder: 1,
+    createdAt: now,
+    updatedAt: now,
   },
   {
-    id: 'word_2', 
+    id: 'word_2',
     korean: '감사합니다',
     japanese: 'ありがとうございます',
     exampleKorean: '정말 감사합니다.',
@@ -58,6 +139,8 @@ const testWords = [
     grade: 1,
     unitId: 'unit_1_1',
     unitOrder: 2,
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: 'word_3',
@@ -68,8 +151,9 @@ const testWords = [
     grade: 1,
     unitId: 'unit_1_1',
     unitOrder: 3,
+    createdAt: now,
+    updatedAt: now,
   },
-  // 2級ユニット1の単語（1-2語目）
   {
     id: 'word_4',
     korean: '학생',
@@ -79,6 +163,8 @@ const testWords = [
     grade: 2,
     unitId: 'unit_2_1',
     unitOrder: 1,
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: 'word_5',
@@ -89,8 +175,9 @@ const testWords = [
     grade: 2,
     unitId: 'unit_2_1',
     unitOrder: 2,
+    createdAt: now,
+    updatedAt: now,
   },
-  // 3級ユニット10の単語（テスト用）
   {
     id: 'word_6',
     korean: '컴퓨터',
@@ -100,154 +187,62 @@ const testWords = [
     grade: 3,
     unitId: 'unit_3_10',
     unitOrder: 1,
-  }
+    createdAt: now,
+    updatedAt: now,
+  },
 ];
 
+// テスト用SRSデータ
 const testSrsData = [
   {
     id: 'srs_1',
     wordId: 'word_1',
     masteryLevel: 0,
     easeFactor: 2.5,
-    nextReviewDate: Date.now(), // 今日復習対象
+    nextReviewDate: now,
     intervalDays: 1,
     mistakeCount: 0,
     lastReviewed: null,
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: 'srs_2',
     wordId: 'word_2',
     masteryLevel: 1,
     easeFactor: 2.5,
-    nextReviewDate: Date.now() + (2 * 24 * 60 * 60 * 1000), // 2日後
+    nextReviewDate: now + 2 * 24 * 60 * 60 * 1000,
     intervalDays: 3,
     mistakeCount: 0,
-    lastReviewed: Date.now() - (1 * 24 * 60 * 60 * 1000), // 1日前
+    lastReviewed: now - 1 * 24 * 60 * 60 * 1000,
+    createdAt: now,
+    updatedAt: now,
   },
   {
     id: 'srs_3',
     wordId: 'word_3',
     masteryLevel: 3,
     easeFactor: 2.5,
-    nextReviewDate: Date.now() + (5 * 24 * 60 * 60 * 1000), // 5日後
+    nextReviewDate: now + 5 * 24 * 60 * 60 * 1000,
     intervalDays: 6,
     mistakeCount: 1,
-    lastReviewed: Date.now() - (1 * 24 * 60 * 60 * 1000), // 1日前
-  }
+    lastReviewed: now - 1 * 24 * 60 * 60 * 1000,
+    createdAt: now,
+    updatedAt: now,
+  },
 ];
 
-// データベースパスを取得する関数（link-db.shの処理を参考）
-function findDatabasePath(): string | null {
-  console.log('🔍 iOS Simulator内のデータベースを検索中...');
-  
-  try {
-    // find コマンドでTopikDojo.dbを検索
-    const result = execSync(
-      'find ~/Library/Developer/CoreSimulator/Devices -name "TopikDojo.db" -type f 2>/dev/null | head -1',
-      { encoding: 'utf8' }
-    );
-    
-    return result.trim();
-  } catch (error) {
-    console.error('❌ データベース検索エラー:', (error as Error).message);
-    return null;
-  }
-}
+console.log('📝 テストデータを挿入中...');
 
-// fixtureデータを流し込むメイン処理
-async function seedDatabase(): Promise<void> {
-  const dbPath = findDatabasePath();
-  
-  if (!dbPath) {
-    console.error('❌ TopikDojo.db が見つかりません');
-    console.error('以下を確認してください:');
-    console.error('   1. iOS Simulatorが起動している');
-    console.error('   2. TopikDojoアプリが一度起動されている');
-    console.error('   3. データベースが初期化されている');
-    process.exit(1);
-  }
-  
-  console.log('✅ データベースを発見:', dbPath);
-  
-  // SQLiteを使用してfixtureデータを挿入
-  const db = new Database(dbPath);
-  
-  try {
-    console.log('🗑️ 既存データをクリア中...');
-    
-    // 既存データをクリア
-    db.exec('DELETE FROM srs_management');
-    db.exec('DELETE FROM words');
-    db.exec('DELETE FROM units');
-    
-    console.log('📝 テストデータを挿入中...');
-    
-    // ユニットデータを挿入
-    const insertUnit = db.prepare('INSERT INTO units (id, grade, unit_number, created_at, updated_at) VALUES (?, ?, ?, ?, ?)');
-    const now = Date.now();
-    
-    for (const unit of testUnits) {
-      insertUnit.run(unit.id, unit.grade, unit.unitNumber, now, now);
-    }
-    
-    // 単語データを挿入
-    const insertWord = db.prepare(`
-      INSERT INTO words (id, korean, japanese, example_korean, example_japanese, grade, unit_id, unit_order, created_at, updated_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    for (const word of testWords) {
-      insertWord.run(
-        word.id,
-        word.korean,
-        word.japanese,
-        word.exampleKorean,
-        word.exampleJapanese,
-        word.grade,
-        word.unitId,
-        word.unitOrder,
-        now,
-        now
-      );
-    }
-    
-    // SRSデータを挿入
-    const insertSrs = db.prepare(`
-      INSERT INTO srs_management (id, word_id, mastery_level, ease_factor, next_review_date, interval_days, mistake_count, last_reviewed, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    for (const srs of testSrsData) {
-      insertSrs.run(
-        srs.id,
-        srs.wordId,
-        srs.masteryLevel,
-        srs.easeFactor,
-        srs.nextReviewDate,
-        srs.intervalDays,
-        srs.mistakeCount,
-        srs.lastReviewed ?? null,
-        now,
-        now
-      );
-    }
-    
-    console.log('✅ テストデータの挿入完了!');
-    console.log('📊 挿入したデータ:');
-    console.log(`   - ユニット: ${testUnits.length}件`);
-    console.log(`   - 単語: ${testWords.length}件`);
-    console.log(`   - SRS: ${testSrsData.length}件`);
-    
-  } catch (error) {
-    console.error('❌ データ挿入エラー:', (error as Error).message);
-    process.exit(1);
-  } finally {
-    db.close();
-  }
-}
+db.insert(units).values(testUnits).run();
+db.insert(words).values(testWords).run();
+db.insert(srsManagement).values(testSrsData).run();
 
-// スクリプト実行
-seedDatabase().catch((error) => {
-  console.error('❌ Script failed:', error);
-  process.exit(1);
-});
+sqlite.close();
+
+console.log('✅ テストデータの挿入完了!');
+console.log(`📁 DB出力先: ${DB_PATH}`);
+console.log('📊 挿入したデータ:');
+console.log(`   - ユニット: ${testUnits.length}件`);
+console.log(`   - 単語: ${testWords.length}件`);
+console.log(`   - SRS: ${testSrsData.length}件`);
