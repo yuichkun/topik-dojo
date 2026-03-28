@@ -19,11 +19,33 @@ TOPIK（韓国語能力試験）対策専用の単語帳アプリです。日本
 
 ### 必要なもの
 
-- **Node.js 20 以上**（Expo SDK 55 は Node 18 では動作しません）
-- **Xcode**（最新の安定版。iOS Simulator ランタイムがインストール済みであること）
-- **Git**
+| 要件 | バージョン | 備考 |
+| --- | --- | --- |
+| Node.js | **20 以上** | `node -v` で確認。18 では動作しない |
+| Xcode | **26 以上** | Expo SDK 55 / RN 0.83.4 の必須要件 |
+| iOS Simulator ランタイム | Xcode に同梱のもの | Xcode 初回起動時に自動インストールされる |
+| CocoaPods | 1.13 以上 | `pod --version` で確認 |
+| Git | - | - |
 
 Android Studio は不要です。このプロジェクトは iOS のみで開発しています。
+
+### Xcode の確認
+
+Xcode 26 が `xcode-select` で選択されていることを確認してください。
+
+```bash
+xcodebuild -version
+# Xcode 26.x が表示されること
+
+xcode-select -p
+# /Applications/Xcode26.app/Contents/Developer のように Xcode 26 のパスが表示されること
+```
+
+異なるバージョンが表示される場合：
+
+```bash
+sudo xcode-select -s /Applications/<Xcode26のアプリ名>.app/Contents/Developer
+```
 
 ### 初回セットアップ（クローンから起動まで）
 
@@ -32,19 +54,19 @@ Android Studio は不要です。このプロジェクトは iOS のみで開発
 git clone <repo-url>
 cd topik-dojo
 
-# 2. 依存インストール（--legacy-peer-deps は必須）
+# 2. 依存インストール（--legacy-peer-deps は必須。Expo SDK 55 canary 版の peer dependency 競合を回避するため）
 npm install --legacy-peer-deps
 
-# 3. ネイティブプロジェクト生成
+# 3. ネイティブプロジェクト生成（CocoaPods の install も自動実行される）
 npx expo prebuild
 
-# 4. iOS で起動
+# 4. iOS シミュレータで起動
 npx expo run:ios
 ```
 
 これで iPhone Simulator でアプリが起動します。
 
-> **Note**: `ios/` ディレクトリは Expo CNG (Continuous Native Generation) で自動生成されます。リポジトリには含まれていません。
+> **Note**: `ios/` と `android/` は Expo CNG (Continuous Native Generation) で自動生成されます。リポジトリには含まれていません。`app.config.ts` の設定から `npx expo prebuild` で毎回再生成できます。
 
 ### 実機で実行する場合
 
@@ -118,13 +140,38 @@ Expo SDK 55 は canary 版のため、peer dependency の競合が起きます�
 npm install --legacy-peer-deps
 ```
 
+### `npx expo prebuild` で "Please upgrade XCode" エラー
+
+Xcode 26 が `xcode-select` で選択されていることを確認してください。
+
+```bash
+xcodebuild -version   # 26.x であること
+xcode-select -p       # Xcode 26 のパスであること
+```
+
 ### `npx expo prebuild` で pod install が失敗する（"Failed to validate worklets version"）
 
-`react-native-worklets` のバージョンが合っていない可能性があります。以下で修正できます。
+`react-native-worklets` のバージョンが合っていない可能性があります。
 
 ```bash
 npm install react-native-worklets@0.7 --legacy-peer-deps
 npx expo prebuild --clean
+```
+
+### `xcrun simctl` で "CoreSimulatorService connection became invalid" エラー
+
+複数の Xcode バージョンを切り替えた場合に発生します。CoreSimulatorService をリセットしてください。
+
+```bash
+sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService
+```
+
+それでも解決しない場合、キャッシュの削除が必要です。
+
+```bash
+rm -rf ~/Library/Logs/CoreSimulator
+rm -rf ~/Library/Developer/CoreSimulator
+sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService
 ```
 
 ### テストで "invalid ELF header" エラー
@@ -134,12 +181,6 @@ npx expo prebuild --clean
 ```bash
 npm rebuild better-sqlite3
 ```
-
-### Xcode で "destination not found" エラー
-
-iOS Simulator ランタイムがインストールされていません。Xcode を開いて以下の手順で追加してください。
-
-**Xcode > Settings > Platforms** から iOS Simulator ランタイムをダウンロード・インストールしてください。
 
 ## 設計ドキュメント
 
@@ -160,8 +201,3 @@ iOS Simulator ランタイムがインストールされていません。Xcode 
 | 4 級 | 2,000 語 | 200 ユニット | 中級後半 |
 | 5 級 | 3,000 語 | 300 ユニット | 高級前半 |
 | 6 級 | 3,000 語 | 300 ユニット | 高級後半 |
-
----
-
-_作成日: 2025/6/13_
-_更新日: 2026/3/28_
