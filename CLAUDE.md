@@ -90,8 +90,7 @@ topik-dojo/
 │   │   ├── constants.ts    # DB定数
 │   │   ├── models/         # モデルヘルパー
 │   │   └── queries/        # クエリ関数
-│   ├── screens/            # 画面コンポーネント（ロジック）
-│   ├── hooks/              # カスタムフック
+│   ├── hooks/              # カスタムフック（useUnits, useReviewCount, useWordAudio）
 │   └── assets/             # 音声ファイル等
 ├── drizzle/                # Drizzle Kit生成ファイル
 ├── docs/                   # 設計ドキュメント
