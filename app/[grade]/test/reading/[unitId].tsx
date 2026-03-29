@@ -5,16 +5,40 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import database from '../../../../src/database/client';
 import { getWordsByUnitId } from '../../../../src/database/queries/unitQueries';
 import { getRandomWordsByGrade } from '../../../../src/database/queries/wordQueries';
 import { createSrsManagement } from '../../../../src/database/queries/srsQueries';
 import { createWordMastery } from '../../../../src/database/queries/wordMasteryQueries';
 import { updateOrCreateLearningProgress } from '../../../../src/database/queries/learningProgressQueries';
+import { BackButton } from '../../../../src/components/ui';
 import type { Word } from '../../../../src/database/schema';
+
+// ─── Design Tokens ───────────────────────────────────────────
+
+const C = {
+  primary: '#002897',
+  primaryContainer: '#003ace',
+  surface: '#f8f9fa',
+  surfaceContainerLowest: '#ffffff',
+  surfaceContainer: '#edeeef',
+  surfaceContainerHighest: '#e1e3e5',
+  onBackground: '#191c1d',
+  onSurfaceVariant: '#434653',
+  outlineVariant: '#c3c6d5',
+  onPrimary: '#ffffff',
+  correct: '#16a34a',
+  correctBg: '#f0fdf4',
+  incorrect: '#dc2626',
+  incorrectBg: '#fef2f2',
+};
+
+// ─── Types ───────────────────────────────────────────────────
 
 interface QuestionData {
   word: Word;
@@ -28,7 +52,126 @@ interface AnswerResult {
   userAnswer: string;
   correctAnswer: string;
   timeMs: number;
+  korean: string;
 }
+
+// ─── Completion Screen ──────────────────────────────────────
+
+function CompletionScreen({
+  results,
+  onBack,
+}: {
+  results: AnswerResult[];
+  onBack: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const correctCount = results.filter(r => r.correct).length;
+  const totalCount = results.length;
+  const accuracy =
+    totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: C.surface }}>
+      <StatusBar barStyle="light-content" />
+
+      <LinearGradient
+        colors={[C.primary, C.primaryContainer]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingTop: insets.top + 48,
+          paddingBottom: 64,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          alignItems: 'center',
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: 'Manrope_500Medium',
+            fontSize: 11,
+            color: 'rgba(255,255,255,0.55)',
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            marginBottom: 12,
+          }}
+        >
+          READING TEST COMPLETE
+        </Text>
+        <Text
+          style={{
+            fontFamily: 'Epilogue_700Bold',
+            fontSize: 72,
+            color: C.onPrimary,
+          }}
+        >
+          {accuracy}%
+        </Text>
+        <Text
+          style={{
+            fontFamily: 'Manrope_400Regular',
+            fontSize: 15,
+            color: 'rgba(255,255,255,0.55)',
+            marginTop: 4,
+          }}
+        >
+          正答率
+        </Text>
+      </LinearGradient>
+
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 32 }}>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 36, color: C.correct }}>
+              {correctCount}
+            </Text>
+            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 12, color: C.onSurfaceVariant, marginTop: 4 }}>
+              正解
+            </Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 36, color: C.incorrect }}>
+              {totalCount - correctCount}
+            </Text>
+            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 12, color: C.onSurfaceVariant, marginTop: 4 }}>
+              不正解
+            </Text>
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 36, color: C.onBackground }}>
+              {totalCount}
+            </Text>
+            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 12, color: C.onSurfaceVariant, marginTop: 4 }}>
+              問題数
+            </Text>
+          </View>
+        </View>
+
+        {totalCount - correctCount > 0 && (
+          <View style={{ backgroundColor: C.surfaceContainerLowest, borderRadius: 12, padding: 16 }}>
+            <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 14, color: C.onSurfaceVariant, textAlign: 'center' }}>
+              間違えた単語は復習リストに追加されました
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 16 }}>
+        <TouchableOpacity
+          onPress={onBack}
+          style={{ backgroundColor: C.primary, borderRadius: 4, paddingVertical: 16, alignItems: 'center' }}
+          activeOpacity={0.8}
+        >
+          <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 16, color: C.onPrimary }}>
+            戻る
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// ─── Main Component ─────────────────────────────────────────
 
 export default function ReadingTestScreen() {
   const router = useRouter();
@@ -38,6 +181,8 @@ export default function ReadingTestScreen() {
   }>();
 
   const gradeNum = Number(grade) || 1;
+  const insets = useSafeAreaInsets();
+  const labels = ['A', 'B', 'C', 'D'];
 
   const [questions, setQuestions] = useState<QuestionData[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -47,7 +192,6 @@ export default function ReadingTestScreen() {
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<AnswerResult[]>([]);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
-
   const [testCompleted, setTestCompleted] = useState(false);
 
   useEffect(() => {
@@ -64,7 +208,6 @@ export default function ReadingTestScreen() {
         }
 
         const wordsData = await getWordsByUnitId(database, unitId);
-
         if (cancelled) return;
 
         if (wordsData.length === 0) {
@@ -73,15 +216,8 @@ export default function ReadingTestScreen() {
         }
 
         const generatedQuestions: QuestionData[] = [];
-
         for (const word of wordsData) {
-          const wrongWords = await getRandomWordsByGrade(
-            database,
-            gradeNum,
-            word.id,
-            3,
-          );
-
+          const wrongWords = await getRandomWordsByGrade(database, gradeNum, word.id, 3);
           if (cancelled) return;
 
           const options = [word.japanese, ...wrongWords.map(w => w.japanese)];
@@ -102,37 +238,30 @@ export default function ReadingTestScreen() {
           setError('問題データの読み込みに失敗しました');
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadQuestions();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [unitId, gradeNum]);
 
   const handleAnswerSelect = useCallback(
     (answer: string) => {
       if (isAnswered) return;
-
       setSelectedAnswer(answer);
       setIsAnswered(true);
 
-      const currentQuestion = questions[currentIndex];
-      const isCorrect = answer === currentQuestion.correctAnswer;
-      const timeMs = Date.now() - questionStartTime;
-
+      const q = questions[currentIndex];
       setResults(prev => [
         ...prev,
         {
-          wordId: currentQuestion.word.id,
-          correct: isCorrect,
+          wordId: q.word.id,
+          correct: answer === q.correctAnswer,
           userAnswer: answer,
-          correctAnswer: currentQuestion.correctAnswer,
-          timeMs,
+          correctAnswer: q.correctAnswer,
+          timeMs: Date.now() - questionStartTime,
+          korean: q.word.korean,
         },
       ]);
     },
@@ -142,16 +271,12 @@ export default function ReadingTestScreen() {
   const saveTestResults = useCallback(
     async (finalResults: AnswerResult[]) => {
       try {
-        const correctResults = finalResults.filter(r => r.correct);
-        for (const result of correctResults) {
-          await createWordMastery(database, result.wordId, 'reading');
+        for (const r of finalResults.filter(r => r.correct)) {
+          await createWordMastery(database, r.wordId, 'reading');
         }
-
-        const incorrectResults = finalResults.filter(r => !r.correct);
-        for (const result of incorrectResults) {
-          await createSrsManagement(database, result.wordId, true);
+        for (const r of finalResults.filter(r => !r.correct)) {
+          await createSrsManagement(database, r.wordId, true);
         }
-
         await updateOrCreateLearningProgress(database, gradeNum);
       } catch (err) {
         console.error('テスト結果保存エラー:', err);
@@ -161,6 +286,22 @@ export default function ReadingTestScreen() {
   );
 
   const handleNext = useCallback(async () => {
+    let finalResults = results;
+
+    if (!isAnswered) {
+      const q = questions[currentIndex];
+      const skippedResult: AnswerResult = {
+        wordId: q.word.id,
+        correct: false,
+        userAnswer: '',
+        correctAnswer: q.correctAnswer,
+        timeMs: Date.now() - questionStartTime,
+        korean: q.word.korean,
+      };
+      finalResults = [...results, skippedResult];
+      setResults(finalResults);
+    }
+
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setSelectedAnswer(null);
@@ -168,210 +309,207 @@ export default function ReadingTestScreen() {
       setQuestionStartTime(Date.now());
     } else {
       setTestCompleted(true);
-      await saveTestResults(results);
+      await saveTestResults(finalResults);
     }
-  }, [currentIndex, questions.length, results, saveTestResults]);
+  }, [currentIndex, questions, results, saveTestResults, isAnswered, questionStartTime]);
 
   const handleBack = useCallback(() => {
     if (results.length > 0 && !testCompleted) {
-      Alert.alert(
-        'テストを中断しますか？',
-        '現在のテスト結果は保存されません。',
-        [
-          { text: 'キャンセル', style: 'cancel' },
-          { text: '中断する', onPress: () => router.back() },
-        ],
-      );
+      Alert.alert('テストを中断しますか？', '現在のテスト結果は保存されません。', [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: '中断する', onPress: () => router.back() },
+      ]);
     } else {
       router.back();
     }
   }, [results.length, testCompleted, router]);
 
-  const getOptionStyle = (option: string) => {
-    if (!isAnswered) {
-      return 'border-2 border-gray-300 bg-white';
-    }
+  // ─── Option styling helpers ─────────────────────────────
 
-    const currentQuestion = questions[currentIndex];
-    const isCorrect = option === currentQuestion.correctAnswer;
-    const isSelected = option === selectedAnswer;
-
-    if (isCorrect) {
-      return 'border-2 border-green-500 bg-green-50';
-    } else if (isSelected && !isCorrect) {
-      return 'border-2 border-red-500 bg-red-50';
-    }
-    return 'border-2 border-gray-200 bg-gray-50';
+  const getOptionBg = (option: string) => {
+    if (!isAnswered) return C.surfaceContainerLowest;
+    if (option === questions[currentIndex].correctAnswer) return C.correctBg;
+    if (option === selectedAnswer) return C.incorrectBg;
+    return C.surfaceContainer;
   };
 
-  const getOptionTextStyle = (option: string) => {
-    if (!isAnswered) {
-      return 'text-gray-800';
-    }
-
-    const currentQuestion = questions[currentIndex];
-    const isCorrect = option === currentQuestion.correctAnswer;
-    const isSelected = option === selectedAnswer;
-
-    if (isCorrect) {
-      return 'text-green-700 font-semibold';
-    } else if (isSelected && !isCorrect) {
-      return 'text-red-700 font-semibold';
-    }
-    return 'text-gray-400';
+  const getOptionTextColor = (option: string) => {
+    if (!isAnswered) return C.onBackground;
+    if (option === questions[currentIndex].correctAnswer) return C.correct;
+    if (option === selectedAnswer) return C.incorrect;
+    return C.outlineVariant;
   };
+
+  const getLabelColor = (option: string) => {
+    if (!isAnswered) return C.onSurfaceVariant;
+    if (option === questions[currentIndex].correctAnswer) return C.correct;
+    if (option === selectedAnswer) return C.incorrect;
+    return C.outlineVariant;
+  };
+
+  // ─── Loading / Error / Complete ─────────────────────────
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#14B8A6" />
-        <Text className="mt-4 text-gray-600">問題を準備しています...</Text>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.surface }}>
+        <ActivityIndicator size="large" color={C.primary} />
+        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 14, color: C.onSurfaceVariant, marginTop: 16 }}>
+          問題を準備しています...
+        </Text>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-white px-4">
-        <Text className="text-red-500 text-center mb-4">{error}</Text>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.surface, paddingHorizontal: 24 }}>
+        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 15, color: C.onBackground, textAlign: 'center', marginBottom: 24 }}>
+          {error}
+        </Text>
         <TouchableOpacity
-          className="bg-teal-500 px-6 py-3 rounded-lg"
           onPress={() => router.back()}
+          style={{ backgroundColor: C.primary, borderRadius: 4, paddingHorizontal: 24, paddingVertical: 12 }}
         >
-          <Text className="text-white font-semibold">戻る</Text>
+          <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 14, color: C.onPrimary }}>戻る</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
   if (testCompleted) {
-    const correctCount = results.filter(r => r.correct).length;
-    const totalCount = results.length;
-    const accuracy =
-      totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-    const incorrectCount = totalCount - correctCount;
-
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-3xl font-bold text-gray-800 mb-4">
-            テスト完了！
-          </Text>
-
-          <View className="bg-gray-50 rounded-xl p-6 w-full mb-6">
-            <Text className="text-center text-5xl font-bold text-teal-500 mb-2">
-              {accuracy}%
-            </Text>
-            <Text className="text-center text-gray-600 mb-4">正答率</Text>
-
-            <View className="flex-row justify-around">
-              <View className="items-center">
-                <Text className="text-2xl font-bold text-green-500">
-                  {correctCount}
-                </Text>
-                <Text className="text-gray-600">正解</Text>
-              </View>
-              <View className="items-center">
-                <Text className="text-2xl font-bold text-red-500">
-                  {incorrectCount}
-                </Text>
-                <Text className="text-gray-600">不正解</Text>
-              </View>
-              <View className="items-center">
-                <Text className="text-2xl font-bold text-gray-700">
-                  {totalCount}
-                </Text>
-                <Text className="text-gray-600">問題数</Text>
-              </View>
-            </View>
-          </View>
-
-          {incorrectCount > 0 && (
-            <Text className="text-gray-600 text-center mb-6">
-              間違えた単語は復習リストに追加されました。
-            </Text>
-          )}
-
-          <TouchableOpacity
-            className="bg-teal-500 px-8 py-4 rounded-lg w-full"
-            onPress={() => router.back()}
-          >
-            <Text className="text-white text-lg font-semibold text-center">
-              戻る
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
+    return <CompletionScreen results={results} onBack={() => router.back()} />;
   }
+
+  // ─── Quiz UI ────────────────────────────────────────────
 
   const currentQuestion = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="px-4 py-3 border-b border-gray-200">
-        <View className="flex-row items-center justify-between mb-2">
-          <TouchableOpacity onPress={handleBack}>
-            <Text className="text-teal-500 text-base font-semibold">
-              ← 戻る
-            </Text>
-          </TouchableOpacity>
+    <View style={{ flex: 1, backgroundColor: C.surface }}>
+      <StatusBar barStyle="dark-content" />
 
-          <Text className="text-lg font-semibold text-gray-800">
-            {gradeNum}級 リーディングテスト
-          </Text>
-
-          <Text className="text-gray-500 text-base">
-            {currentIndex + 1}/{questions.length}
-          </Text>
-        </View>
-
-        <View className="bg-gray-200 rounded-full h-2">
-          <View
-            className="bg-teal-500 h-2 rounded-full"
-            style={{ width: `${progress}%` }}
-          />
+      {/* Progress bar */}
+      <View style={{ paddingTop: insets.top }}>
+        <View style={{ height: 3, backgroundColor: C.surfaceContainerHighest, borderRadius: 1.5 }}>
+          <View style={{ height: 3, width: `${progress}%`, backgroundColor: C.primary, borderRadius: 1.5 }} />
         </View>
       </View>
 
-      <View className="flex-1 px-6 py-8">
-        <View className="items-center mb-8">
-          <Text className="text-4xl font-bold text-gray-800 text-center">
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 24,
+          paddingTop: 16,
+          paddingBottom: 8,
+        }}
+      >
+        <BackButton onPress={handleBack} />
+        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: C.onSurfaceVariant }}>
+          {currentIndex + 1} / {questions.length}
+        </Text>
+      </View>
+
+      {/* Content */}
+      <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 32 }}>
+        {/* Stimulus card */}
+        <View
+          style={{
+            backgroundColor: C.surfaceContainerLowest,
+            borderRadius: 24,
+            paddingVertical: 48,
+            paddingHorizontal: 32,
+            alignItems: 'center',
+            shadowColor: C.onBackground,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.04,
+            shadowRadius: 24,
+            elevation: 3,
+            marginBottom: 40,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: 'Manrope_500Medium',
+              fontSize: 11,
+              color: C.onSurfaceVariant,
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              marginBottom: 24,
+            }}
+          >
+            READING
+          </Text>
+
+          <Text
+            style={{
+              fontSize: 48,
+              fontWeight: '700',
+              color: C.onBackground,
+              textAlign: 'center',
+              lineHeight: 60,
+            }}
+          >
             {currentQuestion.word.korean}
           </Text>
         </View>
 
-        <View className="flex-1">
-          {currentQuestion.options.map((option, index) => (
-            <TouchableOpacity
-              key={`${currentIndex}-${index}`}
-              className={`p-4 rounded-lg mb-3 ${getOptionStyle(option)}`}
-              onPress={() => handleAnswerSelect(option)}
-              disabled={isAnswered}
-            >
-              <Text
-                className={`text-lg text-center ${getOptionTextStyle(option)}`}
-              >
-                {option}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {isAnswered && (
+        {/* Options */}
+        {currentQuestion.options.map((option, index) => (
           <TouchableOpacity
-            className="bg-teal-500 py-4 rounded-lg mt-4"
-            onPress={handleNext}
+            key={`${currentIndex}-${index}`}
+            onPress={() => handleAnswerSelect(option)}
+            disabled={isAnswered}
+            activeOpacity={0.7}
+            style={{
+              backgroundColor: getOptionBg(option),
+              borderRadius: 10,
+              paddingVertical: 16,
+              paddingHorizontal: 20,
+              marginBottom: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 14,
+            }}
           >
-            <Text className="text-white text-lg font-semibold text-center">
-              {currentIndex < questions.length - 1
-                ? '次の問題へ'
-                : 'テスト完了'}
+            <Text style={{ fontFamily: 'Epilogue_600SemiBold', fontSize: 13, color: getLabelColor(option) }}>
+              {labels[index]}
+            </Text>
+            <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 15, color: getOptionTextColor(option), flex: 1 }}>
+              {option}
             </Text>
           </TouchableOpacity>
-        )}
+        ))}
       </View>
-    </SafeAreaView>
+
+      {/* Next button — always visible */}
+      <View style={{ paddingHorizontal: 32, paddingBottom: insets.bottom + 16 }}>
+        <TouchableOpacity
+          onPress={handleNext}
+          style={{
+            backgroundColor: isAnswered ? C.primary : C.surfaceContainerHighest,
+            borderRadius: 4,
+            paddingVertical: 16,
+            alignItems: 'center',
+          }}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={{
+              fontFamily: 'Manrope_600SemiBold',
+              fontSize: 16,
+              color: isAnswered ? C.onPrimary : C.onSurfaceVariant,
+            }}
+          >
+            {isAnswered
+              ? (currentIndex < questions.length - 1 ? '次の問題へ' : 'テスト完了')
+              : 'スキップ'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
