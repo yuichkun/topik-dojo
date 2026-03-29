@@ -1,142 +1,136 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { renderHook, waitFor, act } from '@testing-library/react-native';
 import { useReviewCount } from '../../src/hooks/useReviewCount';
-import { 
-  createTestWords, 
-  createDueReviews,
-  createNotDueReviews
-} from '../helpers/databaseHelpers';
-import database from '../../src/database';
+import { getReviewCount } from '../../src/database/queries/srsQueries';
 
-describe('useReviewCount hook (integration)', () => {
-  let consoleErrorSpy: jest.SpyInstance;
+jest.mock('../../src/database/queries/srsQueries');
 
+const mockGetReviewCount = getReviewCount as jest.MockedFunction<
+  typeof getReviewCount
+>;
+
+describe('useReviewCount hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Suppress console.error during tests
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    // Restore console.error
-    consoleErrorSpy.mockRestore();
   });
 
   test('should initialize with loading state', () => {
+    mockGetReviewCount.mockResolvedValue(0);
+
     const { result } = renderHook(() => useReviewCount());
 
     expect(result.current.count).toBe(0);
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.error).toBe(null);
+    expect(result.current.loading).toBe(true);
+    expect(result.current.error).toBeNull();
   });
 
   test('should return 0 when no SRS records exist', async () => {
-    // Create some words but no SRS records
-    await createTestWords(database, [
-      { korean: '안녕하세요', japanese: 'こんにちは' },
-      { korean: '감사합니다', japanese: 'ありがとうございます' }
-    ]);
+    mockGetReviewCount.mockResolvedValue(0);
 
     const { result } = renderHook(() => useReviewCount());
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
+      expect(result.current.loading).toBe(false);
+    });
 
     expect(result.current.count).toBe(0);
-    expect(result.current.error).toBe(null);
+    expect(result.current.error).toBeNull();
+    expect(mockGetReviewCount).toHaveBeenCalledWith(
+      expect.anything(),
+      undefined,
+    );
   });
 
   test('should count due reviews correctly', async () => {
-    // Create test words with unique IDs
-    await createTestWords(database, [
-      { id: 'review_word_1', korean: '안녕하세요', japanese: 'こんにちは' },
-      { id: 'review_word_2', korean: '감사합니다', japanese: 'ありがとうございます' },
-      { id: 'review_word_3', korean: '죄송합니다', japanese: 'すみません' },
-      { id: 'review_word_4', korean: '학생', japanese: '学생' }
-    ]);
-
-    // Create mix of due and not due reviews
-    await createDueReviews(database, ['review_word_1', 'review_word_2'], 2); // 2 due reviews
-    await createNotDueReviews(database, ['review_word_3', 'review_word_4'], 2); // 2 not due
+    mockGetReviewCount.mockResolvedValue(5);
 
     const { result } = renderHook(() => useReviewCount());
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
+      expect(result.current.loading).toBe(false);
+    });
 
-    expect(result.current.count).toBe(2); // Only the due reviews
-    expect(result.current.error).toBe(null);
+    expect(result.current.count).toBe(5);
+    expect(result.current.error).toBeNull();
   });
 
+  test('should pass grade parameter to query', async () => {
+    mockGetReviewCount.mockResolvedValue(3);
+
+    const { result } = renderHook(() => useReviewCount(2));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.count).toBe(3);
+    expect(mockGetReviewCount).toHaveBeenCalledWith(expect.anything(), 2);
+  });
+
+  test('should handle errors gracefully', async () => {
+    mockGetReviewCount.mockRejectedValue(new Error('DB error'));
+
+    const { result } = renderHook(() => useReviewCount());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.count).toBe(0);
+    expect(result.current.error).toEqual(new Error('DB error'));
+  });
+
+  test('should refresh count when refresh is called', async () => {
+    mockGetReviewCount.mockResolvedValueOnce(2).mockResolvedValueOnce(5);
+
+    const { result } = renderHook(() => useReviewCount());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.count).toBe(2);
+
+    await act(async () => {
+      await result.current.refresh();
+    });
+
+    expect(result.current.count).toBe(5);
+    expect(mockGetReviewCount).toHaveBeenCalledTimes(2);
+  });
 
   test('should handle cleanup properly on unmount', async () => {
+    mockGetReviewCount.mockResolvedValue(0);
+
     const { result, unmount } = renderHook(() => useReviewCount());
 
-    // Wait for initial load
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
+      expect(result.current.loading).toBe(false);
+    });
 
-    // Unmount should not throw
     expect(() => unmount()).not.toThrow();
   });
 
-  test('should fetch review count immediately on mount', async () => {
-    // Create test data
-    await createTestWords(database, [
-      { id: 'immediate_word_1', korean: '즉시', japanese: '即座' },
-      { id: 'immediate_word_2', korean: '테스트', japanese: 'テスト' }
-    ]);
+  test('should refetch when grade changes', async () => {
+    mockGetReviewCount.mockResolvedValueOnce(3).mockResolvedValueOnce(7);
 
-    await createDueReviews(database, ['immediate_word_1'], 1);
-
-    const { result } = renderHook(() => useReviewCount());
-
-    // Initially loading
-    expect(result.current.isLoading).toBe(true);
-
-    // Should finish loading with correct count
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
-
-    expect(result.current.count).toBe(1);
-    expect(result.current.error).toBe(null);
-  });
-
-  test('should filter SRS records by due date correctly', async () => {
-    // Create test words
-    await createTestWords(database, [
-      { id: 'due_word_1', korean: '오늘', japanese: '今日' },
-      { id: 'due_word_2', korean: '내일', japanese: '明日' },
-      { id: 'due_word_3', korean: '어제', japanese: '昨日' }
-    ]);
-
-    // Create 2 due reviews and 1 not due
-    await createDueReviews(database, ['due_word_1', 'due_word_2'], 2);
-    await createNotDueReviews(database, ['due_word_3'], 1);
-
-    const { result } = renderHook(() => useReviewCount());
+    const { result, rerender } = renderHook(
+      ({ grade }) => useReviewCount(grade),
+      { initialProps: { grade: 1 as number | undefined } },
+    );
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
+      expect(result.current.loading).toBe(false);
+    });
 
-    // Should only count the due reviews
-    expect(result.current.count).toBe(2);
-    expect(result.current.error).toBe(null);
-  });
+    expect(result.current.count).toBe(3);
+    expect(mockGetReviewCount).toHaveBeenCalledWith(expect.anything(), 1);
 
-  test('should handle empty database gracefully', async () => {
-    // Don't create any test data
-    const { result } = renderHook(() => useReviewCount());
+    rerender({ grade: 2 });
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    }, { timeout: 5000 });
+      expect(result.current.count).toBe(7);
+    });
 
-    expect(result.current.count).toBe(0);
-    expect(result.current.error).toBe(null);
+    expect(mockGetReviewCount).toHaveBeenCalledWith(expect.anything(), 2);
   });
 });

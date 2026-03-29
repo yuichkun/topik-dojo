@@ -39,27 +39,14 @@ TOPIK道場アプリのSQLiteデータベース設計
 - 読み取り: 間違い選択肢生成用の同級語彙データ取得（ランダム）
 - 読み取り: 級別総語彙数取得（進捗率計算用）
 
-#### 3. 学習進捗管理
-**機能概要:** ユーザーの学習状況・テスト結果の記録  
-**関連画面:** 07-learning.md（学習進捗記録・取得）, 11-review.md（学習進捗履歴更新）  
+#### 3. 語彙習得管理
+**機能概要:** テスト正解による語彙習得状態の記録・統計  
+**関連画面:** 08-listening-test.md（テスト正解時の習得記録）, 09-reading-test.md（テスト正解時の習得記録）, 10-results.md（習得率統計表示）  
 **データ操作:**
-- 読み取り: ユーザーの学習進捗状況取得
-- 書き込み: 学習完了状況の保存
-- 書き込み: 復習マークされた単語の記録
-- 書き込み: 学習履歴の記録
-- 書き込み: 学習進捗履歴の更新（日別・級別）
-
-#### 4. テスト結果管理
-**機能概要:** リスニング・リーディングテストの結果記録・統計  
-**関連画面:** 08-listening-test.md（リスニングテスト結果記録）, 09-reading-test.md（リーディングテスト結果記録）, 10-results.md（テスト結果統計表示）  
-**データ操作:**
-- 書き込み: テスト結果（問題別詳細 + 全体スコア）の保存
-- 書き込み: テスト履歴（日時、スコア、所要時間）の記録
-- 書き込み: 間違えた問題の記録（復習用、詳細は[SRSシステム仕様書](./srs-system.md)参照）
-- 読み取り: 指定級の全テスト結果データ取得
-- 読み取り: テスト結果履歴データの取得
-- 書き込み: 進捗スナップショットの保存
-- 読み取り: 進捗スナップショットの取得
+- 書き込み: テスト正解時の語彙習得記録（テスト種別・習得日時）
+- 読み取り: 指定級の語彙習得状況取得（リスニング/リーディング別）
+- 書き込み: 日毎習得率スナップショットの保存（updateOrCreate方式）
+- 読み取り: 習得率統計データの取得
 
 ## ER図
 
@@ -88,8 +75,15 @@ erDiagram
         integer updated_at "更新日時"
     }
     
-    
-    
+    %% 語彙習得管理テーブル
+    WORD_MASTERY {
+        string id PK "レコードID"
+        string word_id FK "単語ID"
+        string test_type "テスト種別(listening/reading)"
+        integer mastered_date "初回正解日時"
+        integer created_at "作成日時"
+        integer updated_at "更新日時"
+    }
     
     %% SRS管理テーブル
     SRS_MANAGEMENT {
@@ -107,58 +101,20 @@ erDiagram
     
     %% 学習進捗テーブル
     LEARNING_PROGRESS {
-        integer progress_id PK "進捗ID"
-        date progress_date "進捗日付"
+        string id PK "レコードID"
+        string date "進捗日付(YYYY-MM-DD)"
         integer grade "級"
-        integer mastered_words_count "習得単語数"
+        integer listening_mastered_count "リスニング習得単語数"
+        integer reading_mastered_count "リーディング習得単語数"
         integer total_words_count "総単語数"
-        decimal progress_rate "進捗率(%)"
         integer created_at "作成日時"
-    }
-    
-    %% テスト結果テーブル
-    TEST_RESULTS {
-        integer test_id PK "テストID"
-        integer grade "級"
-        integer unit "ユニット"
-        string test_type "リスニング/リーディング"
-        integer correct_answers "正解数"
-        integer total_questions "総問題数"
-        decimal accuracy_rate "正答率(%)"
-        integer duration_seconds "所要時間(秒)"
-        integer test_date "テスト実施日時"
-        integer created_at "作成日時"
-    }
-    
-    %% テスト問題詳細テーブル
-    TEST_QUESTIONS {
-        integer question_id PK "問題ID"
-        integer test_id FK "テストID"
-        string word_id FK "単語ID"
-        boolean is_correct "正解フラグ"
-        string user_answer "ユーザー回答"
-        string correct_answer "正解"
-        integer response_time_ms "回答時間(ms)"
-        integer created_at "作成日時"
-    }
-    
-    %% 復習履歴テーブル
-    REVIEW_HISTORY {
-        integer review_id PK "復習ID"
-        string word_id FK "単語ID"
-        string feedback "覚えた/覚えてない"
-        integer previous_mastery_level "変更前習得レベル"
-        integer new_mastery_level "変更後習得レベル"
-        integer review_date "復習日時"
-        integer created_at "作成日時"
+        integer updated_at "更新日時"
     }
     
     %% リレーション
     UNITS ||--o{ WORDS : "1対多"
-    WORDS ||--|| SRS_MANAGEMENT : "1対1"
-    WORDS ||--o{ TEST_QUESTIONS : "1対多"
-    WORDS ||--o{ REVIEW_HISTORY : "1対多"
-    TEST_RESULTS ||--o{ TEST_QUESTIONS : "1対多"
+    WORDS ||--o{ WORD_MASTERY : "1対多"
+    WORDS ||--o| SRS_MANAGEMENT : "1対0or1"
 ```
 
 ## テーブル設計
@@ -233,73 +189,48 @@ CREATE TABLE srs_management (
 
 **SRS詳細仕様**: [SRSシステム仕様書](./srs-system.md)を参照
 
-### 4. LEARNING_PROGRESS（学習進捗テーブル）
-日別・級別の学習進捗スナップショットを保存
+### 4. WORD_MASTERY（語彙習得管理テーブル）
+テスト正解による語彙習得状態を管理
+
+```sql
+CREATE TABLE word_mastery (
+    id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
+    word_id TEXT NOT NULL,              -- 単語ID（外部キー）
+    test_type TEXT NOT NULL,            -- テスト種別（listening/reading）
+    mastered_date INTEGER NOT NULL,     -- 初回正解日時（UnixTimestamp）
+    created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
+    updated_at INTEGER NOT NULL,        -- 更新日時（UnixTimestamp）
+    FOREIGN KEY (word_id) REFERENCES words(id),
+    UNIQUE(word_id, test_type)          -- 単語×テスト種別でユニーク
+);
+```
+
+**用途**: 
+- テスト正解時に単語の習得状態を記録
+- 一度正解した単語は「習得済み」として永続化
+- リスニング/リーディング別に管理
+
+### 5. LEARNING_PROGRESS（学習進捗テーブル）
+日別・級別の語彙習得進捗スナップショットを保存
 
 ```sql
 CREATE TABLE learning_progress (
-    progress_id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 進捗ID（自動増分）
-    progress_date DATE NOT NULL,        -- 進捗記録日
+    id TEXT PRIMARY KEY,                -- レコードID（WatermelonDB自動生成）
+    date TEXT NOT NULL,                 -- 進捗日付（YYYY-MM-DD）
     grade INTEGER NOT NULL,             -- 級（1-6）
-    mastered_words_count INTEGER DEFAULT 0,  -- 習得済み単語数
+    listening_mastered_count INTEGER NOT NULL, -- リスニング習得単語数
+    reading_mastered_count INTEGER NOT NULL,   -- リーディング習得単語数
     total_words_count INTEGER NOT NULL, -- その級の総単語数
-    progress_rate DECIMAL(5,2) DEFAULT 0,    -- 進捗率（%）
-    created_at INTEGER NOT NULL,
-    UNIQUE(progress_date, grade)        -- 日付+級の組み合わせでユニーク
+    created_at INTEGER NOT NULL,        -- 作成日時（UnixTimestamp）
+    updated_at INTEGER NOT NULL,        -- 更新日時（UnixTimestamp）
+    UNIQUE(date, grade)                 -- 日付+級の組み合わせでユニーク
 );
 ```
 
-### 5. TEST_RESULTS（テスト結果テーブル）
-テストセッションの全体結果を記録
+**更新方式**: 
+- テスト完了時にupdateOrCreate方式で更新
+- 同日は既存レコードを上書き
 
-```sql
-CREATE TABLE test_results (
-    test_id INTEGER PRIMARY KEY AUTOINCREMENT,  -- テストID（自動増分）
-    grade INTEGER NOT NULL,             -- 級
-    unit INTEGER NOT NULL,              -- ユニット
-    test_type TEXT NOT NULL,            -- テスト種別（listening/reading）
-    correct_answers INTEGER NOT NULL,   -- 正解数
-    total_questions INTEGER NOT NULL,   -- 総問題数
-    accuracy_rate DECIMAL(5,2),         -- 正答率（%）
-    duration_seconds INTEGER,           -- 所要時間（秒）
-    test_date INTEGER NOT NULL,        -- テスト実施日時
-    created_at INTEGER NOT NULL
-);
-```
-
-### 6. TEST_QUESTIONS（テスト問題詳細テーブル）
-テスト内の各問題の詳細結果を記録
-
-```sql
-CREATE TABLE test_questions (
-    question_id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 問題ID（自動増分）
-    test_id INTEGER NOT NULL,           -- テストID（外部キー）
-    word_id TEXT NOT NULL,           -- 単語ID（外部キー）
-    is_correct BOOLEAN NOT NULL,        -- 正解フラグ
-    user_answer TEXT,                   -- ユーザーの回答
-    correct_answer TEXT NOT NULL,       -- 正解
-    response_time_ms INTEGER,           -- 回答時間（ミリ秒）
-    created_at INTEGER NOT NULL,
-    FOREIGN KEY (test_id) REFERENCES test_results(test_id),
-    FOREIGN KEY (word_id) REFERENCES words(id)
-);
-```
-
-### 7. REVIEW_HISTORY（復習履歴テーブル）
-復習セッションでの個別単語フィードバックを記録
-
-```sql
-CREATE TABLE review_history (
-    review_id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 復習ID（自動増分）
-    word_id TEXT NOT NULL,           -- 単語ID（外部キー）
-    feedback TEXT NOT NULL,             -- フィードバック（remembered/forgotten）
-    previous_mastery_level INTEGER,     -- 変更前習得レベル
-    new_mastery_level INTEGER,          -- 変更後習得レベル
-    review_date INTEGER NOT NULL,      -- 復習実施日時
-    created_at INTEGER NOT NULL,
-    FOREIGN KEY (word_id) REFERENCES words(id)
-);
-```
 
 
 
@@ -321,36 +252,38 @@ CREATE TABLE review_history (
 ```sql
 SELECT w.*, s.mastery_level, s.mistake_count
 FROM words w
-JOIN srs_management s ON w.word_id = s.word_id
-WHERE s.next_review_date <= DATE('now')
+JOIN srs_management s ON w.id = s.word_id
+WHERE s.next_review_date <= strftime('%s', 'now') * 1000
   AND s.mastery_level < 9
 ORDER BY s.next_review_date ASC, s.mistake_count DESC
 LIMIT 50;
 ```
 
-#### 2. 級別進捗率取得
+#### 2. 語彙習得状況取得（リスニング/リーディング別）
+```sql
+-- 3級のリスニング習得単語数
+SELECT COUNT(*) as listening_mastered
+FROM word_mastery wm
+JOIN words w ON wm.word_id = w.id
+WHERE w.grade = 3 AND wm.test_type = 'listening';
+
+-- 3級のリーディング習得単語数
+SELECT COUNT(*) as reading_mastered
+FROM word_mastery wm
+JOIN words w ON wm.word_id = w.id
+WHERE w.grade = 3 AND wm.test_type = 'reading';
+```
+
+#### 3. 学習進捗履歴取得
 ```sql
 SELECT 
-    progress_date,
-    progress_rate,
-    mastered_words_count,
+    date,
+    listening_mastered_count,
+    reading_mastered_count,
     total_words_count
 FROM learning_progress
 WHERE grade = 3
-ORDER BY progress_date DESC
-LIMIT 30;
-```
-
-#### 3. テスト結果統計
-```sql
-SELECT 
-    test_type,
-    AVG(accuracy_rate) as avg_accuracy,
-    COUNT(*) as test_count
-FROM test_results
-WHERE grade = 3
-  AND test_date >= DATE('now', '-30 days')
-GROUP BY test_type;
+ORDER BY date DESC;
 ```
 
 #### 4. ユニット一覧取得
@@ -364,14 +297,13 @@ ORDER BY unit_number;
 
 #### 5. ユニット単語取得
 ```sql
--- 指定ユニットの単語を取得（JOINでユニット情報と結合）
+-- 指定ユニットの単語を取得
 SELECT w.*, u.unit_number
 FROM words w
 JOIN units u ON w.unit_id = u.id
 WHERE u.id = 'unit_3_1'
 ORDER BY w.unit_order;
 ```
-
 
 #### 6. 間違い選択肢生成（同級ランダム）
 ```sql

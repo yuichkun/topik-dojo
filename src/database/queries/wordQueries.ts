@@ -1,72 +1,58 @@
-import { Q } from '@nozbe/watermelondb';
-import database from '../index';
-import { Word } from '../models';
-import { TableName } from '../constants';
+import { eq, ne, and, count, inArray } from 'drizzle-orm';
+import { words } from '../schema';
+import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
+import type * as schema from '../schema';
 
-/**
- * 指定された級の単語を取得（ランダム選択肢生成用）
- * @param grade 級（1-6）
- * @param excludeWordId 除外する単語ID（正解の単語）
- * @param limit 取得数
- * @returns ランダムな単語一覧
- */
-export const getRandomWordsByGrade = async (
-  grade: number, 
-  excludeWordId: string, 
-  limit: number
-): Promise<Word[]> => {
-  const words = await database.collections
-    .get<Word>(TableName.WORDS)
-    .query(
-      Q.where('grade', grade),
-      Q.where('id', Q.notEq(excludeWordId))
-    )
-    .fetch();
-  
-  // ランダムに選択
-  const shuffled = words.sort(() => Math.random() - 0.5);
+type Database = BaseSQLiteDatabase<'sync', unknown, typeof schema>;
+
+export async function getRandomWordsByGrade(
+  db: Database,
+  grade: number,
+  excludeWordId: string,
+  limit: number,
+) {
+  const allWords = await db
+    .select()
+    .from(words)
+    .where(and(eq(words.grade, grade), ne(words.id, excludeWordId)));
+
+  const shuffled = allWords.sort(() => Math.random() - 0.5);
   return shuffled.slice(0, limit);
-};
+}
 
-/**
- * 指定されたIDの単語を取得
- * @param wordId 単語ID
- * @returns 単語（存在しない場合はnull）
- */
-export const getWordById = async (wordId: string): Promise<Word | null> => {
-  try {
-    return await database.collections
-      .get<Word>(TableName.WORDS)
-      .find(wordId);
-  } catch {
-    return null;
-  }
-};
+export async function getWordById(db: Database, wordId: string) {
+  const result = await db
+    .select()
+    .from(words)
+    .where(eq(words.id, wordId))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}
 
-/**
- * 複数の単語IDから単語を取得
- * @param wordIds 単語IDの配列
- * @returns 単語一覧
- */
-export const getWordsByIds = async (wordIds: string[]): Promise<Word[]> => {
+export async function getWordsByIds(db: Database, wordIds: string[]) {
   if (wordIds.length === 0) {
     return [];
   }
-  
-  return await database.collections
-    .get<Word>(TableName.WORDS)
-    .query(Q.where('id', Q.oneOf(wordIds)))
-    .fetch();
-};
+  return db.select().from(words).where(inArray(words.id, wordIds));
+}
 
-/**
- * 指定された級の全単語数を取得
- * @param grade 級（1-6）
- * @returns 単語数
- */
-export const getWordCountByGrade = async (grade: number): Promise<number> => {
-  return await database.collections
-    .get<Word>(TableName.WORDS)
-    .query(Q.where('grade', grade))
-    .fetchCount();
-};
+export async function getWordCountByGrade(db: Database, grade: number) {
+  const result = await db
+    .select({ count: count() })
+    .from(words)
+    .where(eq(words.grade, grade));
+  return result[0].count;
+}
+
+export async function searchWordsByKorean(
+  db: Database,
+  koreanCandidates: string[],
+) {
+  if (koreanCandidates.length === 0) return null;
+  const result = await db
+    .select()
+    .from(words)
+    .where(inArray(words.korean, koreanCandidates))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}

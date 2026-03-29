@@ -1,6 +1,8 @@
-import database from '../../index';
-import { Unit, Word } from '../../models';
-import { TableName } from '../../constants';
+import {
+  getTestDb,
+  createTestUnit,
+  createTestWord,
+} from '../../../../__tests__/helpers/databaseHelpers';
 import {
   getUnitsByGrade,
   getUnit,
@@ -10,226 +12,130 @@ import {
 } from '../unitQueries';
 
 describe('unitQueries', () => {
-
   describe('getUnitsByGrade', () => {
-    it('should return units for a specific grade sorted by unit_number', async () => {
-      await database.write(async () => {
-        // 3級のユニットを作成（順序をバラバラに）
-        await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-          unit.grade = 3;
-          unit.unitNumber = 3;
-        });
-        await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-          unit.grade = 3;
-          unit.unitNumber = 1;
-        });
-        await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-          unit.grade = 3;
-          unit.unitNumber = 2;
-        });
-        // 他の級のユニット
-        await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-          unit.grade = 1;
-          unit.unitNumber = 1;
-        });
-      });
+    it('指定級のユニットをunit_number昇順で返す', async () => {
+      await createTestUnit({ id: 'u3', grade: 3, unitNumber: 3 });
+      await createTestUnit({ id: 'u1', grade: 3, unitNumber: 1 });
+      await createTestUnit({ id: 'u2', grade: 3, unitNumber: 2 });
+      await createTestUnit({ id: 'u-other', grade: 1, unitNumber: 1 });
 
-      const units = await getUnitsByGrade(3);
+      const db = getTestDb();
+      const result = await getUnitsByGrade(db, 3);
 
-      expect(units.length).toBe(3);
-      expect(units[0].unitNumber).toBe(1);
-      expect(units[1].unitNumber).toBe(2);
-      expect(units[2].unitNumber).toBe(3);
-      expect(units[0].displayName).toBe('1-10');
-      expect(units[1].displayName).toBe('11-20');
-      expect(units[2].displayName).toBe('21-30');
+      expect(result).toHaveLength(3);
+      expect(result[0].unitNumber).toBe(1);
+      expect(result[1].unitNumber).toBe(2);
+      expect(result[2].unitNumber).toBe(3);
     });
 
-    it('should return empty array if no units exist for the grade', async () => {
-      const units = await getUnitsByGrade(6);
-      expect(units).toEqual([]);
+    it('該当級がなければ空配列を返す', async () => {
+      const db = getTestDb();
+      const result = await getUnitsByGrade(db, 6);
+      expect(result).toEqual([]);
     });
   });
 
   describe('getUnit', () => {
-    it('should return a specific unit by grade and unit number', async () => {
-      await database.write(async () => {
-        await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
-          unitData.grade = 2;
-          unitData.unitNumber = 5;
-        });
-      });
+    it('grade+unitNumberで1件取得', async () => {
+      await createTestUnit({ id: 'u-2-5', grade: 2, unitNumber: 5 });
 
-      const unit = await getUnit(2, 5);
+      const db = getTestDb();
+      const unit = await getUnit(db, 2, 5);
 
-      expect(unit).toBeTruthy();
-      expect(unit?.grade).toBe(2);
-      expect(unit?.unitNumber).toBe(5);
-      expect(unit?.displayName).toBe('41-50');
+      expect(unit).not.toBeNull();
+      expect(unit!.grade).toBe(2);
+      expect(unit!.unitNumber).toBe(5);
     });
 
-    it('should return null if unit does not exist', async () => {
-      const unit = await getUnit(1, 999);
+    it('存在しなければnull', async () => {
+      const db = getTestDb();
+      const unit = await getUnit(db, 1, 999);
       expect(unit).toBeNull();
     });
   });
 
   describe('getWordsByUnitId', () => {
-    it('should return words for a specific unit sorted by unit_order', async () => {
-      let unitId: string = '';
-      await database.write(async () => {
-        const unit = await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
-          unitData.grade = 1;
-          unitData.unitNumber = 1;
-        });
-        unitId = unit.id;
-
-        // 単語を順序をバラバラに作成
-        await database.collections.get<Word>(TableName.WORDS).create((word) => {
-          word.korean = '단어3';
-          word.japanese = '単語3';
-          word.grade = 1;
-          word.unitId = unitId;
-          word.unitOrder = 3;
-        });
-        await database.collections.get<Word>(TableName.WORDS).create((word) => {
-          word.korean = '단어1';
-          word.japanese = '単語1';
-          word.grade = 1;
-          word.unitId = unitId;
-          word.unitOrder = 1;
-        });
-        await database.collections.get<Word>(TableName.WORDS).create((word) => {
-          word.korean = '단어2';
-          word.japanese = '単語2';
-          word.grade = 1;
-          word.unitId = unitId;
-          word.unitOrder = 2;
-        });
+    it('ユニットIDの単語をunitOrder昇順で返す', async () => {
+      await createTestUnit({ id: 'u1', grade: 1, unitNumber: 1 });
+      await createTestWord({
+        id: 'w3',
+        korean: '단어3',
+        japanese: '単語3',
+        grade: 1,
+        unitId: 'u1',
+        unitOrder: 3,
+      });
+      await createTestWord({
+        id: 'w1',
+        korean: '단어1',
+        japanese: '単語1',
+        grade: 1,
+        unitId: 'u1',
+        unitOrder: 1,
+      });
+      await createTestWord({
+        id: 'w2',
+        korean: '단어2',
+        japanese: '単語2',
+        grade: 1,
+        unitId: 'u1',
+        unitOrder: 2,
       });
 
-      const words = await getWordsByUnitId(unitId);
+      const db = getTestDb();
+      const result = await getWordsByUnitId(db, 'u1');
 
-      expect(words.length).toBe(3);
-      expect(words[0].unitOrder).toBe(1);
-      expect(words[1].unitOrder).toBe(2);
-      expect(words[2].unitOrder).toBe(3);
-      expect(words[0].korean).toBe('단어1');
+      expect(result).toHaveLength(3);
+      expect(result[0].unitOrder).toBe(1);
+      expect(result[1].unitOrder).toBe(2);
+      expect(result[2].unitOrder).toBe(3);
+      expect(result[0].korean).toBe('단어1');
     });
   });
 
   describe('getWordsByUnit', () => {
-    it('should return words for a specific grade and unit number', async () => {
-      await database.write(async () => {
-        const unit = await database.collections.get<Unit>(TableName.UNITS).create((unitData) => {
-          unitData.grade = 3;
-          unitData.unitNumber = 10;
+    it('grade+unitNumberから単語一覧を返す', async () => {
+      await createTestUnit({ id: 'u-3-10', grade: 3, unitNumber: 10 });
+      for (let i = 1; i <= 5; i++) {
+        await createTestWord({
+          id: `w${i}`,
+          korean: `단어${i}`,
+          japanese: `単語${i}`,
+          grade: 3,
+          unitId: 'u-3-10',
+          unitOrder: i,
         });
+      }
 
-        // ユニット10の単語を作成
-        for (let i = 1; i <= 5; i++) {
-          await database.collections.get<Word>(TableName.WORDS).create((word) => {
-            word.korean = `단어${i}`;
-            word.japanese = `単語${i}`;
-            word.grade = 3;
-            word.unitId = unit.id;
-            word.unitOrder = i;
-          });
-        }
-      });
+      const db = getTestDb();
+      const result = await getWordsByUnit(db, 3, 10);
 
-      const words = await getWordsByUnit(3, 10);
-
-      expect(words.length).toBe(5);
-      expect(words[0].unitOrder).toBe(1);
-      expect(words[4].unitOrder).toBe(5);
+      expect(result).toHaveLength(5);
+      expect(result[0].unitOrder).toBe(1);
+      expect(result[4].unitOrder).toBe(5);
     });
 
-    it('should return empty array if unit does not exist', async () => {
-      const words = await getWordsByUnit(1, 999);
-      expect(words).toEqual([]);
+    it('ユニットが存在しなければ空配列', async () => {
+      const db = getTestDb();
+      const result = await getWordsByUnit(db, 1, 999);
+      expect(result).toEqual([]);
     });
   });
 
   describe('getUnitCountByGrade', () => {
-    it('should return the correct count of units for a grade', async () => {
-      await database.write(async () => {
-        // 2級に15ユニット作成
-        for (let i = 1; i <= 15; i++) {
-          await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-            unit.grade = 2;
-            unit.unitNumber = i;
-          });
-        }
-        // 3級に5ユニット作成
-        for (let i = 1; i <= 5; i++) {
-          await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-            unit.grade = 3;
-            unit.unitNumber = i;
-          });
-        }
-      });
-
-      const count2 = await getUnitCountByGrade(2);
-      const count3 = await getUnitCountByGrade(3);
-      const count4 = await getUnitCountByGrade(4);
-
-      expect(count2).toBe(15);
-      expect(count3).toBe(5);
-      expect(count4).toBe(0);
-    });
-  });
-
-  describe('実際の級別ユニット表示名の確認', () => {
-    it('should display correct unit names for all grades', async () => {
-      await database.write(async () => {
-        const testCases = [
-          // 1級（40ユニット）
-          { grade: 1, unitNumber: 1, expectedDisplay: '1-10' },
-          { grade: 1, unitNumber: 40, expectedDisplay: '391-400' },
-          
-          // 2級（140ユニット）
-          { grade: 2, unitNumber: 1, expectedDisplay: '1-10' },
-          { grade: 2, unitNumber: 140, expectedDisplay: '1391-1400' },
-          
-          // 3級（200ユニット）
-          { grade: 3, unitNumber: 1, expectedDisplay: '1-10' },
-          { grade: 3, unitNumber: 100, expectedDisplay: '991-1000' },
-          { grade: 3, unitNumber: 200, expectedDisplay: '1991-2000' },
-          
-          // 5級（300ユニット）
-          { grade: 5, unitNumber: 1, expectedDisplay: '1-10' },
-          { grade: 5, unitNumber: 150, expectedDisplay: '1491-1500' },
-          { grade: 5, unitNumber: 300, expectedDisplay: '2991-3000' },
-        ];
-
-        for (const testCase of testCases) {
-          await database.collections.get<Unit>(TableName.UNITS).create((unit) => {
-            unit.grade = testCase.grade;
-            unit.unitNumber = testCase.unitNumber;
-          });
-        }
-      });
-
-      // 各テストケースの検証
-      const testVerifications = [
-        { grade: 1, unitNumber: 1, expectedDisplay: '1-10' },
-        { grade: 1, unitNumber: 40, expectedDisplay: '391-400' },
-        { grade: 2, unitNumber: 1, expectedDisplay: '1-10' },
-        { grade: 2, unitNumber: 140, expectedDisplay: '1391-1400' },
-        { grade: 3, unitNumber: 1, expectedDisplay: '1-10' },
-        { grade: 3, unitNumber: 100, expectedDisplay: '991-1000' },
-        { grade: 3, unitNumber: 200, expectedDisplay: '1991-2000' },
-        { grade: 5, unitNumber: 1, expectedDisplay: '1-10' },
-        { grade: 5, unitNumber: 150, expectedDisplay: '1491-1500' },
-        { grade: 5, unitNumber: 300, expectedDisplay: '2991-3000' },
-      ];
-
-      for (const verification of testVerifications) {
-        const unit = await getUnit(verification.grade, verification.unitNumber);
-        expect(unit).toBeTruthy();
-        expect(unit?.displayName).toBe(verification.expectedDisplay);
+    it('級別ユニット数を正しく返す', async () => {
+      for (let i = 1; i <= 15; i++) {
+        await createTestUnit({ id: `u2-${i}`, grade: 2, unitNumber: i });
       }
+      for (let i = 1; i <= 5; i++) {
+        await createTestUnit({ id: `u3-${i}`, grade: 3, unitNumber: i });
+      }
+
+      const db = getTestDb();
+
+      expect(await getUnitCountByGrade(db, 2)).toBe(15);
+      expect(await getUnitCountByGrade(db, 3)).toBe(5);
+      expect(await getUnitCountByGrade(db, 4)).toBe(0);
     });
   });
 });

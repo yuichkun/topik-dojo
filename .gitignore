@@ -1,3 +1,5 @@
+.env
+.sisyphus
 # OSX
 #
 .DS_Store
@@ -76,3 +78,14 @@ yarn-error.log
 
 # Database files (development only)
 current-db.db
+
+# Expo
+.expo/
+dist/
+expo-env.d.ts
+
+# CNG - generated native directories
+ios/
+android/
+current-db.db
+assets/*.db
