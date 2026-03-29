@@ -92,7 +92,7 @@ export default function LearningScreen() {
 
   useEffect(() => {
     if (currentWord) {
-      playWordAudio(currentWord.id);
+      playWordAudio(currentWord.korean);
     }
   }, [currentWord?.id, playWordAudio]);
 
@@ -151,13 +151,13 @@ export default function LearningScreen() {
 
   const handlePlayWordAudio = useCallback(() => {
     if (currentWord) {
-      playWordAudio(currentWord.id);
+      playWordAudio(currentWord.korean);
     }
   }, [currentWord, playWordAudio]);
 
   const handlePlayExampleAudio = useCallback(() => {
     if (currentWord) {
-      playExampleAudio(currentWord.id);
+      playExampleAudio(currentWord.exampleKorean ?? '');
     }
   }, [currentWord, playExampleAudio]);
 

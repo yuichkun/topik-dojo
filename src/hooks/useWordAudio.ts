@@ -1,26 +1,11 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useCallback, useRef } from 'react';
 import type { AudioSource } from 'expo-audio';
+// @ts-ignore - auto-generated JS file
+import { wordAudioMap as _wordMap, exampleAudioMap as _exampleMap } from '../assets/audioMappings';
 
-// Audio asset mapping for test words (6 files)
-// In production, this would be dynamically generated for 12,000 words
-const wordAudioAssets: Record<string, AudioSource> = {
-  word_1: require('../assets/audio/words/word_1.mp3'),
-  word_2: require('../assets/audio/words/word_2.mp3'),
-  word_3: require('../assets/audio/words/word_3.mp3'),
-  word_4: require('../assets/audio/words/word_4.mp3'),
-  word_5: require('../assets/audio/words/word_5.mp3'),
-  word_6: require('../assets/audio/words/word_6.mp3'),
-};
-
-const exampleAudioAssets: Record<string, AudioSource> = {
-  word_1: require('../assets/audio/examples/word_1.mp3'),
-  word_2: require('../assets/audio/examples/word_2.mp3'),
-  word_3: require('../assets/audio/examples/word_3.mp3'),
-  word_4: require('../assets/audio/examples/word_4.mp3'),
-  word_5: require('../assets/audio/examples/word_5.mp3'),
-  word_6: require('../assets/audio/examples/word_6.mp3'),
-};
+const wordAudioMap = _wordMap as Record<string, AudioSource>;
+const exampleAudioMap = _exampleMap as Record<string, AudioSource>;
 
 export function useWordAudio() {
   const player = useAudioPlayer(null);
@@ -28,8 +13,8 @@ export function useWordAudio() {
   const lastSourceRef = useRef<AudioSource>(null);
 
   const playWordAudio = useCallback(
-    (wordId: string) => {
-      const asset = wordAudioAssets[wordId];
+    (koreanText: string) => {
+      const asset = wordAudioMap[koreanText];
       if (!asset) return;
 
       try {
@@ -44,8 +29,8 @@ export function useWordAudio() {
   );
 
   const playExampleAudio = useCallback(
-    (wordId: string) => {
-      const asset = exampleAudioAssets[wordId];
+    (koreanText: string) => {
+      const asset = exampleAudioMap[koreanText];
       if (!asset) return;
 
       try {

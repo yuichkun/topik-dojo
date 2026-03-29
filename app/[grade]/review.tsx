@@ -78,7 +78,7 @@ export default function ReviewScreen() {
 
   useEffect(() => {
     if (currentWord && !isCompleted) {
-      playWordAudio(currentWord.id);
+      playWordAudio(currentWord.korean);
     }
   }, [currentWord?.id, playWordAudio, isCompleted]);
 
@@ -154,13 +154,13 @@ export default function ReviewScreen() {
 
   const handlePlayWordAudio = useCallback(() => {
     if (currentWord) {
-      playWordAudio(currentWord.id);
+      playWordAudio(currentWord.korean);
     }
   }, [currentWord, playWordAudio]);
 
   const handlePlayExampleAudio = useCallback(() => {
     if (currentWord) {
-      playExampleAudio(currentWord.id);
+      playExampleAudio(currentWord.exampleKorean ?? '');
     }
   }, [currentWord, playExampleAudio]);
 

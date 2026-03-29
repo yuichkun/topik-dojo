@@ -118,7 +118,7 @@ export default function ListeningTestScreen() {
 
   useEffect(() => {
     if (questions.length > 0 && !loading) {
-      playWordAudio(questions[currentIndex].word.id);
+      playWordAudio(questions[currentIndex].word.korean);
     }
   }, [currentIndex, questions, loading, playWordAudio]);
 
@@ -228,7 +228,7 @@ export default function ListeningTestScreen() {
 
   const handleReplay = useCallback(() => {
     if (questions.length > 0) {
-      playWordAudio(questions[currentIndex].word.id);
+      playWordAudio(questions[currentIndex].word.korean);
     }
   }, [questions, currentIndex, playWordAudio]);
 
