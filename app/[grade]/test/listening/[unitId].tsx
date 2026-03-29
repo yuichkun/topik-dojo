@@ -12,8 +12,9 @@ import database from '../../../../src/database/client';
 import { getWordsByUnitId } from '../../../../src/database/queries/unitQueries';
 import { getRandomWordsByGrade } from '../../../../src/database/queries/wordQueries';
 import { createSrsManagement } from '../../../../src/database/queries/srsQueries';
+import { createWordMastery } from '../../../../src/database/queries/wordMasteryQueries';
+import { updateOrCreateLearningProgress } from '../../../../src/database/queries/learningProgressQueries';
 import { useWordAudio } from '../../../../src/hooks/useWordAudio';
-import { testResults, testQuestions } from '../../../../src/database/schema';
 import type { Word } from '../../../../src/database/schema';
 
 interface QuestionData {
@@ -47,7 +48,7 @@ export default function ListeningTestScreen() {
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<AnswerResult[]>([]);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
-  const [testStartTime] = useState(Date.now());
+
   const [testCompleted, setTestCompleted] = useState(false);
 
   const { playWordAudio, isPlaying } = useWordAudio();
@@ -150,53 +151,22 @@ export default function ListeningTestScreen() {
   const saveTestResults = useCallback(
     async (finalResults: AnswerResult[]) => {
       try {
-        const now = Date.now();
-        const correctCount = finalResults.filter(r => r.correct).length;
-        const totalCount = finalResults.length;
-        const accuracy = totalCount > 0 ? correctCount / totalCount : 0;
-        const durationSeconds = Math.round((now - testStartTime) / 1000);
-
-        const testResultId = `tr_${now}`;
-
-        await database.insert(testResults).values({
-          id: testResultId,
-          grade: gradeNum,
-          unit: questions[0]?.word.unitOrder ?? 1,
-          testType: 'listening',
-          correctAnswers: correctCount,
-          totalQuestions: totalCount,
-          accuracyRate: accuracy,
-          durationSeconds,
-          testDate: now,
-          createdAt: now,
-          updatedAt: now,
-        });
-
-        const questionRecords = finalResults.map((r, index) => ({
-          id: `tq_${now}_${index}`,
-          testResultId,
-          wordId: r.wordId,
-          isCorrect: r.correct,
-          userAnswer: r.userAnswer,
-          correctAnswer: r.correctAnswer,
-          responseTimeMs: r.timeMs,
-          createdAt: now,
-          updatedAt: now,
-        }));
-
-        for (const record of questionRecords) {
-          await database.insert(testQuestions).values(record);
+        const correctResults = finalResults.filter(r => r.correct);
+        for (const result of correctResults) {
+          await createWordMastery(database, result.wordId, 'listening');
         }
 
         const incorrectResults = finalResults.filter(r => !r.correct);
         for (const result of incorrectResults) {
           await createSrsManagement(database, result.wordId, true);
         }
+
+        await updateOrCreateLearningProgress(database, gradeNum);
       } catch (err) {
         console.error('テスト結果保存エラー:', err);
       }
     },
-    [testStartTime, gradeNum, questions],
+    [gradeNum],
   );
 
   const handleNext = useCallback(async () => {

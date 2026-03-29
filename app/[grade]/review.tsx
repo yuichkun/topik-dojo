@@ -13,7 +13,6 @@ import {
   getReviewWords,
   updateSrsForRemembered,
   updateSrsForForgotten,
-  saveFeedback,
 } from '../../src/database/queries/srsQueries';
 import { useWordAudio } from '../../src/hooks/useWordAudio';
 import type { Word, SrsManagement } from '../../src/database/schema';
@@ -88,8 +87,6 @@ export default function ReviewScreen() {
 
       setIsProcessing(true);
       try {
-        const prevLevel = currentWordData.srs.masteryLevel;
-
         const updateFunction = remembered
           ? updateSrsForRemembered
           : updateSrsForForgotten;
@@ -103,16 +100,6 @@ export default function ReviewScreen() {
           setIsProcessing(false);
           return;
         }
-
-        const newLevel = updatedSrs.masteryLevel;
-
-        await saveFeedback(
-          database,
-          currentWordData.word.id,
-          remembered ? 'remembered' : 'forgotten',
-          prevLevel,
-          newLevel,
-        );
 
         setReviewedCount(prev => prev + 1);
         if (remembered) {
