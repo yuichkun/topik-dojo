@@ -1,5 +1,5 @@
-import { eq, and, count } from 'drizzle-orm';
-import { wordMastery, words } from '../schema';
+import { eq, and, count, sql } from 'drizzle-orm';
+import { wordMastery, words, units } from '../schema';
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import type * as schema from '../schema';
 
@@ -70,4 +70,26 @@ export async function getReadingMasteredCount(db: Database, grade: number) {
     .innerJoin(words, eq(wordMastery.wordId, words.id))
     .where(and(eq(wordMastery.testType, 'reading'), eq(words.grade, grade)));
   return result[0].count;
+}
+
+export async function getUnitMasteryByGrade(db: Database, grade: number) {
+  const result = await db
+    .select({
+      unitId: units.id,
+      unitNumber: units.unitNumber,
+      listeningMastered: sql<number>`SUM(CASE WHEN ${wordMastery.testType} = 'listening' THEN 1 ELSE 0 END)`,
+      readingMastered: sql<number>`SUM(CASE WHEN ${wordMastery.testType} = 'reading' THEN 1 ELSE 0 END)`,
+    })
+    .from(units)
+    .leftJoin(words, eq(words.unitId, units.id))
+    .leftJoin(wordMastery, eq(wordMastery.wordId, words.id))
+    .where(eq(units.grade, grade))
+    .groupBy(units.id)
+    .orderBy(units.unitNumber);
+  return result.map(r => ({
+    unitId: r.unitId,
+    unitNumber: r.unitNumber,
+    listeningMastered: r.listeningMastered ?? 0,
+    readingMastered: r.readingMastered ?? 0,
+  }));
 }

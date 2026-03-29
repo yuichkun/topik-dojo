@@ -14,31 +14,37 @@ import database from '../../../src/database/client';
 import { getUnitsByGrade } from '../../../src/database/queries/unitQueries';
 import { getWordCountByGrade } from '../../../src/database/queries/wordQueries';
 import {
-  getWordsLearnedByGrade,
-  getCurrentUnit,
-  getAllUnitProgressByGrade,
-  getStreakDays,
+  getListeningMasteredCount,
+  getReadingMasteredCount,
+  getUnitMasteryByGrade,
+} from '../../../src/database/queries/wordMasteryQueries';
+import {
+  getNextUnit,
+  getUnitStudyStateByGrade,
 } from '../../../src/database/queries/unitProgressQueries';
 import { SectionLabel, BackButton, BottomSheet, ActionListItem } from '../../../src/components/ui';
 import type { Unit } from '../../../src/database/schema';
 
 // ─── Types ───
 
-type UnitWithProgress = {
+type StudyState = 'completed' | 'in_progress' | 'not_started';
+
+type UnitData = {
   id: string;
   unitNumber: number;
   range: string;
-  state: 'completed' | 'current' | 'not_started';
-  lastWordIndex: number | null;
+  studyState: StudyState;
+  listeningMastered: number;
+  readingMastered: number;
 };
 
 type ScreenData = {
   totalWords: number;
-  wordsLearned: number;
-  streak: number;
-  currentUnitId: string | null;
+  listeningMastered: number;
+  readingMastered: number;
+  nextUnitId: string | null;
   nextRange: string;
-  units: UnitWithProgress[];
+  units: UnitData[];
 };
 
 // ─── Data Hook ───
@@ -51,43 +57,45 @@ function useScreenData(gradeNumber: number) {
     let cancelled = false;
     (async () => {
       try {
-        const [allUnits, totalWords, wordsLearned, current, progressList, streak] = await Promise.all([
+        const [allUnits, totalWords, listeningMastered, readingMastered, masteryByUnit, studyStates, nextUnit] = await Promise.all([
           getUnitsByGrade(database, gradeNumber),
           getWordCountByGrade(database, gradeNumber),
-          getWordsLearnedByGrade(database, gradeNumber),
-          getCurrentUnit(database, gradeNumber),
-          getAllUnitProgressByGrade(database, gradeNumber),
-          getStreakDays(database),
+          getListeningMasteredCount(database, gradeNumber),
+          getReadingMasteredCount(database, gradeNumber),
+          getUnitMasteryByGrade(database, gradeNumber),
+          getUnitStudyStateByGrade(database, gradeNumber),
+          getNextUnit(database, gradeNumber),
         ]);
 
         if (cancelled) return;
 
-        const progressMap = new Map(progressList.map(p => [p.unitId, p]));
-        const currentUnitId = current?.unit.id ?? null;
+        const masteryMap = new Map(masteryByUnit.map(m => [m.unitId, m]));
+        const studyMap = new Map(studyStates.map(s => [s.unitId, s.state]));
 
-        const unitsWithProgress: UnitWithProgress[] = allUnits.map((u: Unit) => {
-          const progress = progressMap.get(u.id);
-          let state: 'completed' | 'current' | 'not_started' = 'not_started';
-          if (progress?.completedAt) {
-            state = 'completed';
-          } else if (u.id === currentUnitId) {
-            state = 'current';
-          }
+        const units: UnitData[] = allUnits.map((u: Unit) => {
+          const m = masteryMap.get(u.id);
           return {
             id: u.id,
             unitNumber: u.unitNumber,
             range: `${(u.unitNumber - 1) * 10 + 1}-${u.unitNumber * 10}`,
-            state,
-            lastWordIndex: progress?.lastWordIndex ?? null,
+            studyState: studyMap.get(u.id) ?? 'not_started',
+            listeningMastered: m?.listeningMastered ?? 0,
+            readingMastered: m?.readingMastered ?? 0,
           };
         });
 
-        const nextUnit = current?.unit;
-        const nextRange = nextUnit
-          ? `${(nextUnit.unitNumber - 1) * 10 + 1}-${nextUnit.unitNumber * 10}`
-          : '1-10';
+        const nextUnitId = nextUnit?.id ?? units[0]?.id ?? null;
+        const next = units.find(u => u.id === nextUnitId);
+        const nextRange = next?.range ?? '1-10';
 
-        setData({ totalWords, wordsLearned, streak, currentUnitId, nextRange, units: unitsWithProgress });
+        setData({
+          totalWords: totalWords ?? 0,
+          listeningMastered: listeningMastered ?? 0,
+          readingMastered: readingMastered ?? 0,
+          nextUnitId,
+          nextRange,
+          units,
+        });
       } catch (e) {
         console.error('Failed to load unit data:', e);
       } finally {
@@ -107,16 +115,10 @@ function UnitActionSheet({
   onClose,
   onAction,
 }: {
-  unit: UnitWithProgress | null;
+  unit: UnitData | null;
   onClose: () => void;
   onAction: (unitId: string, action: 'learn' | 'listening' | 'reading') => void;
 }) {
-  const progressLabel = (u: UnitWithProgress) => {
-    if (u.state === 'completed') return '完了';
-    if (u.lastWordIndex !== null) return `${u.lastWordIndex + 1}/10語 学習済み`;
-    return '未着手';
-  };
-
   return (
     <BottomSheet visible={!!unit} onClose={onClose}>
       {unit && (
@@ -125,15 +127,55 @@ function UnitActionSheet({
             単語 {unit.range}
           </Text>
           <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 14, color: '#434653', marginTop: 4, marginBottom: 20 }}>
-            {progressLabel(unit)}
+            リスニング {unit.listeningMastered}/10 ・ リーディング {unit.readingMastered}/10
           </Text>
           <ActionListItem icon="book-outline" title="学習する" subtitle="カード形式で語彙を覚える" onPress={() => onAction(unit.id, 'learn')} />
-          <ActionListItem icon="headset-outline" title="聴解テスト" subtitle="音声を聞いて4択で回答" onPress={() => onAction(unit.id, 'listening')} />
-          <ActionListItem icon="document-text-outline" title="読解テスト" subtitle="ハングルを見て4択で回答" onPress={() => onAction(unit.id, 'reading')} />
+          <ActionListItem
+            icon="headset-outline"
+            title="リスニング"
+            subtitle={unit.listeningMastered >= 10 ? '習得済み' : `${unit.listeningMastered}/10 習得`}
+            onPress={() => onAction(unit.id, 'listening')}
+          />
+          <ActionListItem
+            icon="document-text-outline"
+            title="リーディング"
+            subtitle={unit.readingMastered >= 10 ? '習得済み' : `${unit.readingMastered}/10 習得`}
+            onPress={() => onAction(unit.id, 'reading')}
+          />
         </>
       )}
     </BottomSheet>
   );
+}
+
+// ─── Progress Bar ───
+
+function ProgressBar({ label, mastered, total }: { label: string; mastered: number; total: number }) {
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+        <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: '#191c1d' }}>
+          {label}
+        </Text>
+        <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 12, color: '#434653' }}>
+          {mastered.toLocaleString()} / {total.toLocaleString()}
+        </Text>
+      </View>
+      <View style={{ height: 3, backgroundColor: '#e1e3e5', borderRadius: 1.5 }}>
+        <View style={{ height: 3, backgroundColor: '#002897', borderRadius: 1.5, width: `${total > 0 ? Math.min(Math.round((mastered / total) * 100), 100) : 0}%` }} />
+      </View>
+    </View>
+  );
+}
+
+// ─── Grid Colors ───
+
+function getGridColors(state: StudyState) {
+  switch (state) {
+    case 'completed': return { bg: '#fff', text: '#002897' };
+    case 'in_progress': return { bg: '#002897', text: '#fff' };
+    case 'not_started': return { bg: '#edeeef', text: '#c3c6d5' };
+  }
 }
 
 // ─── Main Screen ───
@@ -144,7 +186,7 @@ export default function UnitSelectionScreen() {
   const gradeNumber = Number(grade) || 1;
   const gradeDisplay = String(gradeNumber);
   const { data, loading } = useScreenData(gradeNumber);
-  const [selectedUnit, setSelectedUnit] = useState<UnitWithProgress | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<UnitData | null>(null);
 
   if (loading || !data) {
     return (
@@ -154,11 +196,8 @@ export default function UnitSelectionScreen() {
     );
   }
 
-  const pct = data.totalWords > 0 ? Math.round((data.wordsLearned / data.totalWords) * 100) : 0;
-
   const onStart = () => {
-    const targetId = data.currentUnitId ?? data.units[0]?.id;
-    if (targetId) router.push(`/${gradeDisplay}/learning/${targetId}`);
+    if (data.nextUnitId) setSelectedUnit(data.units.find(u => u.id === data.nextUnitId) ?? null);
   };
 
   const onAction = (unitId: string, action: 'learn' | 'listening' | 'reading') => {
@@ -184,25 +223,10 @@ export default function UnitSelectionScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 80 }}>
-        {/* Progress + streak */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 20 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 48, color: '#002897', lineHeight: 52 }}>
-              {pct}%
-            </Text>
-            <Text style={{ fontFamily: 'Manrope_400Regular', fontSize: 14, color: '#434653', marginTop: 2 }}>
-              {data.wordsLearned.toLocaleString()} / {data.totalWords.toLocaleString()}語
-            </Text>
-            <View style={{ width: '80%', height: 3, backgroundColor: '#e1e3e5', borderRadius: 1.5, marginTop: 10 }}>
-              <View style={{ height: 3, backgroundColor: '#002897', borderRadius: 1.5, width: `${Math.min(pct, 100)}%` }} />
-            </View>
-          </View>
-          {data.streak > 0 && (
-            <View style={{ alignItems: 'center', marginLeft: 16 }}>
-              <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 24, color: '#191c1d' }}>{data.streak}</Text>
-              <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 10, color: '#434653' }}>日連続</Text>
-            </View>
-          )}
+        {/* Two-axis mastery progress */}
+        <View style={{ paddingVertical: 20 }}>
+          <ProgressBar label="リスニング" mastered={data.listeningMastered} total={data.totalWords} />
+          <ProgressBar label="リーディング" mastered={data.readingMastered} total={data.totalWords} />
         </View>
 
         {/* Continue CTA */}
@@ -213,7 +237,7 @@ export default function UnitSelectionScreen() {
         >
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View>
-              <SectionLabel style={{ color: 'rgba(255,255,255,0.45)' }}>次のセッション</SectionLabel>
+              <SectionLabel style={{ color: 'rgba(255,255,255,0.45)' }}>次のユニット</SectionLabel>
               <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 20, color: '#fff', marginTop: 4 }}>
                 単語 {data.nextRange}
               </Text>
@@ -227,25 +251,24 @@ export default function UnitSelectionScreen() {
         {/* Unit grid */}
         <SectionLabel style={{ marginTop: 28, marginBottom: 14 }}>すべてのユニット</SectionLabel>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          {data.units.map(u => (
-            <TouchableOpacity
-              key={u.id}
-              onPress={() => setSelectedUnit(u)}
-              style={{
-                width: '31%',
-                backgroundColor: u.state === 'current' ? '#002897' : u.state === 'completed' ? '#fff' : '#edeeef',
-                borderRadius: 12, paddingVertical: 14, alignItems: 'center',
-              }}
-              activeOpacity={0.85}
-            >
-              <Text style={{
-                fontFamily: 'Epilogue_700Bold', fontSize: 14,
-                color: u.state === 'current' ? '#fff' : u.state === 'completed' ? '#002897' : '#c3c6d5',
-              }}>
-                {u.range}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {data.units.map(u => {
+            const { bg, text: textColor } = getGridColors(u.studyState);
+            return (
+              <TouchableOpacity
+                key={u.id}
+                onPress={() => setSelectedUnit(u)}
+                style={{
+                  width: '31%', backgroundColor: bg,
+                  borderRadius: 12, paddingVertical: 14, alignItems: 'center',
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 14, color: textColor }}>
+                  {u.range}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
 
