@@ -15,6 +15,9 @@ const GRADES = [1, 2, 3, 4, 5, 6] as const;
 export default function TopScreen() {
   const router = useRouter();
   const { count: reviewCount } = useReviewCount();
+  const hasReviews = reviewCount > 0;
+  const headerBg = hasReviews ? '#4c1d95' : '#002897';
+
   const handleReviewPress = () => {
     if (reviewCount === 0) return;
     router.push('/review');
@@ -26,11 +29,10 @@ export default function TopScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
-      <StatusBar barStyle="light-content" backgroundColor="#002897" />
+      <StatusBar barStyle="light-content" backgroundColor={headerBg} />
 
       <View
-        className="bg-primary px-8 pt-12 pb-10"
-        style={{ borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
+        style={{ backgroundColor: headerBg, paddingHorizontal: 32, paddingTop: 48, paddingBottom: 40, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
       >
         <View>
           <Text style={{ fontFamily: 'Epilogue_700Bold', fontSize: 48, color: '#fff', letterSpacing: -2, lineHeight: 48 }}>
@@ -81,23 +83,23 @@ export default function TopScreen() {
         <TouchableOpacity
           style={{
             marginTop: 16,
-            backgroundColor: reviewCount === 0 ? 'rgba(255,255,255,0.15)' : '#ffffff',
+            backgroundColor: hasReviews ? '#ffffff' : 'rgba(255,255,255,0.15)',
             borderRadius: 4,
             paddingVertical: 14,
           }}
           onPress={handleReviewPress}
-          disabled={reviewCount === 0}
+          disabled={!hasReviews}
         >
           <Text
             style={{
               fontFamily: 'Manrope_600SemiBold',
               fontSize: 14,
-              color: reviewCount === 0 ? 'rgba(255,255,255,0.35)' : '#002897',
+              color: hasReviews ? headerBg : 'rgba(255,255,255,0.35)',
               textAlign: 'center',
               letterSpacing: 0.5,
             }}
           >
-            {reviewCount === 0 ? '復習なし' : '復習を始める'}
+            {hasReviews ? '復習を始める' : '復習なし'}
           </Text>
         </TouchableOpacity>
       </View>
