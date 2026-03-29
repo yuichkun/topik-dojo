@@ -11,4 +11,3 @@ import m0001 from './0001_fluffy_maggott.sql';
 m0001
     }
   }
-  

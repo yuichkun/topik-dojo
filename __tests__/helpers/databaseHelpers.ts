@@ -12,7 +12,6 @@ import type {
   InsertSrsManagement,
   InsertWordMastery,
   InsertLearningProgress,
-  InsertUnitProgress,
 } from '../../src/database/schema';
 
 type TestDb = ReturnType<
@@ -126,20 +125,11 @@ export async function createTestLearningProgress(
 }
 
 export async function createTestUnitProgress(
-  data: {
-    id: string;
-    unitId: string;
-    lastWordIndex: number;
-  } & Partial<InsertUnitProgress>,
+  data: { unitId: string; completed?: number },
 ) {
   const db = getTestDb();
-  const now = Date.now();
   await db.insert(unitProgress).values({
-    id: data.id,
     unitId: data.unitId,
-    lastWordIndex: data.lastWordIndex,
-    completedAt: data.completedAt ?? null,
-    createdAt: data.createdAt ?? now,
-    updatedAt: data.updatedAt ?? now,
+    completed: data.completed ?? 0,
   });
 }

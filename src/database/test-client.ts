@@ -52,12 +52,8 @@ export function createTestDatabase() {
     );
 
     CREATE TABLE IF NOT EXISTS unit_progress (
-      id TEXT PRIMARY KEY,
-      unit_id TEXT NOT NULL,
-      last_word_index INTEGER NOT NULL,
-      completed_at INTEGER,
-      created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL
+      unit_id TEXT PRIMARY KEY NOT NULL,
+      completed INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS learning_progress (
