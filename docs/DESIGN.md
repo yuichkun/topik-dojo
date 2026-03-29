@@ -192,7 +192,7 @@ Depth is achieved through **Tonal Layering** rather than structural scaffolding.
   - Selected: `primary` background with `on_primary` text.
 
 - **Progress Indicators:**
-  - Bar height: 2px. Track: `outline_variant`. Indicator: `primary`.
+  - Bar height: 3px. Track: `surface_container_highest` (#e1e3e5). Indicator: `primary`. Border radius: 1.5px.
 
 - **Section Labels:**
   - `Manrope_500Medium`, 11px, `on_surface_variant`, `letterSpacing: 2`, `textTransform: 'uppercase'`

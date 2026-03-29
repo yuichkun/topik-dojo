@@ -146,5 +146,3 @@ function calculateDaysToReview(nextReviewDate) {
 - ユーザーの学習進捗状況
 
 ---
-*ファイル作成日: 2025/6/13*
-*実装担当: AIエージェント*
