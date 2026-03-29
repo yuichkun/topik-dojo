@@ -98,7 +98,7 @@ export default function ResultsScreen() {
     );
   }
 
-  if (gradeResults.totalWordsCount === 0) {
+  if (gradeResults.listening.masteredCount === 0 && gradeResults.reading.masteredCount === 0) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <Header />

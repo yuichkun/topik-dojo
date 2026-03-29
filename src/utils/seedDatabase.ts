@@ -1,4 +1,4 @@
-import { units, words } from '../database/schema';
+import { units, words, srsManagement, wordMastery, learningProgress } from '../database/schema';
 import type { InsertUnit, InsertWord } from '../database/schema';
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import type * as schema from '../database/schema';
@@ -33,6 +33,9 @@ export async function seedDatabase(db: Database): Promise<{
       gradeGroups.get(grade)!.push(entry);
     }
 
+    await db.delete(learningProgress);
+    await db.delete(wordMastery);
+    await db.delete(srsManagement);
     await db.delete(words);
     await db.delete(units);
 

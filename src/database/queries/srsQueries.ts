@@ -26,6 +26,9 @@ export async function createSrsManagement(
   wordId: string,
   fromMistake: boolean = false,
 ) {
+  const existing = await getSrsManagementByWordId(db, wordId);
+  if (existing) return existing;
+
   const now = Date.now();
   const tomorrow = addDays(startOfDay(now), 1);
   const id = `srs_${now}_${Math.random().toString(36).slice(2, 9)}`;
