@@ -70,7 +70,7 @@ export default function TopScreen() {
           </Text>
         </View>
 
-        <View style={{ marginTop: 32 }}>
+        <View style={{ marginTop: 32, alignItems: 'flex-end' }}>
           <Text
             style={{
               fontFamily: 'Manrope_500Medium',
@@ -105,29 +105,30 @@ export default function TopScreen() {
               語
             </Text>
           </View>
-          <TouchableOpacity
-            style={{
-              marginTop: 16,
-              backgroundColor: reviewCount === 0 ? 'rgba(255,255,255,0.15)' : '#ffffff',
-              borderRadius: 4,
-              paddingVertical: 14,
-            }}
-            onPress={handleReviewPress}
-            disabled={reviewCount === 0}
-          >
-            <Text
-              style={{
-                fontFamily: 'Manrope_600SemiBold',
-                fontSize: 14,
-                color: reviewCount === 0 ? 'rgba(255,255,255,0.35)' : '#002897',
-                textAlign: 'center',
-                letterSpacing: 0.5,
-              }}
-            >
-              {reviewCount === 0 ? '復習なし' : '復習を始める'}
-            </Text>
-          </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={{
+            marginTop: 16,
+            backgroundColor: reviewCount === 0 ? 'rgba(255,255,255,0.15)' : '#ffffff',
+            borderRadius: 4,
+            paddingVertical: 14,
+          }}
+          onPress={handleReviewPress}
+          disabled={reviewCount === 0}
+        >
+          <Text
+            style={{
+              fontFamily: 'Manrope_600SemiBold',
+              fontSize: 14,
+              color: reviewCount === 0 ? 'rgba(255,255,255,0.35)' : '#002897',
+              textAlign: 'center',
+              letterSpacing: 0.5,
+            }}
+          >
+            {reviewCount === 0 ? '復習なし' : '復習を始める'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View className="flex-1 px-6 mt-6 justify-center">
