@@ -65,6 +65,11 @@ export const learningProgress = sqliteTable('learning_progress', {
   unique().on(table.date, table.grade),
 ]);
 
+export const appMetadata = sqliteTable('app_metadata', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});
+
 export const unitProgress = sqliteTable('unit_progress', {
   unitId: text('unit_id')
     .primaryKey()

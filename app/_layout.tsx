@@ -5,12 +5,14 @@ import { useFonts, Epilogue_600SemiBold, Epilogue_700Bold } from '@expo-google-f
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold } from '@expo-google-fonts/manrope';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import database from '../src/database/client';
+import { useDataInitialization } from '../src/hooks/useDataInitialization';
 
 LogBox.ignoreLogs(['SafeAreaView has been deprecated']);
 import migrations from '../drizzle/migrations';
 
 export default function RootLayout() {
-  const { success, error } = useMigrations(database, migrations);
+  const { success: migrationSuccess, error: migrationError } = useMigrations(database, migrations);
+  const { ready: seedReady, error: seedError } = useDataInitialization(migrationSuccess ?? false);
   const [fontsLoaded] = useFonts({
     Epilogue_600SemiBold,
     Epilogue_700Bold,
@@ -19,15 +21,23 @@ export default function RootLayout() {
     Manrope_600SemiBold,
   });
 
-  if (error) {
+  if (migrationError) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-red-500">Migration error: {error.message}</Text>
+        <Text className="text-red-500">Migration error: {migrationError.message}</Text>
       </View>
     );
   }
 
-  if (!success || !fontsLoaded) {
+  if (seedError) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-red-500">Seed error: {seedError}</Text>
+      </View>
+    );
+  }
+
+  if (!migrationSuccess || !seedReady || !fontsLoaded) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text>Loading...</Text>
