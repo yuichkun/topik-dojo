@@ -43,3 +43,16 @@ export async function getWordCountByGrade(db: Database, grade: number) {
     .where(eq(words.grade, grade));
   return result[0].count;
 }
+
+export async function searchWordsByKorean(
+  db: Database,
+  koreanCandidates: string[],
+) {
+  if (koreanCandidates.length === 0) return null;
+  const result = await db
+    .select()
+    .from(words)
+    .where(inArray(words.korean, koreanCandidates))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}

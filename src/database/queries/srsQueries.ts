@@ -1,6 +1,6 @@
 import { eq, and, lte, lt, count, type SQL } from 'drizzle-orm';
 import { addDays, startOfDay } from 'date-fns';
-import { srsManagement, words, reviewHistory } from '../schema';
+import { srsManagement, words } from '../schema';
 import {
   SRS_CONSTANTS,
   calculateNextInterval,
@@ -162,24 +162,3 @@ export async function getReviewCount(db: Database, grade?: number) {
   return result[0].count;
 }
 
-export async function saveFeedback(
-  db: Database,
-  wordId: string,
-  feedback: string,
-  prevLevel: number,
-  newLevel: number,
-) {
-  const now = Date.now();
-  const id = `rh_${now}_${Math.random().toString(36).slice(2, 9)}`;
-
-  await db.insert(reviewHistory).values({
-    id,
-    wordId,
-    feedback,
-    previousMasteryLevel: prevLevel,
-    newMasteryLevel: newLevel,
-    reviewDate: now,
-    createdAt: now,
-    updatedAt: now,
-  });
-}

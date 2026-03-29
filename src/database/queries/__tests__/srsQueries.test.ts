@@ -12,10 +12,7 @@ import {
   updateSrsForForgotten,
   getReviewWords,
   getReviewCount,
-  saveFeedback,
 } from '../srsQueries';
-import { reviewHistory } from '../../schema';
-import { eq } from 'drizzle-orm';
 
 async function seedWord(id: string, grade: number = 1) {
   await createTestUnit({ id: `u-${id}`, grade, unitNumber: 1 });
@@ -418,22 +415,4 @@ describe('srsQueries', () => {
     });
   });
 
-  describe('saveFeedback', () => {
-    it('review_historyレコードが作成される', async () => {
-      await seedWord('w1');
-      const db = getTestDb();
-
-      await saveFeedback(db, 'w1', 'remembered', 2, 3);
-
-      const rows = await db
-        .select()
-        .from(reviewHistory)
-        .where(eq(reviewHistory.wordId, 'w1'));
-
-      expect(rows).toHaveLength(1);
-      expect(rows[0].feedback).toBe('remembered');
-      expect(rows[0].previousMasteryLevel).toBe(2);
-      expect(rows[0].newMasteryLevel).toBe(3);
-    });
-  });
 });
