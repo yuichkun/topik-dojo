@@ -7,15 +7,15 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import database from '../../src/database/client';
+import { useRouter } from 'expo-router';
+import database from '../src/database/client';
 import {
   getReviewWords,
   updateSrsForRemembered,
   updateSrsForForgotten,
-} from '../../src/database/queries/srsQueries';
-import { useWordAudio } from '../../src/hooks/useWordAudio';
-import type { Word, SrsManagement } from '../../src/database/schema';
+} from '../src/database/queries/srsQueries';
+import { useWordAudio } from '../src/hooks/useWordAudio';
+import type { Word, SrsManagement } from '../src/database/schema';
 
 interface ReviewWordData {
   word: Word;
@@ -24,8 +24,6 @@ interface ReviewWordData {
 
 export default function ReviewScreen() {
   const router = useRouter();
-  const { grade } = useLocalSearchParams<{ grade: string }>();
-  const gradeNumber = Number(grade) || 1;
 
   const [reviewWords, setReviewWords] = useState<ReviewWordData[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -48,7 +46,7 @@ export default function ReviewScreen() {
         setLoading(true);
         setError(null);
 
-        const words = await getReviewWords(database, gradeNumber);
+        const words = await getReviewWords(database);
 
         if (cancelled) return;
 
@@ -69,7 +67,7 @@ export default function ReviewScreen() {
     return () => {
       cancelled = true;
     };
-  }, [gradeNumber]);
+  }, []);
 
   const currentWordData = reviewWords[currentIndex];
   const currentWord = currentWordData?.word;
