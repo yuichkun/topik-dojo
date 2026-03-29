@@ -2,17 +2,15 @@ import {
   units,
   words,
   srsManagement,
-  testResults,
-  testQuestions,
-  reviewHistory,
+  wordMastery,
+  learningProgress,
 } from '../../src/database/schema';
 import type {
   InsertUnit,
   InsertWord,
   InsertSrsManagement,
-  InsertTestResult,
-  InsertTestQuestion,
-  InsertReviewHistory,
+  InsertWordMastery,
+  InsertLearningProgress,
 } from '../../src/database/schema';
 
 type TestDb = ReturnType<
@@ -85,77 +83,41 @@ export async function createTestSrsRecord(
   });
 }
 
-export async function createTestResult(
+export async function createTestWordMastery(
   data: {
     id: string;
-    grade: number;
-    unit: number;
+    wordId: string;
     testType: string;
-    correctAnswers: number;
-    totalQuestions: number;
-    accuracyRate: number;
-    testDate: number;
-  } & Partial<InsertTestResult>,
+  } & Partial<InsertWordMastery>,
 ) {
   const db = getTestDb();
   const now = Date.now();
-  await db.insert(testResults).values({
+  await db.insert(wordMastery).values({
     id: data.id,
-    grade: data.grade,
-    unit: data.unit,
+    wordId: data.wordId,
     testType: data.testType,
-    correctAnswers: data.correctAnswers,
-    totalQuestions: data.totalQuestions,
-    accuracyRate: data.accuracyRate,
-    durationSeconds: data.durationSeconds ?? null,
-    testDate: data.testDate,
+    masteredDate: data.masteredDate ?? now,
     createdAt: data.createdAt ?? now,
     updatedAt: data.updatedAt ?? now,
   });
 }
 
-export async function createTestQuestion(
+export async function createTestLearningProgress(
   data: {
     id: string;
-    testResultId: string;
-    wordId: string;
-    isCorrect: boolean;
-    correctAnswer: string;
-  } & Partial<InsertTestQuestion>,
+    date: string;
+    grade: number;
+  } & Partial<InsertLearningProgress>,
 ) {
   const db = getTestDb();
   const now = Date.now();
-  await db.insert(testQuestions).values({
+  await db.insert(learningProgress).values({
     id: data.id,
-    testResultId: data.testResultId,
-    wordId: data.wordId,
-    isCorrect: data.isCorrect,
-    userAnswer: data.userAnswer ?? null,
-    correctAnswer: data.correctAnswer,
-    responseTimeMs: data.responseTimeMs ?? null,
-    createdAt: data.createdAt ?? now,
-    updatedAt: data.updatedAt ?? now,
-  });
-}
-
-export async function createTestReviewHistory(
-  data: {
-    id: string;
-    wordId: string;
-    feedback: string;
-    newMasteryLevel: number;
-    reviewDate: number;
-  } & Partial<InsertReviewHistory>,
-) {
-  const db = getTestDb();
-  const now = Date.now();
-  await db.insert(reviewHistory).values({
-    id: data.id,
-    wordId: data.wordId,
-    feedback: data.feedback,
-    previousMasteryLevel: data.previousMasteryLevel ?? null,
-    newMasteryLevel: data.newMasteryLevel,
-    reviewDate: data.reviewDate,
+    date: data.date,
+    grade: data.grade,
+    listeningMasteredCount: data.listeningMasteredCount ?? 0,
+    readingMasteredCount: data.readingMasteredCount ?? 0,
+    totalWordsCount: data.totalWordsCount ?? 0,
     createdAt: data.createdAt ?? now,
     updatedAt: data.updatedAt ?? now,
   });

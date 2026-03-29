@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, unique } from 'drizzle-orm/sqlite-core';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 export const units = sqliteTable('units', {
@@ -39,72 +39,40 @@ export const srsManagement = sqliteTable('srs_management', {
   updatedAt: integer('updated_at').notNull(),
 });
 
-export const testResults = sqliteTable('test_results', {
+export const wordMastery = sqliteTable('word_mastery', {
   id: text('id').primaryKey(),
-  grade: integer('grade').notNull(),
-  unit: integer('unit').notNull(),
+  wordId: text('word_id')
+    .notNull()
+    .references(() => words.id),
   testType: text('test_type').notNull(),
-  correctAnswers: integer('correct_answers').notNull(),
-  totalQuestions: integer('total_questions').notNull(),
-  accuracyRate: real('accuracy_rate').notNull(),
-  durationSeconds: integer('duration_seconds'),
-  testDate: integer('test_date').notNull(),
+  masteredDate: integer('mastered_date').notNull(),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
-});
-
-export const testQuestions = sqliteTable('test_questions', {
-  id: text('id').primaryKey(),
-  testResultId: text('test_result_id')
-    .notNull()
-    .references(() => testResults.id),
-  wordId: text('word_id')
-    .notNull()
-    .references(() => words.id),
-  isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
-  userAnswer: text('user_answer'),
-  correctAnswer: text('correct_answer').notNull(),
-  responseTimeMs: integer('response_time_ms'),
-  createdAt: integer('created_at').notNull(),
-  updatedAt: integer('updated_at').notNull(),
-});
-
-export const reviewHistory = sqliteTable('review_history', {
-  id: text('id').primaryKey(),
-  wordId: text('word_id')
-    .notNull()
-    .references(() => words.id),
-  feedback: text('feedback').notNull(),
-  previousMasteryLevel: integer('previous_mastery_level'),
-  newMasteryLevel: integer('new_mastery_level').notNull(),
-  reviewDate: integer('review_date').notNull(),
-  createdAt: integer('created_at').notNull(),
-  updatedAt: integer('updated_at').notNull(),
-});
+}, (table) => [
+  unique().on(table.wordId, table.testType),
+]);
 
 export const learningProgress = sqliteTable('learning_progress', {
   id: text('id').primaryKey(),
-  progressDate: text('progress_date').notNull(),
+  date: text('date').notNull(),
   grade: integer('grade').notNull(),
-  masteredWordsCount: integer('mastered_words_count').notNull(),
+  listeningMasteredCount: integer('listening_mastered_count').notNull(),
+  readingMasteredCount: integer('reading_mastered_count').notNull(),
   totalWordsCount: integer('total_words_count').notNull(),
-  progressRate: real('progress_rate').notNull(),
   createdAt: integer('created_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
-});
+}, (table) => [
+  unique().on(table.date, table.grade),
+]);
 
 export type Unit = InferSelectModel<typeof units>;
 export type Word = InferSelectModel<typeof words>;
 export type SrsManagement = InferSelectModel<typeof srsManagement>;
-export type TestResult = InferSelectModel<typeof testResults>;
-export type TestQuestion = InferSelectModel<typeof testQuestions>;
-export type ReviewHistory = InferSelectModel<typeof reviewHistory>;
+export type WordMastery = InferSelectModel<typeof wordMastery>;
 export type LearningProgress = InferSelectModel<typeof learningProgress>;
 
 export type InsertUnit = InferInsertModel<typeof units>;
 export type InsertWord = InferInsertModel<typeof words>;
 export type InsertSrsManagement = InferInsertModel<typeof srsManagement>;
-export type InsertTestResult = InferInsertModel<typeof testResults>;
-export type InsertTestQuestion = InferInsertModel<typeof testQuestions>;
-export type InsertReviewHistory = InferInsertModel<typeof reviewHistory>;
+export type InsertWordMastery = InferInsertModel<typeof wordMastery>;
 export type InsertLearningProgress = InferInsertModel<typeof learningProgress>;

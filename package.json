@@ -46,6 +46,7 @@
     "@types/react": "^19.1.0",
     "@types/react-test-renderer": "^19.1.0",
     "@typescript-eslint/parser": "8.57.2",
+    "babel-plugin-inline-import": "3.0.0",
     "babel-preset-expo": "55.0.14-canary-20260327-0789fbc",
     "better-sqlite3": "11.10.0",
     "drizzle-kit": "0.31.10",
