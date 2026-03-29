@@ -39,7 +39,18 @@ TOPIK道場アプリのSQLiteデータベース設計
 - 読み取り: 間違い選択肢生成用の同級語彙データ取得（ランダム）
 - 読み取り: 級別総語彙数取得（進捗率計算用）
 
-#### 3. 語彙習得管理
+#### 3. 学習進捗管理
+**機能概要:** ユニット単位の学習進捗（閲覧ベース）の記録・可視化
+**関連画面:** 03-unit-selection.md（進捗ダッシュボード表示）, 07-learning.md（進捗の記録）
+**データ操作:**
+- 書き込み: 単語表示時に`unit_progress.last_word_index`を更新
+- 書き込み: ユニット最終単語表示時に`unit_progress.completed_at`をセット
+- 読み取り: 級別の学習済み語数・達成率の算出
+- 読み取り: 次にやるべきユニットの特定
+- 読み取り: 全ユニットの完了/途中/未着手状態の取得
+- 読み取り: 連続学習日数（ストリーク）の算出
+
+#### 4. 語彙習得管理
 **機能概要:** テスト正解による語彙習得状態の記録・統計  
 **関連画面:** 08-listening-test.md（テスト正解時の習得記録）, 09-reading-test.md（テスト正解時の習得記録）, 10-results.md（習得率統計表示）  
 **データ操作:**
@@ -111,8 +122,19 @@ erDiagram
         integer updated_at "更新日時"
     }
     
+    %% ユニット学習進捗テーブル
+    UNIT_PROGRESS {
+        string id PK "レコードID"
+        string unit_id FK "ユニットID"
+        integer last_word_index "最後に表示した単語インデックス(0-9)"
+        integer completed_at "完了日時(nullable)"
+        integer created_at "作成日時"
+        integer updated_at "更新日時"
+    }
+
     %% リレーション
     UNITS ||--o{ WORDS : "1対多"
+    UNITS ||--o| UNIT_PROGRESS : "1対0or1"
     WORDS ||--o{ WORD_MASTERY : "1対多"
     WORDS ||--o| SRS_MANAGEMENT : "1対0or1"
 ```

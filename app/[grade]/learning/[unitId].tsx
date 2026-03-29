@@ -16,6 +16,7 @@ import {
   getSrsManagementByWordId,
   createSrsManagement,
 } from '../../../src/database/queries/srsQueries';
+import { upsertUnitProgress } from '../../../src/database/queries/unitProgressQueries';
 import { useWordAudio } from '../../../src/hooks/useWordAudio';
 import { segmentKoreanText, guessLemmas } from '../../../src/utils/koreanLemmatizer';
 import { findWordInExample } from '../../../src/utils/koreanTextUtils';
@@ -162,6 +163,12 @@ export default function LearningScreen() {
       playWordAudio(currentWord.korean);
     }
   }, [currentWord?.id, playWordAudio]);
+
+  useEffect(() => {
+    if (unitId && words.length > 0) {
+      upsertUnitProgress(database, unitId, currentIndex);
+    }
+  }, [unitId, currentIndex, words.length]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < words.length - 1) {
