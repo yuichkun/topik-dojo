@@ -31,6 +31,9 @@ The palette is rooted in a "Whitescape" philosophy, using Cobalt Blue (`primary`
 | `on_background` | #191c1d | Primary text (never pure #000000) |
 | `on_surface_variant` | #434653 | Secondary text (must meet 4.5:1 on white) |
 | `outline_variant` | #c3c6d5 | Ghost borders at 20% opacity |
+| `review` | #4c1d95 | Review mode hero, CTAs |
+| `review_container` | #6d28d9 | Review gradient endpoint |
+| `review_fixed_dim` | #ddd6fe | Review highlight, glow effects |
 
 #### 2.2 On-Cobalt Text Hierarchy
 
