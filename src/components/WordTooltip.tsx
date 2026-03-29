@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Popover from 'react-native-popover-view';
+import Popover, { Rect } from 'react-native-popover-view';
 import { useRouter } from 'expo-router';
 import { useWordAudio } from '../hooks/useWordAudio';
 import type { Word } from '../database/schema';
@@ -9,19 +9,19 @@ interface WordTooltipProps {
   visible: boolean;
   word: Word | null;
   onClose: () => void;
-  fromView: React.RefObject<any> | null;
+  fromRect: { x: number; y: number; width: number; height: number } | null;
 }
 
 export default function WordTooltip({
   visible,
   word,
   onClose,
-  fromView,
+  fromRect,
 }: WordTooltipProps) {
   const router = useRouter();
   const { playWordAudio } = useWordAudio();
 
-  if (!word || !fromView) return null;
+  if (!word || !fromRect) return null;
 
   const getUnitRange = (unitOrder: number) => {
     const unitNumber = Math.ceil(unitOrder / 10);
@@ -44,7 +44,7 @@ export default function WordTooltip({
   return (
     <Popover
       isVisible={visible}
-      from={fromView}
+      from={new Rect(fromRect.x, fromRect.y, fromRect.width, fromRect.height)}
       onRequestClose={onClose}
       animationConfig={{ duration: 200 }}
       popoverStyle={{
