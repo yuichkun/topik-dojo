@@ -190,7 +190,7 @@ export default function ReviewScreen() {
           </View>
         </View>
         <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-6xl mb-6">✨</Text>
+          <Text className="text-4xl mb-6">--</Text>
           <Text className="text-xl font-bold text-gray-800 mb-2">
             復習する単語はありません
           </Text>
@@ -221,7 +221,7 @@ export default function ReviewScreen() {
           </View>
         </View>
         <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-6xl mb-6">🎉</Text>
+          <Text className="text-4xl mb-6">!!</Text>
           <Text className="text-2xl font-bold text-gray-800 mb-2">
             本日の復習完了！
           </Text>

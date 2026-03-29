@@ -362,7 +362,7 @@ export default function ListeningTestScreen() {
             }`}
             onPress={handleReplay}
           >
-            <Text className="text-4xl">{isPlaying ? '⏸️' : '▶️'}</Text>
+            <Text className="text-4xl text-white">{isPlaying ? '||' : '▶'}</Text>
           </TouchableOpacity>
 
           <Text className="text-sm text-gray-500 mt-4">

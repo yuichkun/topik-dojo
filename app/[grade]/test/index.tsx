@@ -60,7 +60,7 @@ export default function TestModeSelectionScreen() {
           className="bg-purple-50 border-2 border-purple-500 rounded-lg py-8 mb-6 items-center"
           onPress={handleListeningPress}
         >
-          <Text className="text-2xl mb-2">🎧</Text>
+          <Text className="text-2xl mb-2 text-purple-500">Listening</Text>
           <Text className="text-xl font-bold text-purple-600">リスニング</Text>
           <Text className="text-sm text-purple-500 mt-2 text-center px-4">
             音声を聞いて日本語訳を4択から選択
@@ -71,7 +71,7 @@ export default function TestModeSelectionScreen() {
           className="bg-teal-50 border-2 border-teal-500 rounded-lg py-8 items-center"
           onPress={handleReadingPress}
         >
-          <Text className="text-2xl mb-2">📖</Text>
+          <Text className="text-2xl mb-2 text-teal-500">Reading</Text>
           <Text className="text-xl font-bold text-teal-600">リーディング</Text>
           <Text className="text-sm text-teal-500 mt-2 text-center px-4">
             ハングル文字を見て日本語訳を4択から選択
