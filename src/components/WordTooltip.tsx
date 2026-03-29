@@ -69,7 +69,7 @@ export default function WordTooltip({
             onPress={handlePlayAudio}
             className="bg-blue-500 rounded-full p-1.5 active:bg-blue-600"
           >
-            <Text className="text-white text-xs">🔊</Text>
+            <Text className="text-white text-xs">▶</Text>
           </TouchableOpacity>
         </View>
 

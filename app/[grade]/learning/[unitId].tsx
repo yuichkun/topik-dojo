@@ -189,7 +189,7 @@ export default function LearningScreen() {
 
   const handlePlayExampleAudio = useCallback(() => {
     if (currentWord) {
-      playExampleAudio(currentWord.exampleKorean ?? '');
+      playExampleAudio(currentWord.korean);
     }
   }, [currentWord, playExampleAudio]);
 
@@ -282,7 +282,7 @@ export default function LearningScreen() {
               }`}
               disabled={isPlaying}
             >
-              <Text className="text-white font-semibold">🔊 音声再生</Text>
+              <Text className="text-white font-semibold">▶ 音声再生</Text>
             </TouchableOpacity>
           </TouchableOpacity>
 
@@ -324,7 +324,7 @@ export default function LearningScreen() {
                           }`}
                           disabled={isPlaying}
                         >
-                          <Text className="text-white text-xs">🔊</Text>
+                          <Text className="text-white text-xs">▶</Text>
                         </TouchableOpacity>
                       </View>
                       <View className="flex-row flex-wrap mb-3">

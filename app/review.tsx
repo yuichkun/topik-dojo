@@ -145,7 +145,7 @@ export default function ReviewScreen() {
 
   const handlePlayExampleAudio = useCallback(() => {
     if (currentWord) {
-      playExampleAudio(currentWord.exampleKorean ?? '');
+      playExampleAudio(currentWord.korean);
     }
   }, [currentWord, playExampleAudio]);
 
@@ -321,7 +321,7 @@ export default function ReviewScreen() {
               }`}
               disabled={isPlaying}
             >
-              <Text className="text-white font-semibold">🔊 音声再生</Text>
+              <Text className="text-white font-semibold">▶ 音声再生</Text>
             </TouchableOpacity>
           </TouchableOpacity>
 
@@ -365,7 +365,7 @@ export default function ReviewScreen() {
                           }`}
                           disabled={isPlaying}
                         >
-                          <Text className="text-white text-xs">🔊</Text>
+                          <Text className="text-white text-xs">▶</Text>
                         </TouchableOpacity>
                       </View>
                       <Text className="text-lg text-gray-800 mb-3">
