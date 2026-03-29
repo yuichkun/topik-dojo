@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import database from '../../../src/database/client';
 import { getWordsByUnitId } from '../../../src/database/queries/unitQueries';
+import { searchWordsByKorean } from '../../../src/database/queries/wordQueries';
 import {
   getSrsManagementByWordId,
   createSrsManagement,
 } from '../../../src/database/queries/srsQueries';
 import { useWordAudio } from '../../../src/hooks/useWordAudio';
+import { segmentKoreanText, guessLemmas } from '../../../src/utils/koreanLemmatizer';
+import { findWordInExample } from '../../../src/utils/koreanTextUtils';
+import WordTooltip from '../../../src/components/WordTooltip';
 import type { Word, SrsManagement } from '../../../src/database/schema';
 
 export default function LearningScreen() {
@@ -36,6 +40,18 @@ export default function LearningScreen() {
   const [srsData, setSrsData] = useState<Map<string, SrsManagement>>(new Map());
 
   const { playWordAudio, playExampleAudio, isPlaying } = useWordAudio();
+
+  const [tooltipWord, setTooltipWord] = useState<Word | null>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipFromRef, setTooltipFromRef] = useState<React.RefObject<any> | null>(null);
+  const wordRefs = useRef<Map<number, React.RefObject<any>>>(new Map());
+
+  const getRefForIndex = (index: number) => {
+    if (!wordRefs.current.has(index)) {
+      wordRefs.current.set(index, React.createRef());
+    }
+    return wordRefs.current.get(index)!;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -89,6 +105,22 @@ export default function LearningScreen() {
   }, [unitId]);
 
   const currentWord = words[currentIndex];
+
+  const handleWordTap = useCallback(async (segment: string, ref: React.RefObject<any>) => {
+    const lemmas = guessLemmas(segment);
+    const foundWord = await searchWordsByKorean(database, lemmas);
+    if (foundWord && foundWord.id !== currentWord?.id) {
+      setTooltipWord(foundWord);
+      setTooltipFromRef(ref);
+      setTooltipVisible(true);
+    }
+  }, [currentWord?.id]);
+
+  const closeTooltip = useCallback(() => {
+    setTooltipVisible(false);
+    setTooltipWord(null);
+    setTooltipFromRef(null);
+  }, []);
 
   useEffect(() => {
     if (currentWord) {
@@ -295,9 +327,37 @@ export default function LearningScreen() {
                           <Text className="text-white text-xs">🔊</Text>
                         </TouchableOpacity>
                       </View>
-                      <Text className="text-lg text-gray-800 mb-3">
-                        {currentWord.exampleKorean}
-                      </Text>
+                      <View className="flex-row flex-wrap mb-3">
+                        {segmentKoreanText(currentWord.exampleKorean).map(
+                          (segment, idx) => {
+                            const ref = getRefForIndex(idx);
+                            const highlight = findWordInExample(
+                              currentWord.korean,
+                              segment,
+                            );
+                            const isCurrentWord = !!highlight;
+
+                            return (
+                              <TouchableOpacity
+                                key={idx}
+                                ref={ref}
+                                onPress={() => handleWordTap(segment, ref)}
+                                disabled={isCurrentWord}
+                              >
+                                <Text
+                                  className={`text-lg ${
+                                    isCurrentWord
+                                      ? 'bg-yellow-200 font-bold'
+                                      : 'text-gray-800'
+                                  }`}
+                                >
+                                  {segment}{' '}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          },
+                        )}
+                      </View>
                     </View>
                   )}
 
@@ -368,6 +428,13 @@ export default function LearningScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <WordTooltip
+        visible={tooltipVisible}
+        word={tooltipWord}
+        onClose={closeTooltip}
+        fromView={tooltipFromRef}
+      />
     </SafeAreaView>
   );
 }
