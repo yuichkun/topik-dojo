@@ -192,9 +192,7 @@ npm run lint         # eslint .
 
 ### シードデータ投入
 
-```bash
-npm run db:seed
-```
+アプリのトップ画面右下の「Seed DB」ボタン（開発ビルドのみ）から words.json のデータを投入できます。
 
 ### Drizzle Studio（DB 閲覧）
 

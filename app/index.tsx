@@ -50,7 +50,7 @@ export default function TopScreen() {
     if (reviewCount === 0) {
       return;
     }
-    router.push('/review');
+    router.push('/1/review' as any);
   };
 
   const handleGradePress = (grade: number) => {

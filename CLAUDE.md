@@ -155,10 +155,9 @@ npx drizzle-kit generate
 
 # Drizzle Studio（ブラウザでDB閲覧）
 npx drizzle-kit studio
-
-# DBシード（テストデータ投入）
-npm run db:seed
 ```
+
+**テストデータ投入**: アプリのトップ画面右下の「Seed DB」ボタン（開発ビルドのみ表示）から words.json のデータを投入できます。
 
 ### 型チェック・Lint
 

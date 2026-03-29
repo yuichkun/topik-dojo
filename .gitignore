@@ -87,3 +87,5 @@ expo-env.d.ts
 # CNG - generated native directories
 ios/
 android/
+current-db.db
+assets/*.db

@@ -86,7 +86,6 @@ Apple Developer アカウントと、Xcode でのデバイス登録が必要で�
 | `npm test`                  | テスト実行                                 |
 | `npm run typecheck`         | 型チェック                                 |
 | `npm run lint`              | Lint 実行                                  |
-| `npm run db:seed`           | テストデータ投入                           |
 | `npx drizzle-kit generate`  | スキーマ変更後にマイグレーション生成       |
 | `npx drizzle-kit studio`    | Drizzle Studio（ブラウザで DB 閲覧）       |
 
