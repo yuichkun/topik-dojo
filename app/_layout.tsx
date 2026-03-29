@@ -1,8 +1,10 @@
 import '../global.css';
 import { Stack } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Text, View, LogBox } from 'react-native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import database from '../src/database/client';
+
+LogBox.ignoreLogs(['SafeAreaView has been deprecated']);
 import migrations from '../drizzle/migrations';
 
 export default function RootLayout() {
