@@ -1,4 +1,4 @@
-import { addDays, startOfDay, subDays } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import {
   getTestDb,
   createTestUnit,
@@ -52,14 +52,14 @@ describe('srsQueries', () => {
       expect(srs!.mistakeCount).toBe(1);
     });
 
-    it('nextReviewDateは明日に設定される', async () => {
+    it('nextReviewDateは今日の0時に設定される', async () => {
       await seedWord('w1');
       const db = getTestDb();
 
       const srs = await createSrsManagement(db, 'w1');
-      const tomorrow = addDays(startOfDay(Date.now()), 1).getTime();
+      const today = startOfDay(Date.now()).getTime();
 
-      expect(Math.abs(srs!.nextReviewDate! - tomorrow)).toBeLessThan(60 * 1000);
+      expect(Math.abs(srs!.nextReviewDate! - today)).toBeLessThan(60 * 1000);
     });
   });
 
@@ -259,14 +259,14 @@ describe('srsQueries', () => {
       expect(updated!.mistakeCount).toBe(3);
     });
 
-    it('nextReviewDateが明日に設定される', async () => {
+    it('nextReviewDateが今日の0時に設定される', async () => {
       await seedWord('w1');
       await createTestSrsRecord({ id: 'srs1', wordId: 'w1', masteryLevel: 4 });
 
       const db = getTestDb();
       const updated = await updateSrsForForgotten(db, 'w1');
-      const tomorrow = addDays(startOfDay(Date.now()), 1).getTime();
-      expect(Math.abs(updated!.nextReviewDate! - tomorrow)).toBeLessThan(
+      const today = startOfDay(Date.now()).getTime();
+      expect(Math.abs(updated!.nextReviewDate! - today)).toBeLessThan(
         60 * 1000,
       );
     });
@@ -412,6 +412,236 @@ describe('srsQueries', () => {
       const db = getTestDb();
       expect(await getReviewCount(db, 1)).toBe(1);
       expect(await getReviewCount(db, 2)).toBe(1);
+    });
+  });
+
+  describe('SRSシナリオテスト', () => {
+    it('A: テスト間違い→即日復習対象→覚えたでlevel 1, interval 3日', async () => {
+      await seedWord('w1');
+      const db = getTestDb();
+
+      // テストで間違える
+      const srs = await createSrsManagement(db, 'w1', true);
+      expect(srs!.masteryLevel).toBe(0);
+      expect(srs!.easeFactor).toBe(2.5);
+      expect(srs!.intervalDays).toBe(1);
+      expect(srs!.mistakeCount).toBe(1);
+
+      // 即日復習対象になる
+      const reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(true);
+
+      // 復習で「覚えた」
+      const updated = await updateSrsForRemembered(db, 'w1');
+      expect(updated!.masteryLevel).toBe(1);
+      expect(updated!.easeFactor).toBe(2.5);
+      expect(updated!.intervalDays).toBe(3);
+    });
+
+    it('B: 学習段階(level 2)で間違え→覚えた', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 2,
+        easeFactor: 2.5,
+        intervalDays: 3,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+
+      // 覚えてない
+      const forgotten = await updateSrsForForgotten(db, 'w1');
+      expect(forgotten!.masteryLevel).toBe(1);
+      expect(forgotten!.easeFactor).toBe(2.3);
+      expect(forgotten!.intervalDays).toBe(1);
+
+      // 即日復習対象
+      const reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(true);
+
+      // 再出題で覚えた
+      const remembered = await updateSrsForRemembered(db, 'w1');
+      expect(remembered!.masteryLevel).toBe(2);
+      expect(remembered!.easeFactor).toBe(2.3);
+      expect(remembered!.intervalDays).toBe(3);
+    });
+
+    it('C: 卒業済み(level 4, 15日間隔)で間違え→回復カーブ', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 4,
+        easeFactor: 2.5,
+        intervalDays: 15,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+
+      // 覚えてない → level 3, ease 2.3, interval 1
+      const step1 = await updateSrsForForgotten(db, 'w1');
+      expect(step1!.masteryLevel).toBe(3);
+      expect(step1!.easeFactor).toBe(2.3);
+      expect(step1!.intervalDays).toBe(1);
+
+      // 覚えた → level 4, interval = round(1 × 2.3) = 2
+      const step2 = await updateSrsForRemembered(db, 'w1');
+      expect(step2!.masteryLevel).toBe(4);
+      expect(step2!.intervalDays).toBe(2);
+
+      // 覚えた → level 5, interval = round(2 × 2.3) = 5
+      const step3 = await updateSrsForRemembered(db, 'w1');
+      expect(step3!.masteryLevel).toBe(5);
+      expect(step3!.intervalDays).toBe(5);
+
+      // 覚えた → level 6, interval = round(5 × 2.3) = 12
+      const step4 = await updateSrsForRemembered(db, 'w1');
+      expect(step4!.masteryLevel).toBe(6);
+      expect(step4!.intervalDays).toBe(12);
+    });
+
+    it('D: 十分定着(level 7, 95日間隔)で間違え→回復→習得完了', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 7,
+        easeFactor: 2.5,
+        intervalDays: 95,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+
+      // 覚えてない → level 6, ease 2.3, interval 1
+      const step1 = await updateSrsForForgotten(db, 'w1');
+      expect(step1!.masteryLevel).toBe(6);
+      expect(step1!.easeFactor).toBe(2.3);
+      expect(step1!.intervalDays).toBe(1);
+
+      // 覚えた → level 7, interval = round(1 × 2.3) = 2
+      const step2 = await updateSrsForRemembered(db, 'w1');
+      expect(step2!.masteryLevel).toBe(7);
+      expect(step2!.intervalDays).toBe(2);
+
+      // 覚えた → level 8, interval = round(2 × 2.3) = 5
+      const step3 = await updateSrsForRemembered(db, 'w1');
+      expect(step3!.masteryLevel).toBe(8);
+      expect(step3!.intervalDays).toBe(5);
+
+      // 覚えた → level 9 (習得完了)
+      const step4 = await updateSrsForRemembered(db, 'w1');
+      expect(step4!.masteryLevel).toBe(9);
+    });
+
+    it('E: セッション内2回連続間違え', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 4,
+        easeFactor: 2.5,
+        intervalDays: 15,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+
+      // 1回目: 覚えてない → level 3, ease 2.3
+      const step1 = await updateSrsForForgotten(db, 'w1');
+      expect(step1!.masteryLevel).toBe(3);
+      expect(step1!.easeFactor).toBe(2.3);
+
+      // 2回目: 覚えてない → level 2, ease 2.1
+      const step2 = await updateSrsForForgotten(db, 'w1');
+      expect(step2!.masteryLevel).toBe(2);
+      expect(step2!.easeFactor).toBeCloseTo(2.1, 10);
+
+      // 覚えた → level 3, interval 6日（固定）
+      const step3 = await updateSrsForRemembered(db, 'w1');
+      expect(step3!.masteryLevel).toBe(3);
+      expect(step3!.intervalDays).toBe(6);
+    });
+
+    it('F: level 0で繰り返し間違える（苦手単語・ease低下の検証）', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 0,
+        easeFactor: 2.5,
+        intervalDays: 1,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+
+      // 3回連続で覚えてない → level 0のまま、easeが低下
+      await updateSrsForForgotten(db, 'w1'); // ease 2.3
+      await updateSrsForForgotten(db, 'w1'); // ease 2.1
+      const step3 = await updateSrsForForgotten(db, 'w1'); // ease 1.9
+      expect(step3!.masteryLevel).toBe(0);
+      expect(step3!.easeFactor).toBeCloseTo(1.9, 10);
+      expect(step3!.mistakeCount).toBe(3);
+
+      // やっと覚えた → level 1, interval 3日
+      const remembered = await updateSrsForRemembered(db, 'w1');
+      expect(remembered!.masteryLevel).toBe(1);
+      expect(remembered!.easeFactor).toBeCloseTo(1.9, 10);
+      expect(remembered!.intervalDays).toBe(3);
+
+      // 以降の回復: ease 1.9のため間隔拡大が鈍化
+      await updateSrsForRemembered(db, 'w1'); // level 2, interval 3
+      await updateSrsForRemembered(db, 'w1'); // level 3, interval 6
+      const step7 = await updateSrsForRemembered(db, 'w1'); // level 4, interval round(6×1.9)=11
+      expect(step7!.masteryLevel).toBe(4);
+      expect(step7!.intervalDays).toBe(11);
+    });
+
+    it('G: 間違えた単語が即日getReviewWordsで取得できる', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 4,
+        easeFactor: 2.5,
+        intervalDays: 15,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+
+      await updateSrsForForgotten(db, 'w1');
+
+      const reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(true);
+    });
+
+    it('H: 間違い後に覚えた場合、getReviewWordsから消える', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 4,
+        easeFactor: 2.5,
+        intervalDays: 15,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+
+      // 覚えてない → 即日復習対象
+      await updateSrsForForgotten(db, 'w1');
+      let reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(true);
+
+      // 覚えた → nextReviewDateが未来になり復習対象外
+      await updateSrsForRemembered(db, 'w1');
+      reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(false);
     });
   });
 

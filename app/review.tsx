@@ -390,7 +390,12 @@ export default function ReviewScreen() {
         if (remembered) setRememberedCount(p => p + 1);
         setFeedbackResults(p => [...p, remembered]);
 
-        if (currentIndex < reviewWords.length - 1) {
+        if (!remembered) {
+          setReviewWords(prev => [...prev, currentWordData]);
+        }
+
+        const hasNextCard = !remembered || currentIndex < reviewWords.length - 1;
+        if (hasNextCard) {
           setCurrentIndex(p => p + 1);
           setShowMeaning(false);
           setShowExample(false);
