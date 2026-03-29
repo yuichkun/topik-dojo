@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StatusBar,
   useColorScheme,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useReviewCount } from '../src/hooks/useReviewCount';
+import database from '../src/database/client';
+import { seedDatabase } from '../src/utils/seedDatabase';
 
 const GRADES = [1, 2, 3, 4, 5, 6] as const;
 
@@ -17,6 +21,30 @@ export default function TopScreen() {
   const isDarkMode = useColorScheme() === 'dark';
 
   const { count: reviewCount } = useReviewCount();
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  const handleSeedDatabase = () => {
+    Alert.alert(
+      'テストデータ投入',
+      'データベースの全データを削除してテストデータを投入します。よろしいですか？',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '実行',
+          style: 'destructive',
+          onPress: async () => {
+            setIsSeeding(true);
+            try {
+              const result = await seedDatabase(database);
+              Alert.alert(result.success ? '成功' : 'エラー', result.message);
+            } finally {
+              setIsSeeding(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const handleReviewPress = () => {
     if (reviewCount === 0) {
@@ -91,6 +119,24 @@ export default function TopScreen() {
           </View>
         </View>
       </View>
+
+      {__DEV__ && (
+        <View className="absolute bottom-4 right-4">
+          <TouchableOpacity
+            onPress={handleSeedDatabase}
+            disabled={isSeeding}
+            className={`px-4 py-2 rounded-lg shadow-lg ${
+              isSeeding ? 'bg-gray-400' : 'bg-blue-500'
+            }`}
+          >
+            {isSeeding ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text className="text-white text-sm font-medium">Seed DB</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
