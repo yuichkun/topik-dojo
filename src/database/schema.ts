@@ -65,6 +65,17 @@ export const learningProgress = sqliteTable('learning_progress', {
   unique().on(table.date, table.grade),
 ]);
 
+export const unitProgress = sqliteTable('unit_progress', {
+  id: text('id').primaryKey(),
+  unitId: text('unit_id')
+    .notNull()
+    .references(() => units.id),
+  lastWordIndex: integer('last_word_index').notNull(),
+  completedAt: integer('completed_at'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});
+
 export type Unit = InferSelectModel<typeof units>;
 export type Word = InferSelectModel<typeof words>;
 export type SrsManagement = InferSelectModel<typeof srsManagement>;
@@ -75,4 +86,6 @@ export type InsertUnit = InferInsertModel<typeof units>;
 export type InsertWord = InferInsertModel<typeof words>;
 export type InsertSrsManagement = InferInsertModel<typeof srsManagement>;
 export type InsertWordMastery = InferInsertModel<typeof wordMastery>;
+export type UnitProgress = InferSelectModel<typeof unitProgress>;
+export type InsertUnitProgress = InferInsertModel<typeof unitProgress>;
 export type InsertLearningProgress = InferInsertModel<typeof learningProgress>;
