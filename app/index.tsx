@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StatusBar,
-  Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useReviewCount } from '../src/hooks/useReviewCount';
-import database from '../src/database/client';
-import { seedDatabase } from '../src/utils/seedDatabase';
 
 const GRADES = [1, 2, 3, 4, 5, 6] as const;
 
@@ -19,31 +15,6 @@ const GRADES = [1, 2, 3, 4, 5, 6] as const;
 export default function TopScreen() {
   const router = useRouter();
   const { count: reviewCount } = useReviewCount();
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  const handleSeedDatabase = () => {
-    Alert.alert(
-      'テストデータ投入',
-      'データベースの全データを削除してテストデータを投入します。よろしいですか？',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '実行',
-          style: 'destructive',
-          onPress: async () => {
-            setIsSeeding(true);
-            try {
-              const result = await seedDatabase(database);
-              Alert.alert(result.success ? '成功' : 'エラー', result.message);
-            } finally {
-              setIsSeeding(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
   const handleReviewPress = () => {
     if (reviewCount === 0) return;
     router.push('/review');
@@ -162,21 +133,6 @@ export default function TopScreen() {
         </View>
       </View>
 
-      {__DEV__ && (
-        <View className="absolute bottom-4 right-4">
-          <TouchableOpacity
-            onPress={handleSeedDatabase}
-            disabled={isSeeding}
-            style={{ backgroundColor: '#002897', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4 }}
-          >
-            {isSeeding ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text style={{ fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: '#fff' }}>Seed DB</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
