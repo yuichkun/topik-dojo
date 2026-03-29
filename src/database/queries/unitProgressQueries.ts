@@ -24,11 +24,16 @@ export async function upsertUnitProgress(
   const completed = lastWordIndex >= 9;
 
   if (existing) {
+    // Do not overwrite a completed unit's progress
+    if (existing.completedAt !== null) {
+      return existing;
+    }
+
     await db
       .update(unitProgress)
       .set({
         lastWordIndex,
-        completedAt: completed ? (existing.completedAt ?? now) : existing.completedAt,
+        completedAt: completed ? now : null,
         updatedAt: now,
       })
       .where(eq(unitProgress.id, existing.id));

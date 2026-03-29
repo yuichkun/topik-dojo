@@ -46,17 +46,17 @@ describe('unitProgressQueries', () => {
       expect(result!.completedAt).not.toBeNull();
     });
 
-    it('does not overwrite completedAt on subsequent updates', async () => {
+    it('does not overwrite a completed unit when reopened', async () => {
       await createTestUnit({ id: 'u1', grade: 1, unitNumber: 1 });
       const db = getTestDb();
 
       const first = await upsertUnitProgress(db, 'u1', 9);
       const originalCompletedAt = first!.completedAt;
 
-      // Re-open the unit and view word 0
+      // Re-open the unit and view word 0 — should NOT change anything
       const second = await upsertUnitProgress(db, 'u1', 0);
 
-      expect(second!.lastWordIndex).toBe(0);
+      expect(second!.lastWordIndex).toBe(9);
       expect(second!.completedAt).toBe(originalCompletedAt);
     });
   });
