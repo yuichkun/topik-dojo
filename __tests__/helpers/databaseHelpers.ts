@@ -4,6 +4,7 @@ import {
   srsManagement,
   wordMastery,
   learningProgress,
+  unitProgress,
 } from '../../src/database/schema';
 import type {
   InsertUnit,
@@ -11,6 +12,7 @@ import type {
   InsertSrsManagement,
   InsertWordMastery,
   InsertLearningProgress,
+  InsertUnitProgress,
 } from '../../src/database/schema';
 
 type TestDb = ReturnType<
@@ -118,6 +120,25 @@ export async function createTestLearningProgress(
     listeningMasteredCount: data.listeningMasteredCount ?? 0,
     readingMasteredCount: data.readingMasteredCount ?? 0,
     totalWordsCount: data.totalWordsCount ?? 0,
+    createdAt: data.createdAt ?? now,
+    updatedAt: data.updatedAt ?? now,
+  });
+}
+
+export async function createTestUnitProgress(
+  data: {
+    id: string;
+    unitId: string;
+    lastWordIndex: number;
+  } & Partial<InsertUnitProgress>,
+) {
+  const db = getTestDb();
+  const now = Date.now();
+  await db.insert(unitProgress).values({
+    id: data.id,
+    unitId: data.unitId,
+    lastWordIndex: data.lastWordIndex,
+    completedAt: data.completedAt ?? null,
     createdAt: data.createdAt ?? now,
     updatedAt: data.updatedAt ?? now,
   });

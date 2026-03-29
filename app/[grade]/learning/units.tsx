@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import database from '../../../src/database/client';
 import { getUnitsByGrade } from '../../../src/database/queries/unitQueries';
 import { getWordCountByGrade } from '../../../src/database/queries/wordQueries';
@@ -40,7 +41,7 @@ function useScreenData(gradeNumber: number) {
   const [data, setData] = useState<ScreenData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let cancelled = false;
     (async () => {
       try {
@@ -94,7 +95,7 @@ function useScreenData(gradeNumber: number) {
       }
     })();
     return () => { cancelled = true; };
-  }, [gradeNumber]);
+  }, [gradeNumber]));
 
   return { data, loading };
 }
