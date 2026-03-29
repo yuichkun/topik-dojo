@@ -42,16 +42,23 @@
 
 ## データソース
 
-### UNIT_PROGRESSテーブル
-学習進捗の読み取り元。学習画面（07）が書き込む。
+### 習得進捗（ダッシュボード）
+`word_mastery` テーブルから算出。テスト正解ベースの実力指標。
 
 | データ | クエリ |
 |---|---|
-| 学習済み語数 | `getWordsLearnedByGrade` — unit_progressの(last_word_index + 1)の合計 |
-| 達成率 | 学習済み語数 ÷ `getWordCountByGrade` |
-| 次のユニット | `getCurrentUnit` — completed_atがnullの最初のユニット |
-| ユニット状態一覧 | `getAllUnitProgressByGrade` — 全ユニットのprogress情報 |
-| ストリーク | `getStreakDays` — completed_atの日付から連続日数を計算 |
+| リスニング習得数 | `getListeningMasteredCount` — word_mastery(test_type='listening')のcount |
+| リーディング習得数 | `getReadingMasteredCount` — word_mastery(test_type='reading')のcount |
+| 総語彙数 | `getWordCountByGrade` |
+| ユニット別習得数 | `getUnitMasteryByGrade` — ユニットごとのリスニング/リーディング習得数 |
+
+### 学習到達度（グリッド・CTA）
+`unit_progress` テーブルから算出。カード閲覧ベースの到達度。
+
+| データ | クエリ |
+|---|---|
+| 次のユニット | `getNextUnit` — completedでない最初のユニット |
+| ユニット状態一覧 | `getUnitStudyStateByGrade` — 完了/途中/未着手の3状態 |
 
 ## ナビゲーション
 

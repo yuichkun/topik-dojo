@@ -127,13 +127,12 @@ function calculateDaysToReview(nextReviewDate) {
 - **対応**: 音声ボタンを無効化、テキストで「音声なし」表示
 - **代替**: 発音表記を強調表示
 
-## 学習進捗の記録
+## 学習到達度の記録
 
 ### UNIT_PROGRESSテーブルへの書き込み
-単語を表示するたびに `upsertUnitProgress(db, unitId, currentIndex)` を呼び出す。
-- **last_word_index**: 表示中の単語のインデックス（0-9）
-- **completed_at**: 最後の単語（index 9）を表示した時点でタイムスタンプをセット
-- 閲覧ベースの進捗記録（単語が画面に表示された時点で「学習済み」とする）
+- ユニットを開いた時点で `markUnitOpened(db, unitId)` を呼び出し、到達度を記録
+- 最後のカードまで閲覧した時点で `markUnitCompleted(db, unitId)` を呼び出す
+- 閲覧ベースの到達度記録（ユニット選択画面のグリッド状態・CTAに使用）
 
 ## 技術要件
 
@@ -141,8 +140,7 @@ function calculateDaysToReview(nextReviewDate) {
 - ナビゲーションパラメータから級+ユニット情報を取得
 - **データベース**: WORDSテーブルから指定ユニットの単語データ（10問分）
 - **getWordsByUnitId query**: ユニットIDで単語一覧を取得
-- **upsertUnitProgress query**: 学習進捗の記録
+- **markUnitOpened / markUnitCompleted**: 学習到達度の記録
 - 音声ファイル（各単語、ファイルパスルールで自動生成）
-- ユーザーの学習進捗状況
 
 ---

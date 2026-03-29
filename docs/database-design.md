@@ -39,16 +39,14 @@ TOPIK道場アプリのSQLiteデータベース設計
 - 読み取り: 間違い選択肢生成用の同級語彙データ取得（ランダム）
 - 読み取り: 級別総語彙数取得（進捗率計算用）
 
-#### 3. 学習進捗管理
-**機能概要:** ユニット単位の学習進捗（閲覧ベース）の記録・可視化
-**関連画面:** 03-unit-selection.md（進捗ダッシュボード表示）, 07-learning.md（進捗の記録）
+#### 3. 学習到達度管理
+**機能概要:** ユニット単位の学習到達度（閲覧ベース）の記録。ダッシュボードの習得進捗は `word_mastery` ベース。
+**関連画面:** 03-unit-selection.md（グリッド状態表示・CTA）, 07-learning.md（到達度の記録）
 **データ操作:**
-- 書き込み: 単語表示時に`unit_progress.last_word_index`を更新
-- 書き込み: ユニット最終単語表示時に`unit_progress.completed_at`をセット
-- 読み取り: 級別の学習済み語数・達成率の算出
-- 読み取り: 次にやるべきユニットの特定
-- 読み取り: 全ユニットの完了/途中/未着手状態の取得
-- 読み取り: 連続学習日数（ストリーク）の算出
+- 書き込み: ユニットを開いた時に `markUnitOpened` で記録
+- 書き込み: 全カード閲覧時に `markUnitCompleted` で完了
+- 読み取り: 次にやるべきユニットの特定（`getNextUnit`）
+- 読み取り: 全ユニットの完了/途中/未着手状態の取得（`getUnitStudyStateByGrade`）
 
 #### 4. 語彙習得管理
 **機能概要:** テスト正解による語彙習得状態の記録・統計  
@@ -124,12 +122,8 @@ erDiagram
     
     %% ユニット学習進捗テーブル
     UNIT_PROGRESS {
-        string id PK "レコードID"
-        string unit_id FK "ユニットID"
-        integer last_word_index "最後に表示した単語インデックス(0-9)"
-        integer completed_at "完了日時(nullable)"
-        integer created_at "作成日時"
-        integer updated_at "更新日時"
+        string unit_id PK_FK "ユニットID"
+        integer completed "全カード閲覧済み(0 or 1)"
     }
 
     %% リレーション
