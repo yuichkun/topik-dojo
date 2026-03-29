@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SectionLabel, BackButton } from '../../../src/components/ui';
 
 const GRADE_WORD_COUNTS: Record<string, number> = {
   '1': 400, '2': 1400, '3': 2000, '4': 2000, '5': 3000, '6': 3000,
@@ -36,21 +37,11 @@ export default function LearningModeSelectionScreen() {
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
-              <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
-                戻る
-              </Text>
-            </TouchableOpacity>
+            <BackButton onPress={() => router.back()} color="rgba(255,255,255,0.55)" />
           </View>
 
           <View style={{ marginTop: 24 }}>
-            <Text style={{
-              fontFamily: 'Manrope_500Medium', fontSize: 11,
-              color: 'rgba(255,255,255,0.45)', letterSpacing: 2,
-              textTransform: 'uppercase',
-            }}>
-              TOPIK
-            </Text>
+            <SectionLabel style={{ color: 'rgba(255,255,255,0.45)' }}>TOPIK</SectionLabel>
             <Text style={{
               fontFamily: 'Epilogue_700Bold', fontSize: 48,
               color: '#ffffff', lineHeight: 52, letterSpacing: -1,
@@ -68,7 +59,7 @@ export default function LearningModeSelectionScreen() {
 
         {/* Content */}
         <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'center' }}>
-          {/* 学習 Hero Card */}
+          {/* Learning Hero Card */}
           <TouchableOpacity
             onPress={() => router.push(`/${gradeDisplay}/learning/units` as Href)}
             style={{
@@ -80,13 +71,7 @@ export default function LearningModeSelectionScreen() {
             }}
             activeOpacity={0.85}
           >
-            <Text style={{
-              fontFamily: 'Manrope_500Medium', fontSize: 11,
-              color: 'rgba(255,255,255,0.45)', letterSpacing: 2,
-              textTransform: 'uppercase',
-            }}>
-              TRAINING
-            </Text>
+            <SectionLabel style={{ color: 'rgba(255,255,255,0.45)' }}>TRAINING</SectionLabel>
             <Text style={{
               fontFamily: 'Epilogue_700Bold', fontSize: 30,
               color: '#ffffff', marginTop: 8, letterSpacing: -0.5,
@@ -115,62 +100,36 @@ export default function LearningModeSelectionScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Test + Results pair */}
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <TouchableOpacity
-              onPress={() => router.push(`/${gradeDisplay}/test` as Href)}
-              style={{
-                flex: 1,
-                backgroundColor: '#ffffff',
-                borderRadius: 16,
-                paddingHorizontal: 20,
-                paddingVertical: 24,
-                alignItems: 'center',
-              }}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="headset-outline" size={28} color="#002897" style={{ marginBottom: 12 }} />
+          {/* Results card - full width */}
+          <TouchableOpacity
+            onPress={() => router.push(`/${gradeDisplay}/results` as Href)}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              paddingHorizontal: 24,
+              paddingVertical: 24,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="trending-up" size={28} color="#002897" style={{ marginRight: 16 }} />
+            <View style={{ flex: 1 }}>
               <Text style={{
-                fontFamily: 'Epilogue_600SemiBold', fontSize: 22,
-                color: '#191c1d',
-              }}>
-                テスト
-              </Text>
-              <Text style={{
-                fontFamily: 'Manrope_400Regular', fontSize: 12,
-                color: '#434653', marginTop: 6, textAlign: 'center',
-              }}>
-                聴解・読解で力試し
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push(`/${gradeDisplay}/results` as Href)}
-              style={{
-                flex: 1,
-                backgroundColor: '#ffffff',
-                borderRadius: 16,
-                paddingHorizontal: 20,
-                paddingVertical: 24,
-                alignItems: 'center',
-              }}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="trending-up" size={28} color="#002897" style={{ marginBottom: 12 }} />
-              <Text style={{
-                fontFamily: 'Epilogue_600SemiBold', fontSize: 22,
+                fontFamily: 'Epilogue_600SemiBold', fontSize: 18,
                 color: '#191c1d',
               }}>
                 成績
               </Text>
               <Text style={{
                 fontFamily: 'Manrope_400Regular', fontSize: 12,
-                color: '#434653', marginTop: 6, textAlign: 'center',
+                color: '#434653', marginTop: 4,
               }}>
                 学習の記録を確認
               </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#c3c6d5" />
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
