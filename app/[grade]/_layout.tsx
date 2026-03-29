@@ -11,6 +11,7 @@ export default function GradeLayout() {
       <Stack.Screen name="test/reading/[unitId]" />
       <Stack.Screen name="test/listening/[unitId]" />
       <Stack.Screen name="review" />
+      <Stack.Screen name="results" />
     </Stack>
   );
 }
