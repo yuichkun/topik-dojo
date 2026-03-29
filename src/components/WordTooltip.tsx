@@ -33,7 +33,7 @@ export default function WordTooltip({
 
   const handleUnitPress = () => {
     onClose();
-    router.push(`/${word.grade}/learning/${word.unitId}`);
+    router.push(`/${word.grade}/learning/${word.unitId}?wordId=${word.id}`);
   };
 
   const handlePlayAudio = () => {

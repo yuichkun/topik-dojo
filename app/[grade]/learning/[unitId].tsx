@@ -576,9 +576,10 @@ function LearningLayout(props: LayoutProps) {
 
 export default function LearningScreen() {
   const router = useRouter();
-  const { grade, unitId } = useLocalSearchParams<{
+  const { grade, unitId, wordId } = useLocalSearchParams<{
     grade: string;
     unitId: string;
+    wordId?: string;
   }>();
   const gradeNumber = Number(grade) || 1;
 
@@ -620,6 +621,10 @@ export default function LearningScreen() {
           return;
         }
         setWords(wordsData);
+        if (wordId) {
+          const targetIndex = wordsData.findIndex(w => w.id === wordId);
+          if (targetIndex >= 0) setCurrentIndex(targetIndex);
+        }
         const srsMap = new Map<string, SrsManagement>();
         for (const word of wordsData) {
           const srs = await getSrsManagementByWordId(database, word.id);
