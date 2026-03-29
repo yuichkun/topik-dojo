@@ -9,8 +9,7 @@
     "ios": "expo run:ios",
     "lint": "eslint .",
     "test": "jest",
-    "typecheck": "tsc --noEmit",
-    "db:seed": "tsx ./scripts/seed-db.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-navigation/native": "^7.1.33",
