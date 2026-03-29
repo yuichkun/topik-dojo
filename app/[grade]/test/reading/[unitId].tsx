@@ -16,6 +16,8 @@ import { getRandomWordsByGrade } from '../../../../src/database/queries/wordQuer
 import { createSrsManagement } from '../../../../src/database/queries/srsQueries';
 import { createWordMastery } from '../../../../src/database/queries/wordMasteryQueries';
 import { updateOrCreateLearningProgress } from '../../../../src/database/queries/learningProgressQueries';
+import { Ionicons } from '@expo/vector-icons';
+import { useWordAudio } from '../../../../src/hooks/useWordAudio';
 import { BackButton } from '../../../../src/components/ui';
 import type { Word } from '../../../../src/database/schema';
 
@@ -193,6 +195,7 @@ export default function ReadingTestScreen() {
   const [results, setResults] = useState<AnswerResult[]>([]);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [testCompleted, setTestCompleted] = useState(false);
+  const { playWordAudio, isPlaying } = useWordAudio();
 
   useEffect(() => {
     let cancelled = false;
@@ -455,6 +458,23 @@ export default function ReadingTestScreen() {
           >
             {currentQuestion.word.korean}
           </Text>
+
+          <TouchableOpacity
+            onPress={() => playWordAudio(currentQuestion.word.korean)}
+            disabled={isPlaying}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: isPlaying ? C.surfaceContainerHighest : C.primary,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: 20,
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name={isPlaying ? 'pause' : 'play'} size={16} color={C.onPrimary} />
+          </TouchableOpacity>
         </View>
 
         {/* Options */}
