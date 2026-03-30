@@ -39,9 +39,7 @@ export default function RootLayout() {
 
   if (!migrationSuccess || !seedReady || !fontsLoaded) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <Text>Loading...</Text>
-      </View>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#002897' }} />
     );
   }
 
