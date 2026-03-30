@@ -1,5 +1,5 @@
-import { eq, and, lte, lt, count, type SQL } from 'drizzle-orm';
-import { addDays, startOfDay } from 'date-fns';
+import { eq, and, lte, lt, gt, min, count, type SQL } from 'drizzle-orm';
+import { addDays, startOfDay, differenceInDays } from 'date-fns';
 import { srsManagement, words } from '../schema';
 import {
   SRS_CONSTANTS,
@@ -163,5 +163,69 @@ export async function getReviewCount(db: Database, grade?: number) {
     .where(and(...conditions));
 
   return result[0].count;
+}
+
+export async function getUpcomingReviewSchedule(
+  db: Database,
+): Promise<Array<{ reviewDate: number; wordCount: number; minInterval: number }>> {
+  const now = Date.now();
+  const today = startOfDay(now);
+
+  const rows = await db
+    .select({
+      reviewDate: srsManagement.nextReviewDate,
+      wordCount: count(),
+      minInterval: min(srsManagement.intervalDays),
+    })
+    .from(srsManagement)
+    .where(
+      and(
+        gt(srsManagement.nextReviewDate, today.getTime()),
+        lt(srsManagement.masteryLevel, SRS_CONSTANTS.MAX_MASTERY_LEVEL),
+      ),
+    )
+    .groupBy(srsManagement.nextReviewDate)
+    .orderBy(srsManagement.nextReviewDate);
+
+  return rows.map(r => ({
+    reviewDate: r.reviewDate!,
+    wordCount: r.wordCount,
+    minInterval: r.minInterval ?? 1,
+  }));
+}
+
+export async function getOverdueReviewInfo(
+  db: Database,
+): Promise<{ count: number; minInterval: number; oldestOverdueDays: number }> {
+  const now = Date.now();
+  const today = startOfDay(now);
+
+  const rows = await db
+    .select({
+      totalCount: count(),
+      minInterval: min(srsManagement.intervalDays),
+      oldestReviewDate: min(srsManagement.nextReviewDate),
+    })
+    .from(srsManagement)
+    .where(
+      and(
+        lte(srsManagement.nextReviewDate, now),
+        lt(srsManagement.masteryLevel, SRS_CONSTANTS.MAX_MASTERY_LEVEL),
+      ),
+    );
+
+  const row = rows[0];
+  if (!row || row.totalCount === 0) {
+    return { count: 0, minInterval: 0, oldestOverdueDays: 0 };
+  }
+
+  const oldestDate = row.oldestReviewDate ?? today.getTime();
+  const oldestOverdueDays = Math.max(0, differenceInDays(today, oldestDate));
+
+  return {
+    count: row.totalCount,
+    minInterval: row.minInterval ?? 1,
+    oldestOverdueDays,
+  };
 }
 

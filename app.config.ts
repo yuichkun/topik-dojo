@@ -33,6 +33,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-sqlite',
     ['expo-audio', { microphonePermission: false }],
+    'expo-notifications',
   ],
   extra: {
     eas: {

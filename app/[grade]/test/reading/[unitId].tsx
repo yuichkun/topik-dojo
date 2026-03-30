@@ -18,6 +18,7 @@ import { createWordMastery } from '../../../../src/database/queries/wordMasteryQ
 import { updateOrCreateLearningProgress } from '../../../../src/database/queries/learningProgressQueries';
 import { Ionicons } from '@expo/vector-icons';
 import { useWordAudio } from '../../../../src/hooks/useWordAudio';
+import { rescheduleReviewNotifications } from '../../../../src/utils/notificationScheduler';
 import { BackButton } from '../../../../src/components/ui';
 import type { Word } from '../../../../src/database/schema';
 
@@ -281,6 +282,7 @@ export default function ReadingTestScreen() {
           await createSrsManagement(database, r.wordId, true);
         }
         await updateOrCreateLearningProgress(database, gradeNum);
+        rescheduleReviewNotifications(database);
       } catch (err) {
         console.error('テスト結果保存エラー:', err);
       }

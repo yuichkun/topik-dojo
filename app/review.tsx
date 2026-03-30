@@ -26,6 +26,7 @@ import {
 import { findWordInExample } from '../src/utils/koreanTextUtils';
 import WordTooltip from '../src/components/WordTooltip';
 import { BackButton } from '../src/components/ui';
+import { rescheduleReviewNotifications } from '../src/utils/notificationScheduler';
 import type { Word, SrsManagement } from '../src/database/schema';
 
 // ─── Design Tokens ───────────────────────────────────────────
@@ -381,6 +382,7 @@ export default function ReviewScreen() {
       try {
         const fn = remembered ? updateSrsForRemembered : updateSrsForForgotten;
         const result = await fn(database, currentWordData.word.id);
+        rescheduleReviewNotifications(database);
         if (!result) {
           setError('データの更新に失敗しました');
           setIsProcessing(false);

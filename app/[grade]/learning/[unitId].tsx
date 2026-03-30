@@ -32,6 +32,7 @@ import {
 import { findWordInExample } from '../../../src/utils/koreanTextUtils';
 import WordTooltip from '../../../src/components/WordTooltip';
 import { BackButton } from '../../../src/components/ui';
+import { rescheduleReviewNotifications } from '../../../src/utils/notificationScheduler';
 import type { Word, SrsManagement } from '../../../src/database/schema';
 
 // ─── Design Tokens ───────────────────────────────────────────
@@ -711,6 +712,7 @@ export default function LearningScreen() {
     if (srsData.get(currentWord.id)) return;
     try {
       const newSrs = await createSrsManagement(database, currentWord.id);
+      rescheduleReviewNotifications(database);
       if (newSrs) {
         setSrsData((prev) => {
           const next = new Map(prev);
