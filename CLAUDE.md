@@ -26,13 +26,11 @@ TOPIK 道場は、日本人韓国語学習者向けの TOPIK（韓国語能力�
 
 ## 画面設計完成状況
 
-全 11 画面の設計が完了：
+全 8 画面：
 
 - **01-top.md** - トップ画面（級選択）
-- **02-learning-mode-selection.md** - 学習モード選択画面
-- **03-unit-selection.md** - 学習用ユニット選択画面
-- **04-test-mode-selection.md** - テストモード選択画面
-- **test-unit-selection.md** - テストユニット選択画面（読解/聴解統合）
+- **02-learning-mode-selection.md** - 学習モード選択画面（学習+成績）
+- **03-unit-selection.md** - ユニット選択画面（学習・テスト統合ハブ、アクションシート方式）
 - **07-learning.md** - 学習画面
 - **08-listening-test.md** - リスニングテスト画面
 - **09-reading-test.md** - リーディングテスト画面
@@ -213,7 +211,3 @@ npm run lint         # = eslint .
 npm install --legacy-peer-deps
 ```
 
----
-
-_Created: 2025/6/13_
-_Updated: 2026/3/28 - Expo SDK 55 移行_

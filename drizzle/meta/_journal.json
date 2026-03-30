@@ -8,6 +8,20 @@
       "when": 1774751901402,
       "tag": "0000_sturdy_silvermane",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774784913490,
+      "tag": "0001_fluffy_maggott",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774799130473,
+      "tag": "0002_productive_karnak",
+      "breakpoints": true
     }
   ]
 }

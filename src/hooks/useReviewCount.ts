@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import database from '../database/client';
 import { getReviewCount } from '../database/queries/srsQueries';
 
@@ -29,9 +30,9 @@ export const useReviewCount = (grade?: number) => {
     }
   }, [grade]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     refresh();
-  }, [refresh]);
+  }, [refresh]));
 
   return { ...state, refresh };
 };

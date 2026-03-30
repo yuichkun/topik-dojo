@@ -9,3 +9,5 @@ export enum TableName {
 export const DATABASE_CONFIG = {
   name: 'TopikDojo.db',
 } as const;
+
+export const DATA_VERSION = 1;

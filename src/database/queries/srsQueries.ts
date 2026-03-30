@@ -30,7 +30,7 @@ export async function createSrsManagement(
   if (existing) return existing;
 
   const now = Date.now();
-  const tomorrow = addDays(startOfDay(now), 1);
+  const today = startOfDay(now);
   const id = `srs_${now}_${Math.random().toString(36).slice(2, 9)}`;
 
   await db.insert(srsManagement).values({
@@ -38,7 +38,7 @@ export async function createSrsManagement(
     wordId,
     masteryLevel: 0,
     easeFactor: SRS_CONSTANTS.INITIAL_EASE_FACTOR,
-    nextReviewDate: tomorrow.getTime(),
+    nextReviewDate: today.getTime(),
     intervalDays: SRS_CONSTANTS.INITIAL_INTERVAL_DAYS,
     mistakeCount: fromMistake ? 1 : 0,
     lastReviewed: null,
@@ -88,7 +88,7 @@ export async function updateSrsForForgotten(db: Database, wordId: string) {
   const now = Date.now();
   const newMasteryLevel = Math.max(0, current.masteryLevel - 1);
   const newEaseFactor = calculateNewEaseFactor(current.easeFactor, false);
-  const tomorrow = addDays(startOfDay(now), 1);
+  const today = startOfDay(now);
 
   await db
     .update(srsManagement)
@@ -96,7 +96,7 @@ export async function updateSrsForForgotten(db: Database, wordId: string) {
       masteryLevel: newMasteryLevel,
       easeFactor: newEaseFactor,
       intervalDays: 1,
-      nextReviewDate: tomorrow.getTime(),
+      nextReviewDate: today.getTime(),
       mistakeCount: current.mistakeCount + 1,
       lastReviewed: now,
       updatedAt: now,

@@ -51,6 +51,16 @@ export function createTestDatabase() {
       UNIQUE(word_id, test_type)
     );
 
+    CREATE TABLE IF NOT EXISTS unit_progress (
+      unit_id TEXT PRIMARY KEY NOT NULL,
+      completed INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS app_metadata (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS learning_progress (
       id TEXT PRIMARY KEY,
       date TEXT NOT NULL,
@@ -69,10 +79,12 @@ export function createTestDatabase() {
 
 export function resetTestDatabase(sqlite: BetterSqlite3.Database) {
   sqlite.exec(`
+    DELETE FROM unit_progress;
     DELETE FROM word_mastery;
     DELETE FROM srs_management;
     DELETE FROM learning_progress;
     DELETE FROM words;
     DELETE FROM units;
+    DELETE FROM app_metadata;
   `);
 }

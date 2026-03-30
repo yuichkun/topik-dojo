@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Popover, { Rect } from 'react-native-popover-view';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useWordAudio } from '../hooks/useWordAudio';
 import type { Word } from '../database/schema';
 
@@ -31,15 +32,15 @@ export default function WordTooltip({
   };
 
   const handleUnitPress = () => {
-    if (!word) return;
     onClose();
-    router.push(`/${word.grade}/learning/${word.unitId}`);
+    router.push(`/${word.grade}/learning/${word.unitId}?wordId=${word.id}`);
   };
 
   const handlePlayAudio = () => {
-    if (!word) return;
     playWordAudio(word.korean);
   };
+
+  const unitLabel = `${word.grade}級 単語${getUnitRange(word.unitOrder)}`;
 
   return (
     <Popover
@@ -48,41 +49,76 @@ export default function WordTooltip({
       onRequestClose={onClose}
       animationConfig={{ duration: 200 }}
       popoverStyle={{
-        backgroundColor: 'white',
+        backgroundColor: 'rgba(25,28,29,0.92)',
         borderRadius: 12,
         padding: 0,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
+        elevation: 8,
       }}
       backgroundStyle={{ backgroundColor: 'transparent' }}
-      arrowSize={{ width: 16, height: 8 }}
+      arrowSize={{ width: 14, height: 7 }}
     >
-      <View className="p-4 min-w-[200px] max-w-[280px]">
-        <View className="flex-row items-center justify-center mb-2">
-          <Text className="text-xl font-bold text-gray-800 mr-2">
+      <View style={{ padding: 14, minWidth: 180, maxWidth: 260 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            marginBottom: 6,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '700',
+              color: '#ffffff',
+            }}
+          >
             {word.korean}
           </Text>
           <TouchableOpacity
             onPress={handlePlayAudio}
-            className="bg-blue-500 rounded-full p-1.5 active:bg-blue-600"
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <Text className="text-white text-xs">▶</Text>
+            <Ionicons name="play" size={11} color="#ffffff" />
           </TouchableOpacity>
         </View>
 
-        <Text className="text-base text-gray-700 text-center">
+        <Text
+          style={{
+            fontSize: 14,
+            color: 'rgba(255,255,255,0.8)',
+            textAlign: 'center',
+            marginBottom: 8,
+          }}
+        >
           {word.japanese}
         </Text>
 
         <TouchableOpacity
           onPress={handleUnitPress}
-          className="bg-gray-100 rounded px-2 py-1 mt-2 active:bg-gray-200"
+          style={{ alignSelf: 'center' }}
         >
-          <Text className="text-xs text-blue-600 text-center underline">
-            {word.grade}級 ユニット{getUnitRange(word.unitOrder)}
+          <Text
+            style={{
+              fontFamily: 'Manrope_500Medium',
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.7)',
+              textDecorationLine: 'underline',
+            }}
+          >
+            {unitLabel}
           </Text>
         </TouchableOpacity>
       </View>

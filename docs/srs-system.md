@@ -72,11 +72,15 @@ ease_factorを使用した動的間隔で復習：
   mastery_level: Math.max(0, 現在のレベル - 1), // レベル下降
   ease_factor: Math.max(1.3, 現在の値 - 0.2),  // 係数低下
   interval_days: 1,                            // 間隔リセット
-  next_review_date: 明日,                      // 1日後に再復習
+  next_review_date: 今日の0時,                  // 即日復習対象
   mistake_count: 現在の値 + 1,                 // 間違い回数増加
   last_reviewed: 現在時刻
 }
 ```
+
+#### セッション内再出題
+復習画面で「覚えてない」を選択したカードは、セッション内のキュー末尾に再追加される。
+ユーザーが「覚えた」を選択するまで繰り返し出題される（Ankiのrelearning stepsに相当）。
 
 ### 制限値
 - **最小ease_factor**: 1.3
@@ -94,7 +98,7 @@ ease_factorを使用した動的間隔で復習：
   word_id: "間違えた単語ID",
   mastery_level: 0,
   ease_factor: 2.5,
-  next_review_date: 明日,
+  next_review_date: 今日の0時,   // 即日復習対象
   interval_days: 1,
   mistake_count: 1,
   last_reviewed: null
@@ -113,7 +117,7 @@ ease_factorを使用した動的間隔で復習：
   word_id: "学習中の単語ID",
   mastery_level: 0,
   ease_factor: 2.5,
-  next_review_date: 明日,
+  next_review_date: 今日の0時,   // 即日復習対象
   interval_days: 1,
   mistake_count: 0,  // 学習モードでは0からスタート
   last_reviewed: null
@@ -171,4 +175,3 @@ function calculateNextInterval(srsData) {
 このように、順調に覚えていけば復習間隔が指数関数的に延長され、効率的な学習が可能になります。
 
 ---
-*最終更新: 2025/06/20*

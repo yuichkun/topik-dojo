@@ -7,6 +7,7 @@ module.exports = function (api) {
     ],
     plugins: [
       ['inline-import', { extensions: ['.sql'] }],
+      ['@babel/plugin-transform-object-rest-spread', { useBuiltIns: true }],
     ],
   };
 };
