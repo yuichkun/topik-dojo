@@ -32,6 +32,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sqlite',
     ['expo-audio', { microphonePermission: false }],
   ],
+  extra: {
+    eas: {
+      projectId: 'dd0225a9-f24c-4db5-92eb-a989168240c2',
+    },
+  },
   experiments: {
     typedRoutes: true,
   },
