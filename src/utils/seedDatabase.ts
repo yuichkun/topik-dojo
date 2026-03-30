@@ -149,6 +149,9 @@ export async function seedIfNeeded(db: Database): Promise<boolean> {
     return false;
   }
 
-  await seedDatabase(db);
+  const result = await seedDatabase(db);
+  if (!result.success) {
+    throw new Error(result.message);
+  }
   return true;
 }
