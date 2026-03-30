@@ -1,5 +1,5 @@
 import { eq, and, lte, lt, gt, min, count, type SQL } from 'drizzle-orm';
-import { addDays, startOfDay, differenceInDays } from 'date-fns';
+import { startOfDay, differenceInDays } from 'date-fns';
 import { srsManagement, words } from '../schema';
 import {
   SRS_CONSTANTS,
@@ -30,7 +30,6 @@ export async function createSrsManagement(
   if (existing) return existing;
 
   const now = Date.now();
-  const today = startOfDay(now);
   const id = `srs_${now}_${Math.random().toString(36).slice(2, 9)}`;
 
   await db.insert(srsManagement).values({
@@ -38,7 +37,7 @@ export async function createSrsManagement(
     wordId,
     masteryLevel: 0,
     easeFactor: SRS_CONSTANTS.INITIAL_EASE_FACTOR,
-    nextReviewDate: today.getTime(),
+    nextReviewDate: now,
     intervalDays: SRS_CONSTANTS.INITIAL_INTERVAL_DAYS,
     mistakeCount: fromMistake ? 1 : 0,
     lastReviewed: null,
@@ -64,7 +63,8 @@ export async function updateSrsForRemembered(db: Database, wordId: string) {
     newEaseFactor,
     current.intervalDays,
   );
-  const nextReviewDate = addDays(startOfDay(now), newInterval);
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const nextReviewDate = now + newInterval * DAY_MS;
 
   await db
     .update(srsManagement)
@@ -72,7 +72,7 @@ export async function updateSrsForRemembered(db: Database, wordId: string) {
       masteryLevel: newMasteryLevel,
       easeFactor: newEaseFactor,
       intervalDays: newInterval,
-      nextReviewDate: nextReviewDate.getTime(),
+      nextReviewDate,
       lastReviewed: now,
       updatedAt: now,
     })
@@ -88,7 +88,6 @@ export async function updateSrsForForgotten(db: Database, wordId: string) {
   const now = Date.now();
   const newMasteryLevel = Math.max(0, current.masteryLevel - 1);
   const newEaseFactor = calculateNewEaseFactor(current.easeFactor, false);
-  const today = startOfDay(now);
 
   await db
     .update(srsManagement)
@@ -96,7 +95,7 @@ export async function updateSrsForForgotten(db: Database, wordId: string) {
       masteryLevel: newMasteryLevel,
       easeFactor: newEaseFactor,
       intervalDays: 1,
-      nextReviewDate: today.getTime(),
+      nextReviewDate: now,
       mistakeCount: current.mistakeCount + 1,
       lastReviewed: now,
       updatedAt: now,
@@ -169,7 +168,6 @@ export async function getUpcomingReviewSchedule(
   db: Database,
 ): Promise<Array<{ reviewDate: number; wordCount: number; minInterval: number }>> {
   const now = Date.now();
-  const today = startOfDay(now);
 
   const rows = await db
     .select({
@@ -180,7 +178,7 @@ export async function getUpcomingReviewSchedule(
     .from(srsManagement)
     .where(
       and(
-        gt(srsManagement.nextReviewDate, today.getTime()),
+        gt(srsManagement.nextReviewDate, now),
         lt(srsManagement.masteryLevel, SRS_CONSTANTS.MAX_MASTERY_LEVEL),
       ),
     )
