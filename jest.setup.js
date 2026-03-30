@@ -12,6 +12,14 @@ jest.mock('expo-audio', () => ({
   })),
 }));
 
+jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: (cb) => {
+    const { useEffect } = require('react');
+    useEffect(() => { cb(); }, [cb]);
+  },
+  useNavigation: () => ({ navigate: jest.fn() }),
+}));
+
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(() => ({
     push: jest.fn(),
