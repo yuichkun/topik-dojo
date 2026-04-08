@@ -1,4 +1,5 @@
 import '../global.css';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { Text, View, LogBox } from 'react-native';
 import { useFonts, Epilogue_600SemiBold, Epilogue_700Bold } from '@expo-google-fonts/epilogue';
@@ -6,6 +7,10 @@ import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold } from '@exp
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import database from '../src/database/client';
 import { useDataInitialization } from '../src/hooks/useDataInitialization';
+import {
+  requestNotificationPermissions,
+  rescheduleReviewNotifications,
+} from '../src/utils/notificationScheduler';
 
 LogBox.ignoreLogs(['SafeAreaView has been deprecated']);
 import migrations from '../drizzle/migrations';
@@ -36,6 +41,13 @@ export default function RootLayout() {
       </View>
     );
   }
+
+  useEffect(() => {
+    if (seedReady) {
+      requestNotificationPermissions().catch(() => {});
+      rescheduleReviewNotifications(database);
+    }
+  }, [seedReady]);
 
   if (!migrationSuccess || !seedReady || !fontsLoaded) {
     return (

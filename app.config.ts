@@ -16,7 +16,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'com.topikdojo',
-    buildNumber: '1',
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     adaptiveIcon: {
@@ -31,6 +33,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-sqlite',
     ['expo-audio', { microphonePermission: false }],
+    'expo-notifications',
   ],
   extra: {
     eas: {

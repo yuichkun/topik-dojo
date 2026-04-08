@@ -20,6 +20,15 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
 }));
 
+jest.mock('expo-notifications', () => ({
+  cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve('mock-id')),
+  setBadgeCountAsync: jest.fn(() => Promise.resolve(true)),
+  getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+}));
+
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(() => ({
     push: jest.fn(),

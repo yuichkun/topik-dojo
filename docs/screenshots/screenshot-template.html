@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOPIK道場 App Store Screenshots</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a1a;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    padding: 40px;
+    justify-content: center;
+  }
+
+  .screenshot {
+    width: 430px;
+    height: 932px;
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  /* ─── Headline area ─── */
+  .headline-area {
+    padding: 60px 32px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    z-index: 2;
+  }
+
+  .headline {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 900;
+    font-size: 32px;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+  }
+
+  .sub-headline {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    margin-top: 8px;
+    opacity: 0.7;
+  }
+
+  /* ─── Phone frame area ─── */
+  .phone-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0 28px;
+    overflow: hidden;
+  }
+
+  .phone-frame {
+    width: 280px;
+    height: 580px;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+    border: 3px solid rgba(255,255,255,0.15);
+  }
+
+  .phone-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+
+  /* ─── Color themes ─── */
+  .theme-cobalt {
+    background: linear-gradient(170deg, #002897 0%, #001a6b 100%);
+  }
+  .theme-cobalt .headline { color: #ffffff; }
+  .theme-cobalt .sub-headline { color: rgba(255,255,255,0.6); }
+
+  .theme-purple {
+    background: linear-gradient(170deg, #4c1d95 0%, #2e1065 100%);
+  }
+  .theme-purple .headline { color: #ffffff; }
+  .theme-purple .sub-headline { color: rgba(255,255,255,0.6); }
+
+  .theme-surface {
+    background: linear-gradient(170deg, #f0f1f3 0%, #e1e3e5 100%);
+  }
+  .theme-surface .headline { color: #191c1d; }
+  .theme-surface .sub-headline { color: #434653; }
+
+  .theme-dark {
+    background: linear-gradient(170deg, #191c1d 0%, #0d0e10 100%);
+  }
+  .theme-dark .headline { color: #ffffff; }
+  .theme-dark .sub-headline { color: rgba(255,255,255,0.5); }
+
+  /* ─── Notification mockup (screenshot 5) ─── */
+  .notif-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 28px 40px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .notif-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .notif-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .notif-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .notif-content {
+    flex: 1;
+  }
+
+  .notif-title {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: white;
+  }
+
+  .notif-body {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  .notif-time {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    flex-shrink: 0;
+  }
+
+  .notif-card.urgent {
+    background: rgba(220, 38, 38, 0.15);
+    border-color: rgba(220, 38, 38, 0.25);
+  }
+
+  .notif-card.critical {
+    background: rgba(220, 38, 38, 0.25);
+    border-color: rgba(220, 38, 38, 0.4);
+  }
+
+  /* ─── In-phone notification banner (iOS-style) ─── */
+  .phone-frame-with-notif {
+    position: relative;
+  }
+
+  .in-phone-notif {
+    position: absolute;
+    top: 40px;
+    left: 8px;
+    right: 8px;
+    background: rgba(30, 30, 30, 0.92);
+    backdrop-filter: blur(30px);
+    border-radius: 16px;
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    z-index: 10;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  .in-phone-notif .fn-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .in-phone-notif .fn-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .in-phone-notif .fn-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .in-phone-notif .fn-app {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 600;
+    font-size: 9px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.3px;
+  }
+
+  .in-phone-notif .fn-body {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+
+  /* ─── Label ─── */
+  .ss-label {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+    font-family: monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    z-index: 10;
+  }
+
+  /* Instructions */
+  .instructions {
+    width: 100%;
+    color: #888;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="instructions">
+  Each frame below = 1 App Store screenshot. Take a browser screenshot of each one individually at the correct resolution.<br>
+  Recommended: use browser DevTools to set viewport to 1290x2796 (6.7") and screenshot each .screenshot element.
+</div>
+
+<!-- ===== Screenshot 1: Hero ===== -->
+<div class="screenshot theme-cobalt">
+  <span class="ss-label">1/5</span>
+  <div class="headline-area" style="padding-top: 120px; padding-bottom: 32px;">
+    <div class="headline" style="font-size: 36px; line-height: 1.35;">
+      覚えた単語を、<br>忘れさせない。
+    </div>
+    <div class="sub-headline" style="font-size: 16px; margin-top: 12px;">
+      忘却曲線に基づくSRSで、TOPIK語彙を科学的に定着
+    </div>
+  </div>
+  <div class="phone-area">
+    <div class="phone-frame">
+      <img src="/Users/yuichkun/Downloads/ss_11c_review_meaning.png" alt="Review screen">
+    </div>
+  </div>
+</div>
+
+<!-- ===== Screenshot 2: SRS / Review ===== -->
+<div class="screenshot theme-purple">
+  <span class="ss-label">2/5</span>
+  <div class="headline-area" style="padding-top: 100px;">
+    <div class="headline" style="font-size: 30px;">
+      忘れかけた頃に、<br>復習が届く。
+    </div>
+    <div class="sub-headline">
+      SM-2アルゴリズムが記憶状態を追跡
+    </div>
+  </div>
+  <div class="phone-area">
+    <div class="phone-frame phone-frame-with-notif">
+      <div class="in-phone-notif">
+        <div class="fn-icon"><img src="../../assets/icon.png" alt="icon"></div>
+        <div class="fn-content">
+          <div class="fn-app">TOPIK道場</div>
+          <div class="fn-body">12語の定着率が約50%に低下。今なら短時間で回復</div>
+        </div>
+      </div>
+      <img src="/Users/yuichkun/Downloads/ss_11_review.png" alt="Review card">
+    </div>
+  </div>
+</div>
+
+<!-- ===== Screenshot 3: Test ===== -->
+<div class="screenshot theme-cobalt">
+  <span class="ss-label">3/5</span>
+  <div class="headline-area" style="padding-top: 100px;">
+    <div class="headline" style="font-size: 30px;">
+      聴いて覚える。<br>読んで確かめる。
+    </div>
+    <div class="sub-headline">
+      リスニング・リーディング両対応の4択テスト
+    </div>
+  </div>
+  <div class="phone-area">
+    <div class="phone-frame">
+      <img src="/Users/yuichkun/Downloads/ss_06_reading_test.png" alt="Reading test">
+    </div>
+  </div>
+</div>
+
+<!-- ===== Screenshot 4: Learning ===== -->
+<div class="screenshot theme-surface">
+  <span class="ss-label">4/5</span>
+  <div class="headline-area" style="padding-top: 100px;">
+    <div class="headline" style="font-size: 30px;">
+      毎日10語。<br>着実に積み上げる。
+    </div>
+    <div class="sub-headline">
+      音声・例文付きカードで語彙を習得
+    </div>
+  </div>
+  <div class="phone-area">
+    <div class="phone-frame">
+      <img src="/Users/yuichkun/Downloads/ss_04c_learning_example.png" alt="Learning with example">
+    </div>
+  </div>
+</div>
+
+<!-- ===== Screenshot 5: Notifications / 道場 ===== -->
+<div class="screenshot theme-dark">
+  <span class="ss-label">5/5</span>
+  <div class="headline-area" style="padding-top: 100px; padding-bottom: 16px;">
+    <div class="headline" style="font-size: 30px;">
+      サボったら、<br>道場が追いかけてくる。
+    </div>
+    <div class="sub-headline">
+      放置するほど通知が厳しくなるエスカレーション機能
+    </div>
+  </div>
+  <div class="notif-stack">
+    <div class="notif-card">
+      <div class="notif-icon"><img src="../../assets/icon.png" alt="icon"></div>
+      <div class="notif-content">
+        <div class="notif-title">TOPIK道場</div>
+        <div class="notif-body">12語の復習が遅れ始めています</div>
+      </div>
+      <div class="notif-time">2時間前</div>
+    </div>
+    <div class="notif-card urgent">
+      <div class="notif-icon"><img src="../../assets/icon.png" alt="icon"></div>
+      <div class="notif-content">
+        <div class="notif-title">TOPIK道場</div>
+        <div class="notif-body">12語の定着率が約50%に低下。今なら短時間で回復</div>
+      </div>
+      <div class="notif-time">昨日</div>
+    </div>
+    <div class="notif-card urgent">
+      <div class="notif-icon"><img src="../../assets/icon.png" alt="icon"></div>
+      <div class="notif-content">
+        <div class="notif-title">TOPIK道場</div>
+        <div class="notif-body">12語の定着率が約25%に低下。今なら短時間で回復</div>
+      </div>
+      <div class="notif-time">2日前</div>
+    </div>
+    <div class="notif-card critical">
+      <div class="notif-icon"><img src="../../assets/icon.png" alt="icon"></div>
+      <div class="notif-content">
+        <div class="notif-title">TOPIK道場</div>
+        <div class="notif-body">12語の定着率が10%以下。覚え直しコストが急増中</div>
+      </div>
+      <div class="notif-time">3日前</div>
+    </div>
+    <div class="notif-card critical">
+      <div class="notif-icon"><img src="../../assets/icon.png" alt="icon"></div>
+      <div class="notif-content">
+        <div class="notif-title">TOPIK道場</div>
+        <div class="notif-body">12語が7日間未復習。再学習は初回の約70%の時間で済みます</div>
+      </div>
+      <div class="notif-time">1週間前</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

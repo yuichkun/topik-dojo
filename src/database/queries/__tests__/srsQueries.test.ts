@@ -1,4 +1,3 @@
-import { startOfDay } from 'date-fns';
 import {
   getTestDb,
   createTestUnit,
@@ -12,7 +11,11 @@ import {
   updateSrsForForgotten,
   getReviewWords,
   getReviewCount,
+  getUpcomingReviewSchedule,
+  getOverdueReviewInfo,
 } from '../srsQueries';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 async function seedWord(id: string, grade: number = 1) {
   await createTestUnit({ id: `u-${id}`, grade, unitNumber: 1 });
@@ -52,14 +55,25 @@ describe('srsQueries', () => {
       expect(srs!.mistakeCount).toBe(1);
     });
 
-    it('nextReviewDateは今日の0時に設定される', async () => {
+    it('nextReviewDateは現在時刻に設定される（0時ではなく実時刻）', async () => {
       await seedWord('w1');
       const db = getTestDb();
 
+      const before = Date.now();
       const srs = await createSrsManagement(db, 'w1');
-      const today = startOfDay(Date.now()).getTime();
+      const after = Date.now();
 
-      expect(Math.abs(srs!.nextReviewDate! - today)).toBeLessThan(60 * 1000);
+      expect(srs!.nextReviewDate).toBeGreaterThanOrEqual(before);
+      expect(srs!.nextReviewDate).toBeLessThanOrEqual(after);
+    });
+
+    it('作成直後にgetReviewWordsで取得可能', async () => {
+      await seedWord('w1');
+      const db = getTestDb();
+
+      await createSrsManagement(db, 'w1');
+      const reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(true);
     });
   });
 
@@ -158,6 +172,45 @@ describe('srsQueries', () => {
       const updated = await updateSrsForRemembered(db, 'w1');
       expect(updated!.masteryLevel).toBe(5);
       expect(updated!.intervalDays).toBe(38);
+    });
+
+    it('nextReviewDateは現在時刻を起点にintervalDays後に設定される', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 0,
+        intervalDays: 1,
+        easeFactor: 2.5,
+      });
+
+      const db = getTestDb();
+      const before = Date.now();
+      const updated = await updateSrsForRemembered(db, 'w1');
+      const after = Date.now();
+
+      // mastery 0→1 yields interval=3
+      const expected3Days = 3 * DAY_MS;
+      expect(updated!.nextReviewDate).toBeGreaterThanOrEqual(before + expected3Days);
+      expect(updated!.nextReviewDate).toBeLessThanOrEqual(after + expected3Days);
+    });
+
+    it('覚えた後、intervalDays経過前はgetReviewWordsに含まれない', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 0,
+        intervalDays: 1,
+        easeFactor: 2.5,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+      await updateSrsForRemembered(db, 'w1');
+
+      const reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(false);
     });
 
     it('lastReviewedが更新される', async () => {
@@ -259,16 +312,17 @@ describe('srsQueries', () => {
       expect(updated!.mistakeCount).toBe(3);
     });
 
-    it('nextReviewDateが今日の0時に設定される', async () => {
+    it('nextReviewDateは現在時刻に設定される（0時ではなく実時刻）', async () => {
       await seedWord('w1');
       await createTestSrsRecord({ id: 'srs1', wordId: 'w1', masteryLevel: 4 });
 
       const db = getTestDb();
+      const before = Date.now();
       const updated = await updateSrsForForgotten(db, 'w1');
-      const today = startOfDay(Date.now()).getTime();
-      expect(Math.abs(updated!.nextReviewDate! - today)).toBeLessThan(
-        60 * 1000,
-      );
+      const after = Date.now();
+
+      expect(updated!.nextReviewDate).toBeGreaterThanOrEqual(before);
+      expect(updated!.nextReviewDate).toBeLessThanOrEqual(after);
     });
   });
 
@@ -620,7 +674,28 @@ describe('srsQueries', () => {
       expect(reviews.some(r => r.word.id === 'w1')).toBe(true);
     });
 
-    it('H: 間違い後に覚えた場合、getReviewWordsから消える', async () => {
+    it('H: 覚えた後、getReviewWordsから消えgetUpcomingに現れる', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        masteryLevel: 0,
+        intervalDays: 1,
+        easeFactor: 2.5,
+        nextReviewDate: Date.now() - 1000,
+      });
+
+      const db = getTestDb();
+      await updateSrsForRemembered(db, 'w1');
+
+      const reviews = await getReviewWords(db);
+      expect(reviews.some(r => r.word.id === 'w1')).toBe(false);
+
+      const upcoming = await getUpcomingReviewSchedule(db);
+      expect(upcoming.length).toBeGreaterThan(0);
+    });
+
+    it('I: 間違い後に覚えた場合、getReviewWordsから消える', async () => {
       await seedWord('w1');
       await createTestSrsRecord({
         id: 'srs1',
@@ -642,6 +717,169 @@ describe('srsQueries', () => {
       await updateSrsForRemembered(db, 'w1');
       reviews = await getReviewWords(db);
       expect(reviews.some(r => r.word.id === 'w1')).toBe(false);
+    });
+  });
+
+  describe('getUpcomingReviewSchedule', () => {
+    it('未来のnextReviewDateを持つ単語がスケジュールに含まれる', async () => {
+      await seedWord('w1');
+      const futureDate = Date.now() + 2 * DAY_MS;
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: futureDate,
+        intervalDays: 3,
+      });
+
+      const db = getTestDb();
+      const schedule = await getUpcomingReviewSchedule(db);
+
+      expect(schedule.length).toBe(1);
+      expect(schedule[0].wordCount).toBe(1);
+      expect(schedule[0].reviewDate).toBe(futureDate);
+    });
+
+    it('期限到来済みの単語はスケジュールに含まれない', async () => {
+      await seedWord('w1');
+      await seedWord('w2');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: Date.now() - 1000,
+      });
+      await createTestSrsRecord({
+        id: 'srs2',
+        wordId: 'w2',
+        nextReviewDate: Date.now() + 2 * DAY_MS,
+      });
+
+      const db = getTestDb();
+      const schedule = await getUpcomingReviewSchedule(db);
+
+      expect(schedule.length).toBe(1);
+      expect(schedule[0].reviewDate).toBeGreaterThan(Date.now());
+    });
+
+    it('同じタイムスタンプの複数単語は1つのグループにまとまる', async () => {
+      await seedWord('w1');
+      await seedWord('w2');
+      const sharedDate = Date.now() + 3 * DAY_MS;
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: sharedDate,
+        intervalDays: 3,
+      });
+      await createTestSrsRecord({
+        id: 'srs2',
+        wordId: 'w2',
+        nextReviewDate: sharedDate,
+        intervalDays: 7,
+      });
+
+      const db = getTestDb();
+      const schedule = await getUpcomingReviewSchedule(db);
+
+      expect(schedule.length).toBe(1);
+      expect(schedule[0].wordCount).toBe(2);
+      expect(schedule[0].minInterval).toBe(3);
+    });
+
+    it('異なるタイムスタンプの単語はそれぞれ別グループ', async () => {
+      await seedWord('w1');
+      await seedWord('w2');
+      const date1 = Date.now() + 1 * DAY_MS;
+      const date2 = Date.now() + 5 * DAY_MS;
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: date1,
+      });
+      await createTestSrsRecord({
+        id: 'srs2',
+        wordId: 'w2',
+        nextReviewDate: date2,
+      });
+
+      const db = getTestDb();
+      const schedule = await getUpcomingReviewSchedule(db);
+
+      expect(schedule.length).toBe(2);
+      expect(schedule[0].reviewDate).toBeLessThan(schedule[1].reviewDate);
+    });
+
+    it('mastery=9の単語はスケジュールに含まれない', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: Date.now() + 2 * DAY_MS,
+        masteryLevel: 9,
+      });
+
+      const db = getTestDb();
+      const schedule = await getUpcomingReviewSchedule(db);
+      expect(schedule.length).toBe(0);
+    });
+  });
+
+  describe('getOverdueReviewInfo', () => {
+    it('期限超過の単語がない場合はゼロ値を返す', async () => {
+      const db = getTestDb();
+      const info = await getOverdueReviewInfo(db);
+      expect(info).toEqual({ count: 0, minInterval: 0, oldestOverdueDays: 0 });
+    });
+
+    it('期限超過の単語数とminIntervalを正しく返す', async () => {
+      await seedWord('w1');
+      await seedWord('w2');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: Date.now() - 2 * DAY_MS,
+        intervalDays: 3,
+      });
+      await createTestSrsRecord({
+        id: 'srs2',
+        wordId: 'w2',
+        nextReviewDate: Date.now() - 1 * DAY_MS,
+        intervalDays: 7,
+      });
+
+      const db = getTestDb();
+      const info = await getOverdueReviewInfo(db);
+
+      expect(info.count).toBe(2);
+      expect(info.minInterval).toBe(3);
+    });
+
+    it('oldestOverdueDaysが日数で正しく計算される', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: Date.now() - 5 * DAY_MS,
+      });
+
+      const db = getTestDb();
+      const info = await getOverdueReviewInfo(db);
+
+      expect(info.oldestOverdueDays).toBeGreaterThanOrEqual(4);
+      expect(info.oldestOverdueDays).toBeLessThanOrEqual(5);
+    });
+
+    it('mastery=9の単語はoverdue集計に含まれない', async () => {
+      await seedWord('w1');
+      await createTestSrsRecord({
+        id: 'srs1',
+        wordId: 'w1',
+        nextReviewDate: Date.now() - 2 * DAY_MS,
+        masteryLevel: 9,
+      });
+
+      const db = getTestDb();
+      const info = await getOverdueReviewInfo(db);
+      expect(info.count).toBe(0);
     });
   });
 
