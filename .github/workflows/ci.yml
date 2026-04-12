@@ -1,10 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -45,17 +47,43 @@ jobs:
       - name: Build Android APK
         run: cd android && ./gradlew assembleDebug --no-daemon
 
-  # iOS build requires macOS runner and expo prebuild
-  # Uncomment when needed:
-  # build-ios:
-  #   runs-on: macos-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'npm'
-  #     - run: npm ci --legacy-peer-deps
-  #     - run: npx expo prebuild --platform ios --non-interactive
-  #     - run: cd ios && xcodebuild -workspace TopikDojo.xcworkspace -scheme TopikDojo -configuration Debug -destination 'generic/platform=iOS Simulator' build
+  build-ios:
+    runs-on: [self-hosted, macOS, ARM64]
+    needs: test
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Add Homebrew to PATH
+        run: echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Generate native project (CNG)
+        run: npx expo prebuild --platform ios --non-interactive
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: pod install
+
+      - name: Build iOS (Simulator)
+        working-directory: ios
+        run: |
+          xcodebuild \
+            -workspace TOPIK.xcworkspace \
+            -scheme TOPIK \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Clean up generated native project
+        if: always()
+        run: rm -rf ios
