@@ -76,8 +76,8 @@ jobs:
         working-directory: ios
         run: |
           xcodebuild \
-            -workspace TopikDojo.xcworkspace \
-            -scheme TopikDojo \
+            -workspace TOPIK.xcworkspace \
+            -scheme TOPIK \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
