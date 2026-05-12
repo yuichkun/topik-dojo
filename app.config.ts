@@ -3,7 +3,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'TOPIK道場',
   slug: 'topik-dojo',
-  version: '1.0.0',
+  version: process.env.APP_VERSION ?? '1.0.0',
   orientation: 'portrait',
   scheme: 'topikdojo',
   userInterfaceStyle: 'light',
@@ -16,6 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'com.topikdojo',
+    buildNumber: process.env.APP_BUILD_NUMBER ?? '1',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
