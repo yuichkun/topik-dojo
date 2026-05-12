@@ -70,38 +70,51 @@ TOPIK 道場 iOS アプリは 2026-04-01 に App Store で v1.0 (build 8) とし
 
 - 戻すときに EAS のサーバー側カウンタ（現時点で 8 で止まっている）が Apple 側の実際の最大値より小さい状態になっているため、再度 `eas build:version:set` で同期し直す必要がある
 
-### 決定 3: marketing version は git タグから抽出、buildNumber は `100 + github.run_number`
+### 決定 3: marketing version は git タグから抽出、buildNumber は `github.run_number * 100 + github.run_attempt`
 
 **選択:**
 
 - `expo.version` を `${GITHUB_REF_NAME#v}` 由来にする（タグから `v` を除いた値）
-- `expo.ios.buildNumber` を `100 + github.run_number` にする
+- `expo.ios.buildNumber` を `github.run_number * 100 + github.run_attempt` にする
 
 **buildNumber 戦略の代替案:**
 
 1. **`github.run_number` のみ（オフセット無し）**
-2. **日付ベース**（例: `202605121356`）
-3. **EAS の `build:version:get` で取得 +1**
+2. **`100 + github.run_number`**（当初検討した案）
+3. **日付ベース**（例: `202605121356`）
+4. **EAS の `build:version:get` で取得 +1**
 
 **採用理由（buildNumber について）:**
 
 - 案 1 単独はダメ。新規 workflow ファイルでは `github.run_number` が 1 から始まる（既存 workflow とは独立にカウントされる仕様）。Apple 側の現状最大 buildNumber 8 と衝突する
-- 案 2（日付ベース）は衝突しないが、数字が大きく見た目が異質で、手動 build 4〜8 との連続性が乏しい
-- 案 3 は `appVersionSource: "local"` の下では EAS が値を更新しない（=参照しないモードのため）ので、毎回同じ「8」を返す。+1 しても常に 9 になり 2 回目で衝突する → 破綻
-- 採用案（`100 + run_number`）は: 初回 101 となり Apple max 8 から余裕を持って離れる、単調増加が GitHub の仕様で保証される、3 桁で見やすく「手動運用時代の 4〜8 と一目で区別できる」
+- 案 2 は run_number が単調増加する点では問題ないが、**workflow 再実行（Re-run）時に `github.run_number` が増えない**ため、同じタグの再試行で同一 buildNumber が再生成され、Apple に「buildNumber 既使用」で弾かれて復旧不能になり得る（codex review で指摘・[#30](https://github.com/yuichkun/topik-dojo/pull/30) 参照）
+- 案 3（日付ベース）は衝突しないが、数字が大きく見た目が異質で、手動 build 4〜8 との連続性が乏しい
+- 案 4 は `appVersionSource: "local"` の下では EAS が値を更新しない（=参照しないモードのため）ので、毎回同じ「8」を返す。+1 しても常に 9 になり 2 回目で衝突する → 破綻
+- 採用案（`run_number * 100 + run_attempt`）は:
+  - 初回（run 1, attempt 1）→ 101 となり Apple max 8 から余裕を持って離れる
+  - 再実行時は `github.run_attempt` が増えるので衝突しない（run 1, attempt 2 → 102, attempt 3 → 103 ...）
+  - 新規 run は百の位以上が必ず大きくなる（run 2, attempt 1 → 201）
+  - 3 桁中心で見やすく、「手動運用時代の 4〜8 と一目で区別できる」
+  - `run_attempt < 100` の前提（実運用では決して起きない）が破られない限り単調増加と一意性が保たれる
 
-### 決定 4: タグ形式は `v*.*.*` 厳密 semver のみ
+### 決定 4: タグ形式は `v*.*.*` 厳密 semver のみ（glob トリガー + workflow 内ガード）
 
-**選択:** workflow トリガーを `tags: - 'v*.*.*'` に限定する
+**選択:**
+
+- workflow トリガー: `tags: - 'v*.*.*'`
+- workflow 内に **strict semver チェックステップ** を入れ、`v<major>.<minor>.<patch>` 以外（prerelease や hyphen を含むタグ）は早期に失敗させる
 
 **代替案:**
 
+- glob だけで絞る（チェックステップ無し）
 - `v*` 全般（prerelease タグ `v1.0.0-rc.1` も含める）
 - `*` 何でも
 
 **採用理由:**
 
-- 誤って関係ないタグ（例: `release-notes-1.0`）を push してもリリースが走らないので安全
+- GitHub Actions の workflow `tags:` フィルタは **glob のみで正規表現非対応**。`v*.*.*` の `*` は `/` 以外の任意文字にマッチするので、`v1.0.0-rc.1` のような prerelease タグも素通りしてしまう（codex review で指摘・[#30](https://github.com/yuichkun/topik-dojo/pull/30) 参照）
+- したがって glob だけでは strict semver 限定を表現できない。workflow 内で `[[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]` の正規表現チェックを行い、外れたタグは早期失敗させる構成にする
+- 誤って関係ないタグ（例: `release-notes-1.0`）を push してもガードで止まるので安全
 - prerelease タグサポートは、marketing version に `-rc.1` を含めると Apple の `CFBundleShortVersionString` 制約に抵触する可能性があり、複雑化を避けて初版では対応外とする
 - 必要になったら後から条件を緩める方が、初回から広く受け付けるより安全
 
@@ -150,8 +163,9 @@ TOPIK 道場 iOS アプリは 2026-04-01 に App Store で v1.0 (build 8) とし
 ### Negative / Trade-offs
 
 - `appVersionSource: "local"` への切替により、EAS のサーバー側 buildNumber 状態（8 で停止）は参照されなくなる
-- `100 + run_number` 方式は、release workflow ファイルを削除して再作成すると `run_number` がリセットされるので、その場合は Apple 側の最大値より大きいオフセットに更新する必要がある
-- buildNumber は marketing version をまたいで一意に増えていく方式（`v1.0.1` → build 101、`v1.0.2` → build 102 …）なので、marketing version と buildNumber の関係が直感的でない。慣れが必要
+- `run_number * 100 + run_attempt` 方式は、release workflow ファイルを削除して再作成すると `run_number` がリセットされるので、その場合は Apple 側の最大値より大きいオフセット（例えば `(run_number + N) * 100 + run_attempt` のように底上げ）に formula を更新する必要がある
+- 同じ workflow run の再実行を 99 回以上行うと（`run_attempt >= 100`）、次の run の buildNumber と衝突する可能性がある。実運用では起き得ない数だが、formula の制約として認識しておく
+- buildNumber は marketing version をまたいで一意に増えていく方式（`v1.0.1` → build 101、`v1.0.2` → build 201 …）なので、marketing version と buildNumber の関係が直感的でない。慣れが必要
 
 ### Future considerations
 
